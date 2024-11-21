@@ -30,6 +30,9 @@ jobs:
       - name: Setup sbt
         uses: sbt/setup-sbt@v1
 
+      - name: check version
+        run: sbt 'show version'
+
       - name: Build project
         run: sbt test
 
@@ -53,9 +56,6 @@ jobs:
 
       - name: Setup sbt
         uses: sbt/setup-sbt@v1
-
-      - name: clean up
-        run: sbt clean
 
       - name: check version
         run: sbt 'show version'

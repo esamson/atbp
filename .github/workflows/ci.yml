@@ -67,3 +67,11 @@ jobs:
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
         run: sbt ci-release
+
+      - name: check version again
+        if: always()
+        run: sbt 'show version'
+
+      - name: check status
+        if: always()
+        run: git status

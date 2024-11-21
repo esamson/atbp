@@ -1,0 +1,117 @@
+package ph.samson.atbp.cli
+
+import zio.Cause
+import zio.ExitCode
+import zio.Runtime
+import zio.ZIO
+import zio.ZLayer
+import zio.cli.CliApp
+import zio.cli.Command
+import zio.cli.HelpDoc
+import zio.cli.Options
+import zio.cli.ZIOCliDefault
+import zio.config.typesafe.TypesafeConfigProvider
+import zio.logging.consoleErrLogger
+
+object Main extends ZIOCliDefault {
+
+  val Name = "atbp"
+
+  val Version = {
+    // read version info from JAR manifest
+    val pak = Main.getClass.getPackage
+    Option(pak.getImplementationVersion) match
+      case Some(version) => version
+      case None          =>
+        // we're running unpackaged
+        "(dev)"
+  }
+
+  val verbose = Options.boolean("verbose").alias("v")
+  val quiet = Options.boolean("quiet").alias("q")
+  val logging = verbose ++ quiet
+
+  val atbp = Command(Name, logging).subcommands(
+    Markdown2Confluence.command,
+    Plate.command
+  )
+
+  override def cliApp = CliApp.make(
+    name = Name,
+    version = Version,
+    summary = HelpDoc.Span.text("Assorted tooling bits and pieces"),
+    command = atbp
+  ) { case ((verbose, quiet), toolCommand) =>
+    val run = for {
+      conf <- Conf.appConf
+      _ <- toolCommand.run(conf)
+    } yield ()
+
+    val logger = if quiet then {
+      quietLogger
+    } else if verbose then {
+      verboseLogger
+    } else {
+      regularLogger
+    }
+
+    val exitHandler = run.catchSomeCause { case f @ Cause.Fail(throwable, _) =>
+      throwable match
+        case _: IllegalArgumentException => logAndExit(f, ExitCode(1))
+    }
+
+    exitHandler.provide(logger)
+  }
+
+  def logAndExit(cause: Cause.Fail[Throwable], exitCode: ExitCode) =
+    for {
+      - <- ZIO.logDebugCause(cause)
+      _ <- ZIO.logError(cause.value.getMessage)
+      _ <- exit(exitCode)
+    } yield ()
+
+  lazy val quietLogger = {
+    val configProvider = TypesafeConfigProvider.fromHoconString(
+      """logger {
+        |  format = "%message"
+        |  filter {
+        |    rootLevel = WARN
+        |  }
+        |}
+        |""".stripMargin
+    )
+    Runtime.removeDefaultLoggers
+      >>> Runtime.setConfigProvider(configProvider)
+      >>> consoleErrLogger()
+  }
+
+  lazy val regularLogger = {
+    val configProvider = TypesafeConfigProvider.fromHoconString(
+      """logger {
+        |  format = "%message"
+        |  filter {
+        |    rootLevel = INFO
+        |  }
+        |}
+        |""".stripMargin
+    )
+    Runtime.removeDefaultLoggers
+      >>> Runtime.setConfigProvider(configProvider)
+      >>> consoleErrLogger()
+  }
+
+  lazy val verboseLogger = {
+    val configProvider = TypesafeConfigProvider.fromHoconString(
+      """logger {
+        |  format = "[%level %name][%spans][%kvs] %message%cause"
+        |  filter {
+        |    rootLevel = DEBUG
+        |  }
+        |}
+        |""".stripMargin
+    )
+    Runtime.removeDefaultLoggers
+      >>> Runtime.setConfigProvider(configProvider)
+      >>> consoleErrLogger()
+  }
+}

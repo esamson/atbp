@@ -3,10 +3,7 @@ ThisBuild / scalaVersion := "3.5.2"
 ThisBuild / versionScheme := Some("semver-spec")
 
 lazy val root = Project("atbp", file("."))
-  .settings(
-    name := "atbp-root",
-    publish / skip := true
-  )
+  .settings(publish / skip := true)
   .aggregate(cli, confluence, http, jira, md2c, plate)
 
 lazy val cli = atbpModule("cli")

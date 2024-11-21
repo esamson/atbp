@@ -54,10 +54,16 @@ jobs:
       - name: Setup sbt
         uses: sbt/setup-sbt@v1
 
+      - name: clean up
+        run: sbt clean
+
+      - name: check version
+        run: sbt 'show version'
+
       - name: Publish project
         env:
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-        run: sbt clean ci-release
+        run: sbt ci-release

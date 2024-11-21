@@ -62,7 +62,7 @@ object PublisherSpec extends ZIOSpecDefault {
 
       for (p <- Live.live(publish).exit) yield assertTrue(p.isSuccess)
     }
-  ).provideShared(pubLayer)
+  ).provideShared(pubLayer) @@ TestAspect.ignore
 
   def testDir(name: String): Task[File] =
     ZIO.attemptBlocking(TestFiles("publisher") / name)

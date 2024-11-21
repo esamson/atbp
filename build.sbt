@@ -1,5 +1,6 @@
 ThisBuild / organization := "samson.ph"
 ThisBuild / scalaVersion := "3.5.2"
+ThisBuild / versionScheme := Some("semver-spec")
 
 lazy val root = Project("atbp", file("."))
   .settings(

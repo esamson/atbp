@@ -1,32 +1,12 @@
-# macOS
-.DS_Store
+target
 
-# sbt specific
-dist/*
-target/
-lib_managed/
-src_managed/
-project/boot/
-project/plugins/project/
-project/local-plugins.sbt
-.history
-.ensime
-.ensime_cache/
-.sbt-scripted/
-local.sbt
+/.idea/
 
-# Bloop
-.bsp
+# sbt
+.bsp/
 
-# VS Code
-.vscode/
-
-# Metals
-.bloop/
+# Scala Metals
+# https://scalameta.org/metals/
 .metals/
+.bloop/
 metals.sbt
-
-# IDEA
-.idea
-.idea_modules
-/.worksheet/

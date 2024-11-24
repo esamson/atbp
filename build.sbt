@@ -11,13 +11,17 @@ lazy val root = Project("atbp", file("."))
 
 lazy val cli = atbpModule("cli")
   .dependsOn(md2c, plate)
-  .enablePlugins(JavaAppPackaging)
+  .enablePlugins(
+    DockerPlugin,
+    JavaAppPackaging
+  )
   .settings(Dependencies.cli)
   .settings(
     // sbt-native-packager
     packageName := "atbp",
     maintainer := "edward@samson.ph",
-    executableScriptName := packageName.value
+    executableScriptName := packageName.value,
+    dockerBaseImage := "eclipse-temurin:21-jre-noble"
   )
 
 lazy val confluence = atbpModule("confluence")

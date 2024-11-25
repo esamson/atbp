@@ -3,7 +3,8 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("21"))
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.StartsWith(Ref.Tag("v")),
-  RefPredicate.Equals(Ref.Branch("main"))
+  RefPredicate.Equals(Ref.Branch("main")),
+  RefPredicate.Equals(Ref.Branch("publish-docker")),
 )
 
 ThisBuild / githubWorkflowPublishPreamble := Seq(

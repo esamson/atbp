@@ -1,3 +1,5 @@
+import sbtdynver.DynVer
+
 ThisBuild / organization := "samson.ph"
 ThisBuild / scalaVersion := "3.5.2"
 ThisBuild / versionScheme := Some("semver-spec")
@@ -26,7 +28,15 @@ lazy val cli = atbpModule("cli")
     Docker / version := (version.value)
       .replace("+", ".")
       .replace("-", ".")
-      .toLowerCase
+      .toLowerCase,
+    dockerUpdateLatest := !DynVer.isSnapshot(),
+    dockerAliases ++= {
+      if (DynVer.isSnapshot()) {
+        Seq(dockerAlias.value.withTag(Some("snapshot")))
+      } else {
+        Nil
+      }
+    }
   )
 
 lazy val confluence = atbpModule("confluence")

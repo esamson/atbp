@@ -8,27 +8,7 @@ ThisBuild / githubWorkflowPublishTargetBranches := Seq(
 
 ThisBuild / githubWorkflowGeneratedCI := (ThisBuild / githubWorkflowGeneratedCI).value
   .map {
-    case publish @ WorkflowJob(
-          "publish",
-          _,
-          _,
-          _,
-          _,
-          None,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _,
-          _
-        ) =>
+    case publish if publish.id == "publish" && publish.permissions.isEmpty =>
       publish.copy(
         permissions = Some(
           Permissions.Specify(

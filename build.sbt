@@ -21,7 +21,8 @@ lazy val cli = atbpModule("cli")
     packageName := "atbp",
     maintainer := "edward@samson.ph",
     executableScriptName := packageName.value,
-    dockerBaseImage := "eclipse-temurin:21-jre-noble"
+    dockerBaseImage := "eclipse-temurin:21-jre-noble",
+    dockerRepository := Some("ghcr.io/esamson")
   )
 
 lazy val confluence = atbpModule("confluence")

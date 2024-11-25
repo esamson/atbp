@@ -6,15 +6,26 @@ ThisBuild / githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.Equals(Ref.Branch("main"))
 )
 
+ThisBuild / githubWorkflowPublishPreamble := Seq(
+  WorkflowStep.Run(
+    commands = List("""echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin"""),
+    name = Some("Log in to registry")
+  )
+)
+
 ThisBuild / githubWorkflowPublish := Seq(
   WorkflowStep.Sbt(
     commands = List("ci-release"),
-    name = Some("Publish project"),
+    name = Some("Publish jars"),
     env = Map(
       "PGP_PASSPHRASE" -> "${{ secrets.PGP_PASSPHRASE }}",
       "PGP_SECRET" -> "${{ secrets.PGP_SECRET }}",
       "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
       "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
     )
+  ),
+  WorkflowStep.Sbt(
+    commands = List("dockerPublish"),
+    name = Some("Publish container")
   )
 )

@@ -4,12 +4,51 @@ ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.StartsWith(Ref.Tag("v")),
   RefPredicate.Equals(Ref.Branch("main")),
-  RefPredicate.Equals(Ref.Branch("publish-docker")),
+  RefPredicate.Equals(Ref.Branch("publish-docker"))
 )
+
+ThisBuild / githubWorkflowGeneratedCI := (ThisBuild / githubWorkflowGeneratedCI).value
+  .map {
+    case publish @ WorkflowJob(
+          "publish",
+          _,
+          _,
+          _,
+          _,
+          None,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _,
+          _
+        ) =>
+      publish.copy(
+        permissions = Some(
+          Permissions.Specify(
+            Map(
+              PermissionScope.Contents -> PermissionValue.Read,
+              PermissionScope.Packages -> PermissionValue.Write,
+              PermissionScope.IdToken -> PermissionValue.Write
+            )
+          )
+        )
+      )
+    case other => other
+  }
 
 ThisBuild / githubWorkflowPublishPreamble := Seq(
   WorkflowStep.Run(
-    commands = List("""echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin"""),
+    commands = List(
+      """echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin"""
+    ),
     name = Some("Log in to registry")
   )
 )

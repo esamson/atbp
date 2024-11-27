@@ -1,4 +1,4 @@
-import com.typesafe.sbt.packager.docker.ExecCmd
+import com.typesafe.sbt.packager.docker.Cmd
 import sbtdynver.DynVer
 
 ThisBuild / organization := "samson.ph"
@@ -38,7 +38,7 @@ lazy val cli = atbpModule("cli")
         Nil
       }
     },
-    dockerCommands += ExecCmd(
+    dockerCommands += Cmd(
       // format: off
       "RUN",
       "apt-get", "update",

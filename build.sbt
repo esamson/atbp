@@ -1,3 +1,4 @@
+import com.typesafe.sbt.packager.docker.ExecCmd
 import sbtdynver.DynVer
 
 ThisBuild / organization := "samson.ph"
@@ -36,7 +37,17 @@ lazy val cli = atbpModule("cli")
       } else {
         Nil
       }
-    }
+    },
+    dockerCommands += ExecCmd(
+      // format: off
+      "RUN",
+      "apt-get", "update",
+      "&&", "apt-get", "install", "-y", "graphviz",
+      "&&", "apt-get", "autoremove",
+      "&&", "apt-get", "clean",
+      "&&", "rm", "-rf", "/var/lib/apt/lists/*"
+      // format: on
+    )
   )
 
 lazy val confluence = atbpModule("confluence")

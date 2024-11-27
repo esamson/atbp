@@ -38,15 +38,16 @@ lazy val cli = atbpModule("cli")
         Nil
       }
     },
-    dockerCommands += Cmd(
-      // format: off
-      "RUN",
-      "apt-get", "update",
-      "&&", "apt-get", "install", "-y", "graphviz",
-      "&&", "apt-get", "autoremove",
-      "&&", "apt-get", "clean",
-      "&&", "rm", "-rf", "/var/lib/apt/lists/*"
-      // format: on
+    dockerCommands ++= Seq(
+      Cmd("USER", "root"),
+      Cmd(
+        "RUN",
+        "apt-get update",
+        "&& apt-get install -y graphviz",
+        "&& apt-get autoremove",
+        "&& apt-get clean",
+        "&& rm -rf /var/lib/apt/lists/*"
+      )
     )
   )
 

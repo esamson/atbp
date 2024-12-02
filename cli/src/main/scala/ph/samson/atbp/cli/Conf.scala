@@ -27,9 +27,10 @@ case class Conf(
 
 object Conf {
   val Descriptor: Config[Conf] = deriveConfig[Conf]
+  val Resolver = config("atbp")
 
   val appConf: Task[Conf] = for {
-    config <- ZIO.attemptBlockingIO(config("atbp").load)
+    config <- ZIO.attemptBlockingIO(Resolver.load)
     provider <- ConfigProvider.fromTypesafeConfigZIO(config.getConfig("atbp"))
     conf <- provider.load(Descriptor)
   } yield conf

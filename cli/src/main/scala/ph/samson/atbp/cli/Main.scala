@@ -8,6 +8,8 @@ import zio.ZLayer
 import zio.cli.CliApp
 import zio.cli.Command
 import zio.cli.HelpDoc
+import zio.cli.HelpDoc.*
+import zio.cli.HelpDoc.Span.*
 import zio.cli.Options
 import zio.cli.ZIOCliDefault
 import zio.config.typesafe.TypesafeConfigProvider
@@ -27,19 +29,44 @@ object Main extends ZIOCliDefault {
         "(dev)"
   }
 
-  val verbose = Options.boolean("verbose").alias("v")
-  val quiet = Options.boolean("quiet").alias("q")
+  val verbose = Options.boolean("verbose").alias("v") ?? "Print out debug logs."
+  val quiet = Options.boolean("quiet").alias("q") ??
+    "Only print warning logs. Takes precedence over verbose flag."
   val logging = verbose ++ quiet
 
-  val atbp = Command(Name, logging).subcommands(
-    Markdown2Confluence.command,
-    Plate.command
-  )
+  val atbp = Command(Name, logging)
+    .subcommands(
+      Markdown2Confluence.command,
+      Plate.command
+    )
+    .withHelp(
+      blocks(
+        p(
+          "Unrelated tools that I'm too lazy to build and package and install" +
+            " separately. Each tool is its own command. See list below."
+        ),
+        p(
+          spans(
+            text("Use "),
+            code("atbp <command> --help"),
+            text(" for specific help for each tool.")
+          )
+        ),
+        h2("Configuration"),
+        p(
+          spans(
+            text("User configuration is read from "),
+            code(Conf.Resolver.get("application.conf").pathAsString),
+            text(" as a HOCON formatted file.")
+          )
+        )
+      )
+    )
 
   override def cliApp = CliApp.make(
     name = Name,
     version = Version,
-    summary = HelpDoc.Span.text("Assorted tooling bits and pieces"),
+    summary = text("Assorted tooling bits and pieces"),
     command = atbp
   ) { case ((verbose, quiet), toolCommand) =>
     val run = for {

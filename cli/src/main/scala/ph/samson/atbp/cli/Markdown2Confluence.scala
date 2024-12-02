@@ -9,6 +9,7 @@ import zio.ZIO
 import zio.cli.Args
 import zio.cli.Command
 import zio.cli.Exists.Yes
+import zio.cli.HelpDoc.*
 import zio.cli.Options
 import zio.http.ZClient
 
@@ -60,15 +61,22 @@ object Markdown2Confluence {
 
   private val sourceDir = Args.directory("sourceDir", Yes).atMost(1)
   private val cleanup =
-    Options.boolean("cleanup") ?? "Remove drafts from the space"
+    Options.boolean("cleanup") ?? "Remove drafts from the space."
 
   val command: Command[Markdown2Confluence] =
-    Command("md2c", cleanup, sourceDir).map { (c, s) =>
-      Markdown2Confluence(
-        sourceDir = s match
-          case Nil      => File.currentWorkingDirectory
-          case dir :: _ => dir,
-        cleanup = c
+    Command("md2c", cleanup, sourceDir)
+      .withHelp(
+        blocks(
+          h2("Markdown to Confluence"),
+          p("Publish a directory of Markdown documents to Confluence.")
+        )
       )
-    }
+      .map { (c, s) =>
+        Markdown2Confluence(
+          sourceDir = s match
+            case Nil      => File.currentWorkingDirectory
+            case dir :: _ => dir,
+          cleanup = c
+        )
+      }
 }

@@ -7,7 +7,7 @@ import com.atlassian.adf.model.node.Media.ExternalMedia
 import com.atlassian.adf.model.node.Media.fileMedia
 import ph.samson.atbp.confluence.Client
 import ph.samson.atbp.confluence.model.Attachment
-import ph.samson.atbp.confluence.model.ChildPagesResult.ChildPage
+import ph.samson.atbp.confluence.model.ChildPage
 import ph.samson.atbp.confluence.model.CreatePageRequest
 import ph.samson.atbp.confluence.model.PageBodyWrite
 import ph.samson.atbp.confluence.model.PageSingle

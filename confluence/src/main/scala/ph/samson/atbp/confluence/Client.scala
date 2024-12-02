@@ -2,8 +2,7 @@ package ph.samson.atbp.confluence
 
 import better.files.File
 import ph.samson.atbp.confluence.model.Attachment
-import ph.samson.atbp.confluence.model.ChildPagesResult
-import ph.samson.atbp.confluence.model.ChildPagesResult.ChildPage
+import ph.samson.atbp.confluence.model.ChildPage
 import ph.samson.atbp.confluence.model.Content
 import ph.samson.atbp.confluence.model.CreateAttachmentResponse
 import ph.samson.atbp.confluence.model.CreatePageRequest
@@ -79,8 +78,8 @@ trait Client {
 
 object Client {
 
-  private def V1Base = "/rest/api"
-  private def V2Base = "/api/v2"
+  private def V1Base = "/wiki/rest/api"
+  private def V2Base = "/wiki/api/v2"
 
   private class LiveImpl(client: HttpClient, baseUrl: URL) extends Client {
 
@@ -187,9 +186,9 @@ object Client {
             .addPath("/pages")
             .addPath(id)
             .get("children")
-          result <- res.body.to[ChildPagesResult]
+          result <- res.body.to[MultiEntityResult[ChildPage]]
           _ <- ZIO.logDebug(s"result: $result")
-          next <- getNextChildPages(result._links)
+          next <- getNextPage[ChildPage](result._links)
         } yield result.results ++ next
       })
 
@@ -208,23 +207,6 @@ object Client {
           next <- getNextPage[Content](result._links)
         } yield result.results ++ next
       })
-
-    private def getNextChildPages(
-        links: MultiEntityLinks
-    ): Task[List[ChildPage]] =
-      links.next match
-        case None => ZIO.succeed(Nil)
-        case Some(next) =>
-          ZIO.scoped(ZIO.logSpan("getNextChildPages") {
-            for {
-              _ <- ZIO.logDebug("getNextChildPages")
-              res <- client
-                .get(next)
-              result <- res.body.to[ChildPagesResult]
-              _ <- ZIO.logDebug(s"result: $result")
-              next <- getNextChildPages(result._links)
-            } yield result.results ++ next
-          })
 
     override def getPageAttachments(id: String): Task[List[Attachment]] =
       ZIO.scoped(ZIO.logSpan("getPageAttachments") {
@@ -250,8 +232,7 @@ object Client {
           ZIO.scoped(ZIO.logSpan("getNextPage") {
             for {
               _ <- ZIO.logDebug("getNextPage")
-              res <- client
-                .get(next)
+              res <- client.get(next)
               result <- res.body.to[MultiEntityResult[T]]
               _ <- ZIO.logDebug(s"result: $result")
               next <- getNextPage(result._links)
@@ -332,7 +313,7 @@ object Client {
         Authorization.Basic(conf.user, conf.token),
         Accept(MediaType.application.json)
       )
-      url <- ZIO.fromEither(URL.decode(s"https://${conf.site}/wiki"))
+      url <- ZIO.fromEither(URL.decode(s"https://${conf.site}"))
       client <- ZIO.serviceWith[HttpClient](
         _.addHeaders(headers).url(url) @@ loggingAspect @@ StatusCheck
           .successOnly()

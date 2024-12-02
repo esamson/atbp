@@ -152,6 +152,15 @@ object ParserSpec extends ZIOSpecDefault {
           pprint.pprintln(s"doc: $doc")
           assertTrue(doc.isSupported)
         }
+      },
+      test("problematic") {
+        val markdown = testMarkdown("problematic.md")
+        for {
+          Parsed(_, doc, _) <- Parser.parse(markdown)
+        } yield {
+          pprint.pprintln(s"doc: $doc")
+          assertTrue(doc.isSupported)
+        }
       }
     )
   )

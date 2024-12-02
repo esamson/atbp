@@ -81,7 +81,7 @@ object Publisher {
       val sourceName =
         if baseDir == page.source then baseDir.name
         else baseDir.relativize(page.source)
-      for {
+      val publish = for {
         currentChildren <- client.getChildPages(current.id)
         publishedChildren <- ZIO.foreachPar(page.children)(
           publishPage(_, current.id, currentChildren, baseDir)
@@ -126,7 +126,8 @@ object Publisher {
         }
         _ <- deletePages(extraChildren)
       } yield published
-      end for
+
+      publish.mapError(cause => PublishingFailed(page, cause))
     }
 
     def currentPage(
@@ -264,4 +265,10 @@ object Publisher {
       client <- ZIO.service[Client]
     } yield LiveImpl(client, conf): Publisher
   }
+
+  case class PublishingFailed(page: Page, cause: Throwable)
+      extends Exception(
+        s"Failed publishing ${page.title} (${page.source})",
+        cause
+      )
 }

@@ -38,19 +38,11 @@ object Publisher {
           given Conf.Final = finalConf
           given Space <- client.getSpace(finalConf.spaceKey)
           rootPage <- client.getPage(finalConf.pageId)
-          rootParent = rootPage.parentId
-          rootChildren <- rootParent
-            .map(client.getChildPages)
-            .getOrElse(ZIO.succeed(Nil))
           baseDir =
             if staged.root.source.isDirectory
             then staged.root.source
             else staged.root.source.parent
-          published <- rootParent match
-            case Some(parentId) =>
-              publishPage(staged.root, parentId, rootChildren, baseDir)
-            case None =>
-              publishPage(staged.root, rootPage, baseDir)
+          published <- publishPage(staged.root, rootPage, baseDir)
         } yield published
       })
 

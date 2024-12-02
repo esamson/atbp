@@ -38,14 +38,18 @@ object Parser {
       FrontMatter(Some(title))
   }
 
-  def parse(source: File) = for {
-    content <- ZIO.attemptBlockingIO(source.contentAsString)
-    (frontMatter, markdown) = splitFrontMatter(content)
-    fm <- parseFrontMatter(frontMatter)
-    doc <- parseMarkdown(markdown)
-    contentHash <- computeHash(markdown)
-  } yield {
-    Parsed(fm, doc, contentHash)
+  def parse(source: File) = {
+    val p = for {
+      content <- ZIO.attemptBlockingIO(source.contentAsString)
+      (frontMatter, markdown) = splitFrontMatter(content)
+      fm <- parseFrontMatter(frontMatter)
+      doc <- parseMarkdown(markdown)
+      contentHash <- computeHash(markdown)
+    } yield {
+      Parsed(fm, doc, contentHash)
+    }
+
+    p.mapError(cause => ParsingFailed(source, cause))
   }
 
   def splitFrontMatter(content: String): (String, String) = {
@@ -79,4 +83,7 @@ object Parser {
       MessageDigest.getInstance("SHA-1").digest(content.getBytes(UTF_8))
     }
   }
+
+  case class ParsingFailed(source: File, cause: Throwable)
+      extends Exception(s"Parsing failed: $source", cause)
 }

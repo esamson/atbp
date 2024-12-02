@@ -83,7 +83,8 @@ object Client {
 
   private class LiveImpl(client: HttpClient, baseUrl: URL) extends Client {
 
-    override def resolveUrl(path: String): URL = baseUrl.addPath(path)
+    override def resolveUrl(path: String): URL =
+      baseUrl.addPath("/wiki").addPath(path)
 
     override def getCurrentUser(): Task[User] =
       ZIO.scoped(ZIO.logSpan("getCurrentUser") {

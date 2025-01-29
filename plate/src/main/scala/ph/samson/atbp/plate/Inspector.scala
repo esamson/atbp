@@ -30,6 +30,18 @@ object Inspector {
 
   private class LiveImpl(client: Client) extends Inspector {
 
+    /** Extract relevant lines from the given source file and write to a sibling
+      * file named with the given suffix.
+      *
+      * @param source
+      *   source file
+      * @param suffix
+      *   suffix for naming the target file
+      * @param check
+      *   criteria for deciding if a Jira key should be included
+      * @return
+      *   target file
+      */
     private def extract(source: File, suffix: String)(
         check: String => Task[Boolean]
     ): Task[File] =

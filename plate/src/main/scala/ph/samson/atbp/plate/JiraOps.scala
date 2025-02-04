@@ -5,6 +5,8 @@ import ph.samson.atbp.jira.model.Issue
 import zio.Task
 import zio.ZIO
 
+import java.time.ZonedDateTime
+
 object JiraOps {
   extension (client: Client) {
 
@@ -41,6 +43,10 @@ object JiraOps {
 
   extension (issue: Issue) {
     def isDone: Boolean = issue.fields.status.statusCategory.name == "Done"
+
+    def hadProgress(since: ZonedDateTime): Boolean =
+      issue.fields.status.statusCategory.name == "In Progress" &&
+        issue.fields.statuscategorychangedate.isAfter(since)
   }
 
   private def childrenJql(keys: List[String]) =

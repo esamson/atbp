@@ -75,8 +75,7 @@ object Inspector {
             result <-
               if issue.isDone then {
                 ZIO.succeed(false)
-              } else if issue.fields.statuscategorychangedate.isAfter(since)
-              then {
+              } else if issue.hadProgress(since) then {
                 ZIO.succeed(true)
               } else {
                 anyDescendantInProgress(key, since)
@@ -91,9 +90,7 @@ object Inspector {
     ): Task[Boolean] = ZIO.logSpan("anyDescendantInProgress") {
       for {
         descendants <- client.getDescendants(key)
-      } yield descendants.exists(
-        _.fields.statuscategorychangedate.isAfter(since)
-      )
+      } yield descendants.exists(_.hadProgress(since))
     }
 
     /** Remove empty sections and extra blank lines.

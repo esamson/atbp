@@ -88,7 +88,12 @@ object Inspector {
       ZIO.logSpan("anyDescendantInProgress") {
         for {
           descendants <- client.getDescendants(key)
-        } yield descendants.exists(_.inProgress)
+        } yield {
+          val someInProgress = descendants.exists(_.inProgress)
+          val partialDone =
+            descendants.exists(_.isDone) && descendants.exists(!_.isDone)
+          someInProgress || partialDone
+        }
       }
 
     /** Remove empty sections and extra blank lines.

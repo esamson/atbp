@@ -12,9 +12,7 @@ import zio.cli.Exists.Yes
 import zio.cli.Options
 import zio.http.ZClient
 
-import java.time.LocalDate
 import java.time.ZoneId
-import java.time.ZonedDateTime
 
 case class Plate(action: Action) extends ToolCommand {
   override def run(conf: Conf): ZIO[Any, Throwable, Unit] = action.run(conf)
@@ -50,8 +48,7 @@ object Plate {
     }
   }
 
-  private case class Check(source: File, status: Status, since: ZonedDateTime)
-      extends Action {
+  private case class Check(source: File, status: Status) extends Action {
     override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
       conf.jiraConf match
         case None => ZIO.fail(new Exception("No jira config."))
@@ -59,7 +56,7 @@ object Plate {
           val check = for {
             inspector <- ZIO.service[Inspector]
             result <- status match
-              case Check.Cooking => inspector.cooking(source, since)
+              case Check.Cooking => inspector.cooking(source)
               case Check.Done    => inspector.done(source)
             _ <- ZIO.logInfo(s"check result: $result")
           } yield ()
@@ -80,12 +77,9 @@ object Plate {
       "done" -> Done
     )
 
-    val since =
-      Options.localDate("since").withDefault(LocalDate.now(PHT).minusWeeks(1))
-
-    val command = Command("check", status ++ since, source).map {
-      case ((status, since), source) =>
-        Check(source, status, since.atStartOfDay(PHT))
+    val command = Command("check", status, source).map {
+      case (status, source) =>
+        Check(source, status)
     }
   }
 

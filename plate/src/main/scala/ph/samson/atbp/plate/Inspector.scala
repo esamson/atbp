@@ -7,11 +7,9 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
-import java.time.ZonedDateTime
-
 trait Inspector {
   def done(source: File): Task[File]
-  def cooking(source: File, since: ZonedDateTime): Task[File]
+  def cooking(source: File): Task[File]
 }
 
 object Inspector {
@@ -67,7 +65,7 @@ object Inspector {
       }
     }
 
-    override def cooking(source: File, since: ZonedDateTime): Task[File] =
+    override def cooking(source: File): Task[File] =
       ZIO.logSpan("cooking") {
         extract(source, ".cooking") { key =>
           for {

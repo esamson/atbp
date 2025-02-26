@@ -75,23 +75,21 @@ object Inspector {
             result <-
               if issue.isDone then {
                 ZIO.succeed(false)
-              } else if issue.hadProgress(since) then {
+              } else if issue.inProgress then {
                 ZIO.succeed(true)
               } else {
-                anyDescendantInProgress(key, since)
+                anyDescendantInProgress(key)
               }
           } yield result
         }
       }
 
-    def anyDescendantInProgress(
-        key: String,
-        since: ZonedDateTime
-    ): Task[Boolean] = ZIO.logSpan("anyDescendantInProgress") {
-      for {
-        descendants <- client.getDescendants(key)
-      } yield descendants.exists(_.hadProgress(since))
-    }
+    def anyDescendantInProgress(key: String): Task[Boolean] =
+      ZIO.logSpan("anyDescendantInProgress") {
+        for {
+          descendants <- client.getDescendants(key)
+        } yield descendants.exists(_.inProgress)
+      }
 
     /** Remove empty sections and extra blank lines.
       *

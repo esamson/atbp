@@ -2,14 +2,23 @@ package ph.samson.atbp.plate
 
 import better.files.File
 import ph.samson.atbp.jira.Client
+import ph.samson.atbp.jira.model.Issue
 import ph.samson.atbp.plate.JiraOps.*
+import zio.Clock
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
+import java.time.temporal.ChronoUnit.DAYS
+
 trait Inspector {
-  def done(source: File): Task[File]
   def cooking(source: File): Task[File]
+  def stale(source: File): Task[File]
+  def done(source: File): Task[File]
 }
 
 object Inspector {
@@ -87,10 +96,60 @@ object Inspector {
         for {
           descendants <- client.getDescendants(key)
         } yield {
-          val someInProgress = descendants.exists(_.inProgress)
-          val partialDone =
-            descendants.exists(_.isDone) && descendants.exists(!_.isDone)
-          someInProgress || partialDone
+          aggregateInProgress(descendants)
+        }
+      }
+
+    /** A set of issues, considered together, is determined to be "In Progress"
+      * if some of them are In Progress or some are Done while there are others
+      * still not Done.
+      *
+      * @param issues
+      * @return
+      */
+    private def aggregateInProgress(issues: List[Issue]) = {
+      val someInProgress = issues.exists(_.inProgress)
+      val partialDone = issues.exists(_.isDone) && issues.exists(!_.isDone)
+      someInProgress || partialDone
+    }
+
+    override def stale(source: File): Task[File] =
+      ZIO.logSpan("stale") {
+        extract(source, ".stale") { key =>
+          for {
+            now <- Clock.instant
+            freshLimit = now
+              .atZone(ZoneId.systemDefault())
+              .minus(28, DAYS)
+              .`with`(LocalTime.MIDNIGHT)
+            issue <- client.getIssue(key)
+            result <-
+              if issue.isDone then {
+                ZIO.succeed(false)
+              } else if issue.inProgress &&
+                issue.fields.updated.isAfter(freshLimit)
+              then {
+                ZIO.succeed(false)
+              } else {
+                allDescendantsStale(key, freshLimit)
+              }
+          } yield result
+        }
+      }
+
+    def allDescendantsStale(
+        key: String,
+        freshLimit: ZonedDateTime
+    ): Task[Boolean] =
+      ZIO.logSpan("allDescendantsStale") {
+        for {
+          descendants <- client.getDescendants(key)
+          inProgress = aggregateInProgress(descendants)
+        } yield {
+          inProgress &&
+          descendants
+            .filterNot(_.isDone)
+            .forall(_.fields.updated.isBefore(freshLimit))
         }
       }
 

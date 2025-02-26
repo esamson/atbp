@@ -57,6 +57,7 @@ object Plate {
             inspector <- ZIO.service[Inspector]
             result <- status match
               case Check.Cooking => inspector.cooking(source)
+              case Check.Stale   => inspector.stale(source)
               case Check.Done    => inspector.done(source)
             _ <- ZIO.logInfo(s"check result: $result")
           } yield ()
@@ -70,10 +71,12 @@ object Plate {
 
     sealed trait Status
     case object Cooking extends Status
+    case object Stale extends Status
     case object Done extends Status
 
     val status: Options[Status] = Options.enumeration("status")(
       "cooking" -> Cooking,
+      "stale" -> Stale,
       "done" -> Done
     )
 

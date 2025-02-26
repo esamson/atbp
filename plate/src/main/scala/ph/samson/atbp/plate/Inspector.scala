@@ -148,7 +148,7 @@ object Inspector {
                       (nonEmpty :+ start, section :: rest)
                     case _ => (Nil, section :: rest) // entries are just blanks
                 }
-              case nonBlank => pruneSection(start, rest, nonBlank :: entries)
+              case _ => pruneSection(start, rest, line :: entries)
       }
 
       def doPrune(in: List[String], out: List[String]): List[String] = {

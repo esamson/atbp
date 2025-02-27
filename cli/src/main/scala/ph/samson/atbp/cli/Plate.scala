@@ -3,7 +3,9 @@ package ph.samson.atbp.cli
 import better.files.File
 import ph.samson.atbp.cli.Plate.Action
 import ph.samson.atbp.jira.Client
-import ph.samson.atbp.plate.{Inspector, Labeler, RadarScanner}
+import ph.samson.atbp.plate.Inspector
+import ph.samson.atbp.plate.Labeler
+import ph.samson.atbp.plate.RadarScanner
 import zio.ZIO
 import zio.cli.Args
 import zio.cli.Command
@@ -95,13 +97,20 @@ object Plate {
             _ <- ZIO.logInfo(s"radar result: $result")
           } yield ()
 
-          scan.provide(ZClient.default, Client.layer(jira), RadarScanner.layer())
+          scan.provide(
+            ZClient.default,
+            Client.layer(jira),
+            RadarScanner.layer()
+          )
       }
     }
   }
 
   private object Radar {
-    val exclude = Options.text("exclude").map(_.split(',').toList.map(_.trim)).withDefault(Nil) ?? "Projects to exclude"
+    val exclude = Options
+      .text("exclude")
+      .map(_.split(',').toList.map(_.trim))
+      .withDefault(Nil) ?? "Projects to exclude"
 
     val command = Command("radar", exclude, source).map {
       case (exclude, source) => Radar(source, exclude)
@@ -109,5 +118,7 @@ object Plate {
   }
 
   val command: Command[Plate] =
-    Command("plate").subcommands(Label.command, Check.command, Radar.command).map(Plate.apply)
+    Command("plate")
+      .subcommands(Label.command, Check.command, Radar.command)
+      .map(Plate.apply)
 }

@@ -60,7 +60,7 @@ object Dependencies {
     object TestLibs {
       val pprint = Libs.pprint % Test
 
-      val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.16"
+      val slf4jSimple = "org.slf4j" % "slf4j-simple" % "2.0.17"
 
       val zioConfigTypesafe = Libs.zioConfigTypesafe % Test
 

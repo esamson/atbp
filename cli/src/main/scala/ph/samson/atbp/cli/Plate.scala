@@ -12,8 +12,6 @@ import zio.cli.Exists.Yes
 import zio.cli.Options
 import zio.http.ZClient
 
-import java.time.ZoneId
-
 case class Plate(action: Action) extends ToolCommand {
   override def run(conf: Conf): ZIO[Any, Throwable, Unit] = action.run(conf)
 }
@@ -70,8 +68,6 @@ object Plate {
   }
 
   private object Check {
-    val PHT = ZoneId.of("Asia/Manila")
-
     sealed trait Status
     case object Cooking extends Status
     case object Stale extends Status

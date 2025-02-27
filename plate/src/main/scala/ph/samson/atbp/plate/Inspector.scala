@@ -23,7 +23,7 @@ trait Inspector {
 
 object Inspector {
 
-  private val JiraLink = """.*\(https://.*/browse/([A-Z]+-\d+)\).*""".r
+  val JiraLink = """.*\(https://.*/browse/([A-Z]+-\d+)\).*""".r
 
   private def includeLine(
       check: String => Task[Boolean]

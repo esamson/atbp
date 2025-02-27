@@ -227,7 +227,7 @@ object Client {
     private def getNextPage[T](links: MultiEntityLinks)(implicit
         codec: BinaryCodec[MultiEntityResult[T]]
     ): Task[List[T]] =
-      links.next match
+      links.next match {
         case None => ZIO.succeed(Nil)
         case Some(next) =>
           ZIO.scoped(ZIO.logSpan("getNextPage") {
@@ -239,6 +239,7 @@ object Client {
               next <- getNextPage(result._links)
             } yield result.results ++ next
           })
+      }
 
     override def createOrUpdateAttachment(
         page: PageSingle,
@@ -276,7 +277,6 @@ object Client {
             .put("/child/attachment")(body)
           result <- res.body.to[CreateAttachmentResponse]
         } yield result
-        end for
       })
 
     override def deleteAttachment(id: String): Task[Boolean] =
@@ -320,6 +320,5 @@ object Client {
           .successOnly()
       )
     } yield LiveImpl(client, url): Client
-    end for
   }
 }

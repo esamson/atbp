@@ -28,11 +28,12 @@ object Inspector {
   private def includeLine(
       check: String => Task[Boolean]
   )(line: String): Task[Boolean] = {
-    line match
+    line match {
       case ""                                 => ZIO.succeed(true)
       case heading if heading.startsWith("#") => ZIO.succeed(true)
       case JiraLink(key)                      => check(key)
       case _                                  => ZIO.succeed(false)
+    }
   }
 
   private class LiveImpl(client: Client) extends Inspector {
@@ -56,10 +57,11 @@ object Inspector {
         sourceLines <- ZIO.attemptBlockingIO(source.lines.toList)
         targetLines <- ZIO.filterPar(sourceLines)(includeLine(check))
         outFile <- ZIO.attemptBlockingIO {
-          val name = source.`extension`() match
+          val name = source.`extension`() match {
             case Some(ext) =>
               source.nameWithoutExtension(includeAll = false) + suffix + ext
             case None => source.name + suffix
+          }
           val out = source.sibling(name)
           out.overwrite(prune(targetLines).mkString("\n"))
         }
@@ -80,9 +82,9 @@ object Inspector {
           for {
             issue <- client.getIssue(key)
             result <-
-              if issue.isDone then {
+              if (issue.isDone) {
                 ZIO.succeed(false)
-              } else if issue.inProgress then {
+              } else if (issue.inProgress) {
                 ZIO.succeed(true)
               } else {
                 anyDescendantInProgress(key)
@@ -124,11 +126,11 @@ object Inspector {
               .`with`(LocalTime.MIDNIGHT)
             issue <- client.getIssue(key)
             result <-
-              if issue.isDone then {
+              if (issue.isDone) {
                 ZIO.succeed(false)
-              } else if issue.inProgress &&
-                issue.fields.updated.isAfter(freshLimit)
-              then {
+              } else if (issue.inProgress &&
+                issue.fields.updated.isAfter(freshLimit))
+              {
                 ZIO.succeed(false)
               } else {
                 allDescendantsStale(key, freshLimit)
@@ -174,17 +176,18 @@ object Inspector {
           in: List[String],
           entries: List[String]
       ): (List[String], List[String]) = {
-        in match
+        in match {
           case Nil =>
-            entries match // this is the last section
+            entries match { // this is the last section
               case Nil => (Nil, Nil)
               case nonEmpty if nonEmpty.exists(_.nonEmpty) =>
                 (nonEmpty :+ start, Nil)
               case _ => (Nil, Nil) // entries are just blanks
+            }
           case line :: rest =>
-            line.trim match
+            line.trim match {
               case "" =>
-                entries match
+                entries match {
                   case "" :: _ =>
                     // ignore consecutive blank lines
                     pruneSection(
@@ -195,37 +198,44 @@ object Inspector {
                   case _ =>
                     // keep the first blank in
                     pruneSection(start, rest, "" :: entries)
+                }
               case section if section.startsWith("#") =>
-                if level(section) > level(start) then {
+                if (level(section) > level(start)) {
                   // entering subsection
                   val (subsection, remaining) = pruneSection(section, rest, Nil)
                   pruneSection(start, remaining, subsection ++ entries)
                 } else {
                   // end of section
-                  entries match
+                  entries match {
                     case Nil => (Nil, section :: rest)
                     case nonEmpty if nonEmpty.exists(_.nonEmpty) =>
                       (nonEmpty :+ start, section :: rest)
                     case _ => (Nil, section :: rest) // entries are just blanks
+                  }
                 }
               case _ => pruneSection(start, rest, line :: entries)
+            }
+        }
       }
 
       def doPrune(in: List[String], out: List[String]): List[String] = {
-        in match
+        in match {
           case Nil => out
           case line :: rest =>
-            line.trim match
+            line.trim match {
               case "" =>
-                out match
+                out match {
                   case Nil => doPrune(rest, out) // ignore leading blank lines
                   case "" :: _ =>
                     doPrune(rest, out) // ignore consecutive blanks
                   case _ => doPrune(rest, "" :: out) // keep first blank
+                }
               case section if section.startsWith("#") =>
                 val (subsection, remaining) = pruneSection(section, rest, Nil)
                 doPrune(remaining, subsection ++ out)
               case nonblank => doPrune(rest, nonblank :: out)
+            }
+        }
       }
 
       doPrune(lines, Nil).reverse

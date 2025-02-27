@@ -16,7 +16,7 @@ import zio.http.ZClient
 case class Markdown2Confluence(sourceDir: File, cleanup: Boolean)
     extends ToolCommand {
   override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
-    conf.confluenceConf match
+    conf.confluenceConf match {
       case None => ZIO.fail(new Exception("No confluence config."))
       case Some(confluence) =>
         val md2cConf: md2c.Conf = conf.md2c.getOrElse(md2c.Conf.Empty)
@@ -26,6 +26,7 @@ case class Markdown2Confluence(sourceDir: File, cleanup: Boolean)
           Client.layer(confluence),
           Publisher.layer(md2cConf)
         )
+    }
   }
 
   def doRun(conf: md2c.Conf) = ZIO.logSpan("run") {
@@ -73,9 +74,10 @@ object Markdown2Confluence {
       )
       .map { (c, s) =>
         Markdown2Confluence(
-          sourceDir = s match
+          sourceDir = s match {
             case Nil      => File.currentWorkingDirectory
-            case dir :: _ => dir,
+            case dir :: _ => dir
+          },
           cleanup = c
         )
       }

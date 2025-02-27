@@ -50,19 +50,21 @@ object Client {
         def tailRequests(
             reqs: List[SearchRequest] = Nil
         ): List[SearchRequest] = {
-          val lastRequest = reqs match
+          val lastRequest = reqs match {
             case Nil       => request
             case last :: _ => last
+          }
 
           val nextStart = lastRequest.startAt + lastRequest.maxResults
 
-          if nextStart < head.total then
+          if (nextStart < head.total) {
             val nextRequest = lastRequest.copy(startAt = nextStart)
             tailRequests(nextRequest :: reqs)
+          }
           else reqs
         }
 
-        if head.length < head.total then tailRequests() else Nil
+        if (head.length < head.total) tailRequests() else Nil
       }
 
       ZIO.scoped(ZIO.logSpan("search") {
@@ -159,6 +161,5 @@ object Client {
     } yield {
       LiveImpl(client): Client
     }
-    end for
   }
 }

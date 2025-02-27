@@ -52,10 +52,10 @@ object SourceTree {
     // find the directory containing `.md2c.conf` file
     def sourceRoot(dir: File): Task[(File, SourceConf)] = for {
       confCheck <- SourceConf.get(dir)
-      found <- confCheck match
+      found <- confCheck match {
         case Some(conf) => ZIO.succeed((dir, conf))
         case None =>
-          dir.parentOption match
+          dir.parentOption match {
             case Some(parent) => sourceRoot(parent)
             case None =>
               ZIO.fail(
@@ -63,15 +63,17 @@ object SourceTree {
                   s"No `.md2c.conf` file for $sourceDir or any of its ancestors"
                 )
               )
+          }
+      }
     } yield found
 
     for {
       (root, conf) <-
-        if sourceDir.isDirectory then sourceRoot(sourceDir)
+        if (sourceDir.isDirectory ) sourceRoot(sourceDir)
         else ZIO.fail(new FileNotFoundException(sourceDir.pathAsString))
       node <- ZIO.attemptBlocking {
         def buildNode(path: File): Node = {
-          if path.isDirectory then {
+          if (path.isDirectory ) {
             val name = path.name
             val contentFile: Option[File] = List(
               s"$name.md",
@@ -79,7 +81,7 @@ object SourceTree {
               "index.md"
             ).map(n => path / n).find(_.isRegularFile)
 
-            contentFile match
+            contentFile match {
               case Some(content) =>
                 MarkdownBranch(
                   name,
@@ -101,18 +103,18 @@ object SourceTree {
                     .toList
                     .sortBy(_.name)
                 )
-            end match
+            } // end match
           } else {
-            path.name match
+            path.name match {
               case FileName.Markdown(name) => MarkdownLeaf(name, path)
               case other                   => Data(other, path)
+            }
           }
         }
 
         SourceTree(buildNode(root), conf)
       }
     } yield node
-    end for
   }
 
   val ignores: List[Regex] = List(
@@ -120,9 +122,10 @@ object SourceTree {
   )
 
   def ignored(path: File): Boolean = {
-    ignores.find(_.matches(path.name)) match
+    ignores.find(_.matches(path.name)) match {
       case Some(_) => true
       case None    => false
+    }
   }
 
   object FileName {

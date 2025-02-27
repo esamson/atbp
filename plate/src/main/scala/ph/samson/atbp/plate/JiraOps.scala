@@ -13,7 +13,7 @@ object JiraOps {
     )
 
     def getDescendants(keys: List[String]): Task[List[Issue]] = {
-      keys match
+      keys match {
         case Nil => ZIO.succeed(Nil)
         case parents =>
           ZIO.logSpan("getDescendants") {
@@ -25,10 +25,11 @@ object JiraOps {
               children ++ descendants
             }
           }
+      }
     }
 
     def getChildren(keys: List[String]): Task[List[Issue]] = {
-      keys match
+      keys match {
         case Nil => ZIO.succeed(Nil)
         case parents =>
           ZIO.logSpan("getChildren") {
@@ -36,6 +37,7 @@ object JiraOps {
               children <- client.search(childrenJql(parents))
             } yield children
           }
+      }
     }
   }
 

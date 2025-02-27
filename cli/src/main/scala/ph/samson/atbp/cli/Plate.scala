@@ -27,10 +27,11 @@ object Plate {
 
   private case class Label(source: File, value: String) extends Action {
     override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
-      conf.jiraConf match
+      conf.jiraConf match {
         case None => ZIO.fail(new Exception("No jira config."))
         case Some(jira) =>
           doRun().provide(ZClient.default, Client.layer(jira), Labeler.layer())
+      }
     }
 
     def doRun() = ZIO.logSpan("label") {
@@ -50,19 +51,21 @@ object Plate {
 
   private case class Check(source: File, status: Status) extends Action {
     override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
-      conf.jiraConf match
+      conf.jiraConf match {
         case None => ZIO.fail(new Exception("No jira config."))
         case Some(jira) =>
           val check = for {
             inspector <- ZIO.service[Inspector]
-            result <- status match
+            result <- status match {
               case Check.Cooking => inspector.cooking(source)
               case Check.Stale   => inspector.stale(source)
               case Check.Done    => inspector.done(source)
+            }
             _ <- ZIO.logInfo(s"check result: $result")
           } yield ()
 
           check.provide(ZClient.default, Client.layer(jira), Inspector.layer())
+      }
     }
   }
 

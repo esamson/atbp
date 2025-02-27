@@ -22,11 +22,12 @@ object Main extends ZIOCliDefault {
   val Version = {
     // read version info from JAR manifest
     val pak = Main.getClass.getPackage
-    Option(pak.getImplementationVersion) match
+    Option(pak.getImplementationVersion) match {
       case Some(version) => version
       case None          =>
         // we're running unpackaged
         "(dev)"
+    }
   }
 
   val verbose = Options.boolean("verbose").alias("v") ?? "Print out debug logs."
@@ -74,17 +75,18 @@ object Main extends ZIOCliDefault {
       _ <- toolCommand.run(conf)
     } yield ()
 
-    val logger = if quiet then {
+    val logger = if (quiet ) {
       quietLogger
-    } else if verbose then {
+    } else if (verbose ) {
       verboseLogger
     } else {
       regularLogger
     }
 
     val exitHandler = run.catchSomeCause { case f @ Cause.Fail(throwable, _) =>
-      throwable match
+      throwable match {
         case _: IllegalArgumentException => logAndExit(f, ExitCode(1))
+      }
     }
 
     exitHandler.provide(logger)

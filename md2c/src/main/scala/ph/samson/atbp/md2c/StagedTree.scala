@@ -41,7 +41,7 @@ object StagedTree {
         case head :: next =>
           head match {
             case heading: Heading =>
-              if (heading.level() == 1 && heading.toPlainText == title )
+              if (heading.level() == 1 && heading.toPlainText == title)
                 copy(adf = Doc.doc(next.asJava)).trimmedTitle
               else this
             case _ => this

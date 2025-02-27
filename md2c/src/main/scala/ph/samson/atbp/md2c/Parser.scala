@@ -53,9 +53,9 @@ object Parser {
   }
 
   def splitFrontMatter(content: String): (String, String) = {
-    if (content.startsWith(Delimiter) ) {
+    if (content.startsWith(Delimiter)) {
       val endPos = content.indexOf(Delimiter, Delimiter.length)
-      if (endPos == -1 ) {
+      if (endPos == -1) {
         "" -> content
       } else {
         content.substring(Delimiter.length, endPos).trim ->

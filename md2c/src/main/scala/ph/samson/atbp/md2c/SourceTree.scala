@@ -69,11 +69,11 @@ object SourceTree {
 
     for {
       (root, conf) <-
-        if (sourceDir.isDirectory ) sourceRoot(sourceDir)
+        if (sourceDir.isDirectory) sourceRoot(sourceDir)
         else ZIO.fail(new FileNotFoundException(sourceDir.pathAsString))
       node <- ZIO.attemptBlocking {
         def buildNode(path: File): Node = {
-          if (path.isDirectory ) {
+          if (path.isDirectory) {
             val name = path.name
             val contentFile: Option[File] = List(
               s"$name.md",

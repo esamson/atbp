@@ -32,7 +32,7 @@ object PlantUml {
       .map { (codeBlock, index) =>
         val source = codeBlock.toPlainText
         val plantuml =
-          if (source.trim.startsWith("@start") ) source
+          if (source.trim.startsWith("@start")) source
           else s"""@startuml
                   |$source
                   |@enduml""".stripMargin
@@ -40,8 +40,8 @@ object PlantUml {
         val fileFormat = codeBlock
           .language()
           .map(l =>
-            if (l.contains(".svg") ) FileFormat.SVG
-            else if (l.contains(".png") ) FileFormat.PNG
+            if (l.contains(".svg")) FileFormat.SVG
+            else if (l.contains(".png")) FileFormat.PNG
             else FileFormat.SVG
           )
           .orElse(FileFormat.SVG)
@@ -66,7 +66,7 @@ object PlantUml {
   def transform(adf: Doc): Task[Doc] = {
     def transformer(renders: Map[String, File]): DocContent => DocContent = {
       case codeBlock: CodeBlock =>
-        if (codeBlock.language().orElse("").startsWith("plantuml") ) {
+        if (codeBlock.language().orElse("").startsWith("plantuml")) {
           val source = codeBlock.toPlainText
           val path = renders(source).pathAsString
           mediaSingle(RichMedia.Layout.FULL_WIDTH, externalMedia(path))

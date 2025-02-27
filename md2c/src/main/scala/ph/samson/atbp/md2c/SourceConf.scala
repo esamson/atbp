@@ -25,7 +25,7 @@ object SourceConf {
   val Descriptor: Config[SourceConf] = deriveConfig[SourceConf]
 
   def get(sourceDir: File): Task[Option[SourceConf]] =
-    if ((sourceDir / FileName).isRegularFile )
+    if ((sourceDir / FileName).isRegularFile)
       for {
         source <- ConfigProvider.fromHoconFileZIO((sourceDir / FileName).toJava)
         conf <- source.load(Descriptor)
@@ -37,7 +37,7 @@ object SourceConf {
   )
 
   def of(sourceTree: SourceTree): Task[SourceConf] = {
-    val sourceDir = if (sourceTree.root.source.isDirectory ) {
+    val sourceDir = if (sourceTree.root.source.isDirectory) {
       sourceTree.root.source
     } else {
       sourceTree.root.source.parent

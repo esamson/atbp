@@ -75,9 +75,9 @@ object Main extends ZIOCliDefault {
       _ <- toolCommand.run(conf)
     } yield ()
 
-    val logger = if (quiet ) {
+    val logger = if (quiet) {
       quietLogger
-    } else if (verbose ) {
+    } else if (verbose) {
       verboseLogger
     } else {
       regularLogger

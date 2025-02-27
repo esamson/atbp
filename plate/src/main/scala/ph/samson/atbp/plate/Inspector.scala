@@ -128,9 +128,10 @@ object Inspector {
             result <-
               if (issue.isDone) {
                 ZIO.succeed(false)
-              } else if (issue.inProgress &&
-                issue.fields.updated.isAfter(freshLimit))
-              {
+              } else if (
+                issue.inProgress &&
+                issue.fields.updated.isAfter(freshLimit)
+              ) {
                 ZIO.succeed(false)
               } else {
                 allDescendantsStale(key, freshLimit)

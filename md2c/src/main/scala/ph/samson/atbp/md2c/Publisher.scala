@@ -39,8 +39,7 @@ object Publisher {
           given Space <- client.getSpace(finalConf.spaceKey)
           rootPage <- client.getPage(finalConf.pageId)
           baseDir =
-            if (staged.root.source.isDirectory
-            ) staged.root.source
+            if (staged.root.source.isDirectory) staged.root.source
             else staged.root.source.parent
           published <- publishPage(staged.root, rootPage, baseDir)
         } yield published
@@ -71,7 +70,7 @@ object Publisher {
         space: Space
     ): Task[PageSingle] = {
       val sourceName =
-        if (baseDir == page.source ) baseDir.name
+        if (baseDir == page.source) baseDir.name
         else baseDir.relativize(page.source)
       val publish = for {
         currentChildren <- client.getChildPages(current.id)
@@ -89,8 +88,8 @@ object Publisher {
         needsUpdate =
           current.version.message != page.contentHash || !attachmentsAreUpToDate
         published <- {
-          if (current.isDraft || needsUpdate
-          ) updatePage(current, page.trimmedTitle, currentAttachments)
+          if (current.isDraft || needsUpdate)
+            updatePage(current, page.trimmedTitle, currentAttachments)
           else
             ZIO.logInfo(
               s"up to date: $sourceName -> ${client.resolveUrl(current._links.tinyui)}"
@@ -98,8 +97,8 @@ object Publisher {
         }
 
         _ <-
-          if (needsUpdate ) {
-            if (current.isDraft ) {
+          if (needsUpdate) {
+            if (current.isDraft) {
               ZIO.logInfo(
                 s"published: $sourceName -> ${client.resolveUrl(published._links.tinyui)}"
               )
@@ -154,7 +153,7 @@ object Publisher {
     }
 
     def mediaFiles(doc: Doc, source: File): Map[String, File] = {
-      val base = if (source.isDirectory ) source else source.parent
+      val base = if (source.isDirectory) source else source.parent
 
       // the urls in the media nodes point to the files to be attached
       val externalUrls = doc
@@ -168,7 +167,7 @@ object Publisher {
         url <- externalUrls
       } yield {
         val path = Paths.get(url)
-        if (path.isAbsolute ) {
+        if (path.isAbsolute) {
           url -> File(path)
         } else {
           url -> File(base.path.resolve(path))
@@ -190,8 +189,8 @@ object Publisher {
         } yield {
           currentAttachments.find(_.title == file.name) match {
             case Some(attachment) =>
-              if (attachment.comment == file.sha1
-              ) ZIO.succeed(url -> (attachment.fileId, attachment.id))
+              if (attachment.comment == file.sha1)
+                ZIO.succeed(url -> (attachment.fileId, attachment.id))
               else
                 for {
                   attach <- client.createOrUpdateAttachment(current, file)

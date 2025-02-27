@@ -33,7 +33,7 @@ object UpdatePageRequest {
       page.body.storage.map(_.representation).getOrElse("storage"),
       page.body.storage.map(_.value).getOrElse("EMPTY")
     ),
-    version = if (page.status == "draft" ) {
+    version = if (page.status == "draft") {
       Version(1, Some(message))
     } else {
       Version(page.version.number + 1, Some(message))

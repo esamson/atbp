@@ -60,8 +60,7 @@ object Client {
           if (nextStart < head.total) {
             val nextRequest = lastRequest.copy(startAt = nextStart)
             tailRequests(nextRequest :: reqs)
-          }
-          else reqs
+          } else reqs
         }
 
         if (head.length < head.total) tailRequests() else Nil

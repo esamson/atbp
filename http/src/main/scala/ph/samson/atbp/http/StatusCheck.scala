@@ -9,9 +9,7 @@ import zio.http.*
 
 object StatusCheck {
 
-  def successOnly(
-      shouldRetry: Status => Boolean = _.isServerError
-  ): ZClientAspect[
+  def successOnly(): ZClientAspect[
     Nothing,
     Any,
     Nothing,
@@ -20,7 +18,7 @@ object StatusCheck {
     Any,
     Nothing,
     Response
-  ] = statusCheck(_.isSuccess, shouldRetry)
+  ] = statusCheck(accept = _.isSuccess, shouldRetry = _.isServerError)
 
   def statusCheck(
       accept: Status => Boolean,

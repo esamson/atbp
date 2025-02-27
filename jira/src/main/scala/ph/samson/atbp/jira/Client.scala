@@ -48,7 +48,7 @@ object Client {
       def tail(head: SearchResults): List[SearchRequest] = {
 
         def tailRequests(
-            reqs: List[SearchRequest] = Nil
+            reqs: List[SearchRequest]
         ): List[SearchRequest] = {
           val lastRequest = reqs match {
             case Nil       => request
@@ -63,7 +63,7 @@ object Client {
           } else reqs
         }
 
-        if (head.length < head.total) tailRequests() else Nil
+        if (head.length < head.total) tailRequests(Nil) else Nil
       }
 
       ZIO.scoped(ZIO.logSpan("search") {

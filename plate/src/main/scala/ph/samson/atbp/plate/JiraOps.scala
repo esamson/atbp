@@ -46,6 +46,16 @@ object JiraOps {
       issue.fields.status.statusCategory.name == "In Progress"
 
     def isDone: Boolean = issue.fields.status.statusCategory.name == "Done"
+
+    def projectKey: String = issue.key.substring(0, issue.key.indexOf('-'))
+
+    def webUrl = {
+      val base = issue.self.substring(
+        0,
+        issue.self.indexOf('/', "https://".length)
+      )
+      s"$base/browse/${issue.key}"
+    }
   }
 
   private def childrenJql(keys: List[String]) =

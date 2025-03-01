@@ -2,10 +2,15 @@ package ph.samson.atbp.plate
 
 import better.files.File
 import ph.samson.atbp.jira.Client
+import ph.samson.atbp.jira.model.Issue
 import ph.samson.atbp.plate.Inspector.JiraLink
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
+import scala.annotation.tailrec
+
+import JiraOps.*
 
 trait RadarScanner {
 
@@ -50,12 +55,93 @@ object RadarScanner {
         .toList
 
       for {
-        _ <- ZIO.logInfo(s"keys:\n  ${plateKeys.sorted.mkString("\n  ")}")
         _ <- ZIO.logInfo(s"projects:\n  ${projects.sorted.mkString("\n  ")}")
-      } yield Nil
+        descendants <- client.getDescendants(plateKeys)
+        _ <- ZIO.logDebug(s"descendants: ${descendants.length}")
+        updated <- client.search(
+          updatedJql(projects, plateKeys ++ descendants.map(_.key))
+        )
+        _ <- ZIO.logDebug(s"updated: ${updated.length}")
+        collapsed = collapse(updated)
+        summary = collapsed.groupBy(_.projectKey).map { case (key, issues) =>
+          s"$key -> ${issues.length}"
+        }
+        _ <- ZIO.logInfo(
+          s"New items on the radar: ${collapsed.length}\n  ${summary.toList.sorted.mkString("\n  ")}"
+        )
+      } yield format(collapsed)
     }
 
   }
+
+  private def format(issues: List[Issue]) = {
+
+    def formatIssue(issue: Issue) =
+      s"* [${issue.fields.summary}](${issue.webUrl})"
+
+    def doFormat(
+        remaining: List[Issue],
+        project: String,
+        result: List[String]
+    ): List[String] = {
+      remaining match {
+        case Nil => result.reverse
+        case head :: next =>
+          if (head.projectKey == project) {
+            doFormat(next, project, formatIssue(head) :: result)
+          } else {
+            if (result.isEmpty) {
+              // Start of the document
+              doFormat(
+                remaining,
+                head.projectKey,
+                s"## ${head.projectKey}" :: "" :: result
+              )
+            } else {
+              // Start of project section
+              doFormat(
+                remaining,
+                head.projectKey,
+                "" :: s"## ${head.projectKey}" :: "" :: result
+              )
+            }
+          }
+      }
+    }
+
+    doFormat(issues.sortBy(_.key), "", Nil)
+  }
+
+  /** Reduce list of issues to only the top-level items */
+  private def collapse(issues: List[Issue]) = {
+    val keys = issues.map(_.key).toSet
+
+    @tailrec
+    def doCollapse(remaining: List[Issue], result: List[Issue]): List[Issue] = {
+      remaining match {
+        case Nil => result
+        case head :: next =>
+          head.fields.parent match {
+            case None => doCollapse(next, head :: result)
+            case Some(parent) =>
+              if (keys.contains(parent.key)) {
+                doCollapse(next, result)
+              } else {
+                doCollapse(next, head :: result)
+              }
+          }
+      }
+    }
+
+    doCollapse(issues, Nil)
+  }
+
+  private def updatedJql(projects: List[String], excludeKeys: List[String]) =
+    s"""project IN (${projects.mkString(",")})
+       |  AND statusCategory != Done
+       |  AND updated >= -2w
+       |  AND key NOT IN (${excludeKeys.mkString(",")})
+       |""".stripMargin.trim
 
   def layer() = ZLayer {
     for {

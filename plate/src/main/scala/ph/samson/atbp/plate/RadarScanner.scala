@@ -26,7 +26,9 @@ object RadarScanner {
     def scan(source: File, excludeProjects: List[String]): Task[File] =
       ZIO.logSpan("scan") {
         for {
-          _ <- ZIO.logInfo(s"scan $source; excluding: ${excludeProjects.mkString(", ")}")
+          _ <- ZIO.logInfo(
+            s"scan $source; excluding: ${excludeProjects.mkString(", ")}"
+          )
           sourceLines <- ZIO.attemptBlockingIO(source.lines.toList)
           outputLines <- doScan(sourceLines, excludeProjects)
           outFile <- ZIO.attemptBlockingIO {

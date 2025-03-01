@@ -26,9 +26,9 @@ object RadarScanner {
     def scan(source: File, excludeProjects: List[String]): Task[File] =
       ZIO.logSpan("scan") {
         for {
+          _ <- ZIO.logInfo(s"scan $source; excluding: ${excludeProjects.mkString(", ")}")
           sourceLines <- ZIO.attemptBlockingIO(source.lines.toList)
           outputLines <- doScan(sourceLines, excludeProjects)
-          _ <- ZIO.logInfo(s"scan $source, excluding $excludeProjects")
           outFile <- ZIO.attemptBlockingIO {
             val name = source.`extension`() match {
               case Some(ext) =>
@@ -56,12 +56,23 @@ object RadarScanner {
 
       for {
         _ <- ZIO.logInfo(s"projects:\n  ${projects.sorted.mkString("\n  ")}")
-        descendants <- client.getDescendants(plateKeys)
+
+        (descendants, ancestors) <- client
+          .getDescendants(plateKeys)
+          .zipPar(
+            client.getAncestors(plateKeys)
+          )
         _ <- ZIO.logDebug(s"descendants: ${descendants.length}")
+        _ <- ZIO.logDebug(s"ancestors: ${ancestors.length}")
+
         updated <- client.search(
-          updatedJql(projects, plateKeys ++ descendants.map(_.key))
+          updatedJql(
+            projects,
+            plateKeys ++ descendants.map(_.key) ++ ancestors.map(_.key)
+          )
         )
         _ <- ZIO.logDebug(s"updated: ${updated.length}")
+
         collapsed = collapse(updated)
         summary = collapsed.groupBy(_.projectKey).map { case (key, issues) =>
           s"$key -> ${issues.length}"

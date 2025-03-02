@@ -23,10 +23,10 @@ object Main extends ZIOCliDefault {
     // read version info from JAR manifest
     val pak = Main.getClass.getPackage
     Option(pak.getImplementationVersion) match {
-      case Some(version) => version
+      case Some(version) => s" v$version"
       case None          =>
         // we're running unpackaged
-        "(dev)"
+        " (dev)"
     }
   }
 

@@ -10,6 +10,9 @@ import zio.ZIO
 import zio.cli.Args
 import zio.cli.Command
 import zio.cli.Exists.Yes
+import zio.cli.HelpDoc.blocks
+import zio.cli.HelpDoc.h2
+import zio.cli.HelpDoc.p
 import zio.cli.Options
 import zio.http.ZClient
 
@@ -119,6 +122,12 @@ object Plate {
 
   val command: Command[Plate] =
     Command("plate")
+      .withHelp(
+        blocks(
+          h2("Plate Tools"),
+          p("Tools for managing The Plate.")
+        )
+      )
       .subcommands(Label.command, Check.command, Radar.command)
       .map(Plate.apply)
 }

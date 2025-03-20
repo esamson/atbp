@@ -120,6 +120,27 @@ object Plate {
     }
   }
 
+  private case class Sort(source: File) extends Action {
+    override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
+      conf.jiraConf match {
+        case None => ZIO.fail(new Exception("No jira config."))
+        case Some(jira) =>
+          doRun().provide(ZClient.default, Client.layer(jira), Labeler.layer())
+      }
+    }
+
+    def doRun() = ZIO.logSpan("label") {
+      for {
+        labeler <- ZIO.service[Labeler]
+        _ <- labeler.label(source, ???)
+      } yield ()
+    }
+  }
+
+  private object Sort {
+    val command = Command("sort", source).map(s => Sort(s))
+  }
+
   val command: Command[Plate] =
     Command("plate")
       .withHelp(
@@ -128,6 +149,6 @@ object Plate {
           p("Tools for managing The Plate.")
         )
       )
-      .subcommands(Label.command, Check.command, Radar.command)
+      .subcommands(Label.command, Check.command, Radar.command, Sort.command)
       .map(Plate.apply)
 }

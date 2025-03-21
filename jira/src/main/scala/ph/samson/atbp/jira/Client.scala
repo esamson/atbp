@@ -3,6 +3,7 @@ package ph.samson.atbp.jira
 import ph.samson.atbp.http.StatusCheck
 import ph.samson.atbp.jira.model.EditIssueRequest
 import ph.samson.atbp.jira.model.Issue
+import ph.samson.atbp.jira.model.RankIssuesRequest
 import ph.samson.atbp.jira.model.SearchRequest
 import ph.samson.atbp.jira.model.SearchResults
 import zio.LogLevel
@@ -30,17 +31,28 @@ import zio.http.ZClientAspect
   *
   * @see
   *   https://developer.atlassian.com/cloud/jira/platform/rest/
+  * @see
+  *   https://developer.atlassian.com/cloud/jira/software/rest/
   */
 trait Client {
   def getIssue(key: String): Task[Issue]
   def search(jql: String): Task[List[Issue]]
   def addLabel(key: String, label: String): Task[Unit]
   def removeLabel(key: String, label: String): Task[Unit]
+  def rankIssues(
+      keys: List[String],
+      after: Option[String],
+      before: Option[String],
+      rankCustomFieldId: Option[Int]
+  ): Task[Unit]
 }
 
 object Client {
 
   private class LiveImpl(client: HttpClient) extends Client {
+
+    val platformClient = client.addPath("/rest/api/3")
+    val softwareClient = client.addPath("/rest/agile/1.0")
 
     override def search(jql: String): Task[List[Issue]] = {
       val request = SearchRequest(jql, Issue.FieldNames, maxResults = 100)
@@ -87,7 +99,7 @@ object Client {
         _ <- ZIO.logDebug(
           s"Requesting ${request.startAt + 1} to ${request.startAt + request.maxResults}"
         )
-        res <- client
+        res <- platformClient
           .addHeader(ContentType(MediaType.application.json))
           .post("/search")(Body.from(request))
         results <- res.body.to[SearchResults]
@@ -102,7 +114,7 @@ object Client {
     override def getIssue(key: String): Task[Issue] =
       ZIO.scoped(ZIO.logSpan(s"getIssue($key)") {
         for {
-          response <- client.addPath("issue").get(key)
+          response <- platformClient.addPath("issue").get(key)
           result <- response.body.to[Issue]
         } yield result
       })
@@ -110,7 +122,7 @@ object Client {
     override def addLabel(key: String, label: String): Task[Unit] =
       ZIO.scoped(ZIO.logSpan("addLabel") {
         for {
-          _ <- client
+          _ <- platformClient
             .addHeader(ContentType(MediaType.application.json))
             .addPath("issue")
             .put(key)(Body.from(EditIssueRequest.addLabel(label)))
@@ -120,12 +132,28 @@ object Client {
     override def removeLabel(key: String, label: String): Task[Unit] =
       ZIO.scoped(ZIO.logSpan("removeLabel") {
         for {
-          _ <- client
+          _ <- platformClient
             .addHeader(ContentType(MediaType.application.json))
             .addPath("issue")
             .put(key)(Body.from(EditIssueRequest.removeLabel(label)))
         } yield ()
       })
+
+    override def rankIssues(
+        keys: List[String],
+        after: Option[String],
+        before: Option[String],
+        rankCustomFieldId: Option[Int]
+    ): Task[Unit] = ZIO.scoped(ZIO.logSpan("rankIssues") {
+      for {
+        _ <- softwareClient
+          .addHeader(ContentType(MediaType.application.json))
+          .addPath("issue")
+          .put("rank")(
+            Body.from(RankIssuesRequest(keys, after, before, rankCustomFieldId))
+          )
+      } yield ()
+    })
   }
 
   def layer(conf: Conf) = ZLayer {
@@ -151,7 +179,7 @@ object Client {
         Authorization.Basic(conf.user, conf.token),
         Accept(MediaType.application.json)
       )
-      url <- ZIO.fromEither(URL.decode(s"https://${conf.site}/rest/api/3"))
+      url <- ZIO.fromEither(URL.decode(s"https://${conf.site}"))
       client <- ZIO.serviceWith[HttpClient](
         _.addHeaders(headers).url(
           url

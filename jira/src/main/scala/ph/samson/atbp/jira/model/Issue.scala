@@ -115,7 +115,7 @@ object Issue {
     case class Fields(
         summary: String,
         status: Status,
-        priority: Priority,
+        priority: Option[Priority],
         issuetype: IssueType
     )
   }

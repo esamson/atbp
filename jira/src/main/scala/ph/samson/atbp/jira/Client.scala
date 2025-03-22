@@ -39,10 +39,14 @@ trait Client {
   def search(jql: String): Task[List[Issue]]
   def addLabel(key: String, label: String): Task[Unit]
   def removeLabel(key: String, label: String): Task[Unit]
-  def rankIssues(
-      keys: List[String],
-      after: Option[String],
-      before: Option[String],
+  def rankIssuesBefore(
+      issues: List[String],
+      reference: String,
+      rankCustomFieldId: Option[Int]
+  ): Task[Unit]
+  def rankIssuesAfter(
+      issues: List[String],
+      reference: String,
       rankCustomFieldId: Option[Int]
   ): Task[Unit]
 }
@@ -139,12 +143,12 @@ object Client {
         } yield ()
       })
 
-    override def rankIssues(
+    private def rankIssues(
         keys: List[String],
         after: Option[String],
         before: Option[String],
         rankCustomFieldId: Option[Int]
-    ): Task[Unit] = ZIO.scoped(ZIO.logSpan("rankIssues") {
+    ) = ZIO.scoped(
       for {
         _ <- softwareClient
           .addHeader(ContentType(MediaType.application.json))
@@ -153,7 +157,22 @@ object Client {
             Body.from(RankIssuesRequest(keys, after, before, rankCustomFieldId))
           )
       } yield ()
-    })
+    )
+
+    override def rankIssuesBefore(
+        issues: List[String],
+        reference: String,
+        rankCustomFieldId: Option[Int]
+    ): Task[Unit] = ZIO.logSpan("rankIssuesBefore")(
+      rankIssues(issues, None, Some(reference), rankCustomFieldId)
+    )
+    override def rankIssuesAfter(
+        issues: List[String],
+        reference: String,
+        rankCustomFieldId: Option[Int]
+    ): Task[Unit] = ZIO.logSpan("rankIssuesAfter")(
+      rankIssues(issues, Some(reference), None, rankCustomFieldId)
+    )
   }
 
   def layer(conf: Conf) = ZLayer {

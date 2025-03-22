@@ -21,6 +21,19 @@ object ClientLiveImplSpec extends JiraSpec {
       } yield result
 
       for (s <- Live.live(search).exit) yield assertTrue(s.isSuccess)
+    },
+    test("rankIssues") {
+      val search = for {
+        client <- ZIO.service[Client]
+        result <- client.rankIssuesBefore(
+          List("AAT-146", "AAT-155", "AAT-41"),
+          "AAT-212",
+          None
+        )
+        _ <- ZIO.log(s"result\n${pprint(result)}")
+      } yield result
+
+      for (s <- Live.live(search).exit) yield assertTrue(s.isSuccess)
     }
   ) @@ ifEnv(EnvVars.Site)(!_.isBlank)
     @@ ifEnv(EnvVars.User)(!_.isBlank)

@@ -166,6 +166,7 @@ object Client {
     ): Task[Unit] = ZIO.logSpan("rankIssuesBefore")(
       rankIssues(issues, None, Some(reference), rankCustomFieldId)
     )
+
     override def rankIssuesAfter(
         issues: List[String],
         reference: String,

@@ -2,11 +2,14 @@ package ph.samson.atbp.plate
 
 import better.files.File
 import ph.samson.atbp.jira.Client
+import ph.samson.atbp.jira.model.Issue
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
+
+import scala.annotation.tailrec
+
 import JiraOps.*
-import ph.samson.atbp.jira.model.Issue
 
 trait Sorter {
   def sort(source: File): Task[Unit]
@@ -33,21 +36,25 @@ object Sorter {
       } yield ()
     }
 
-    private def sort(sourceKeys: List[String], sourceIssues: List[Issue],
-                     ancestors: List[Issue]): Task[Unit] = {
+    private def sort(
+        sourceKeys: List[String],
+        sourceIssues: List[Issue],
+        ancestors: List[Issue]
+    ): Task[Unit] = {
       val levels = sourceIssues.map(_.fields.issuetype.hierarchyLevel).distinct
       val lookup = (sourceIssues ++ ancestors).map(i => i.key -> i).toMap
 
-      def atLevel( level: Int)(issue: Issue): Task[List[Issue]] = {
+      def atLevel(level: Int)(issue: Issue): Task[List[Issue]] = {
         if (issue.fields.issuetype.hierarchyLevel < level) {
           issue.fields.parent match {
             case None => ZIO.succeed(Nil)
-            case Some(p) => for {
-              parent <- client.getIssue(p.key)
-              leveled <- atLevel( level)(parent)
-            } yield {
-              leveled
-            }
+            case Some(p) =>
+              for {
+                parent <- client.getIssue(p.key)
+                leveled <- atLevel(level)(parent)
+              } yield {
+                leveled
+              }
           }
         } else if (issue.fields.issuetype.hierarchyLevel > level) {
           for {
@@ -61,31 +68,37 @@ object Sorter {
         }
       }
 
-      def sourceAtLevel(level: Int): Task[List[Issue]] = ZIO.logSpan(s"sourceAtLevel $level") {
-        for {
-          issues <- ZIO.foreachPar(sourceKeys.map(lookup))(atLevel(level))
-        } yield {
-          issues.flatten
+      def sourceAtLevel(level: Int): Task[List[Issue]] =
+        ZIO.logSpan(s"sourceAtLevel $level") {
+          for {
+            issues <- ZIO.foreachPar(sourceKeys.map(lookup))(atLevel(level))
+          } yield {
+            issues.flatten
+          }
         }
-      }
 
+      @tailrec
       def doSort(level: Int, sorts: List[Task[Unit]]): List[Task[Unit]] = {
         if (level <= levels.max) {
-          val levelSort = for {
-            issues <- sourceAtLevel(level)
-            levelKeys = issues.map(_.key)
-            groups = levelKeys.distinct
-              .grouped(51)
-              .toList // 50 issues to sort + 1 reference issue
-            _ <- rerank(groups)
-          } yield ()
+          val levelSort = ZIO.logSpan(s"doSort $level") {
+            for {
+              issues <- sourceAtLevel(level)
+              levelKeys = issues.map(_.key)
+              groups = levelKeys.distinct
+                .grouped(51)
+                .toList // 50 issues to sort + 1 reference issue
+              _ <- rerank(groups)
+            } yield ()
+          }
           doSort(level + 1, levelSort :: sorts)
         } else {
           sorts
         }
       }
 
-      ZIO.collectAllParDiscard( doSort(levels.min, Nil) )
+      ZIO.logSpan("sort") {
+        ZIO.collectAllParDiscard(doSort(levels.min, Nil))
+      }
     }
 
     def rerank(groups: List[List[String]]): Task[Unit] = {

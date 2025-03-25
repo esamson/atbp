@@ -23,15 +23,14 @@ object Sorter {
     override def sort(source: File): Task[Unit] = ZIO.logSpan("sort") {
       for {
         content <- ZIO.attemptBlockingIO(source.contentAsString)
-        sourceKeys = JiraKey.findAllMatchIn(content).map(_.group(1)).toList
-        _ <- ZIO.logInfo(
-          s"keys: ${sourceKeys.length}, ${sourceKeys.distinct.length}"
-        )
-        (sourceIssues, ancestors) <-
+        sourceKeys = JiraKey.findAllMatchIn(content).map(_.group(1)).toList.distinct
+        _ <- ZIO.logInfo( s"Sorting ${sourceKeys.length} keys from $source" )
+        (sourceIssues, ancestors, descendants) <-
           client.getIssues(sourceKeys) <&>
-            client.getAncestors(sourceKeys)
+            client.getAncestors(sourceKeys) <&>
+            client.getDescendants(sourceKeys)
 
-        _ <- sort(sourceKeys, sourceIssues, ancestors)
+        _ <- sort(sourceKeys, sourceIssues, ancestors, descendants)
 
       } yield ()
     }
@@ -39,55 +38,68 @@ object Sorter {
     private def sort(
         sourceKeys: List[String],
         sourceIssues: List[Issue],
-        ancestors: List[Issue]
+        ancestors: List[Issue],
+        descendants: List[Issue]
     ): Task[Unit] = {
       val levels = sourceIssues.map(_.fields.issuetype.hierarchyLevel).distinct
-      val lookup = (sourceIssues ++ ancestors).map(i => i.key -> i).toMap
+      val lookup = (sourceIssues ++ ancestors ++ descendants).map(i => i.key -> i).toMap
 
-      def atLevel(level: Int)(issue: Issue): Task[List[Issue]] = {
-        if (issue.fields.issuetype.hierarchyLevel < level) {
+      def getChildren(issue: Issue) = descendants.filter(_.fields.parent.exists(_.key == issue.key))
+
+      def atLevel(level: Int)(issue: Issue): List[Issue] = {
+        val issueLevel = issue.fields.issuetype.hierarchyLevel
+        if (issueLevel < level) {
           issue.fields.parent match {
-            case None => ZIO.succeed(Nil)
+            case None => Nil
             case Some(p) =>
-              for {
-                parent <- client.getIssue(p.key)
-                leveled <- atLevel(level)(parent)
-              } yield {
-                leveled
+              val parent = lookup(p.key)
+              // limit to only one level up
+              // otherwise, we'd loop infinitely below and above the target level
+              if (parent.fields.issuetype.hierarchyLevel == issueLevel + 1) {
+                atLevel(level)(parent)
+              } else {
+                Nil
               }
           }
-        } else if (issue.fields.issuetype.hierarchyLevel > level) {
+        } else if (issueLevel > level) {
           for {
-            children <- client.getChildren(issue.key)
-            leveled <- ZIO.foreachPar(children)(atLevel(level))
+            child <- getChildren(issue)
+            // limit to only one level down
+            // otherwise, we'd loop infinitely below and above the target level
+            if child.fields.issuetype.hierarchyLevel == issueLevel - 1
+            leveled <- atLevel(level)(child)
           } yield {
-            leveled.flatten
+            leveled
           }
         } else {
-          ZIO.succeed(List(issue))
+          List(issue)
         }
       }
 
-      def sourceAtLevel(level: Int): Task[List[Issue]] =
-        ZIO.logSpan(s"sourceAtLevel $level") {
+      def sourceAtLevel(level: Int): List[Issue] =
           for {
-            issues <- ZIO.foreachPar(sourceKeys.map(lookup))(atLevel(level))
+            issue <- sourceKeys.map(lookup)
+            leveled <- atLevel(level)(issue)
           } yield {
-            issues.flatten
+            leveled
           }
-        }
 
       @tailrec
       def doSort(level: Int, sorts: List[Task[Unit]]): List[Task[Unit]] = {
         if (level <= levels.max) {
           val levelSort = ZIO.logSpan(s"doSort $level") {
             for {
-              issues <- sourceAtLevel(level)
+              _ <- ZIO.logInfo(s"sorting at level $level")
+              issues = sourceAtLevel(level)
+              _ <- ZIO.attempt(require(issues.forall(_.fields.issuetype.hierarchyLevel == level)))
+              _ <- ZIO.logInfo(s"${issues.length} to be sorted at level $level")
               levelKeys = issues.map(_.key)
               groups = levelKeys.distinct
                 .grouped(51)
                 .toList // 50 issues to sort + 1 reference issue
+              _ <- ZIO.logInfo(s"reranking level $level")
               _ <- rerank(groups)
+              _ <- ZIO.logInfo(s"sorted level $level")
             } yield ()
           }
           doSort(level + 1, levelSort :: sorts)

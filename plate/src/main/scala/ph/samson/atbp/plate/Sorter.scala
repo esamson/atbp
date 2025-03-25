@@ -102,11 +102,11 @@ object Sorter {
                   issues.forall(_.fields.issuetype.hierarchyLevel == level)
                 )
               )
+              levelKeys = issues.map(_.key).distinct
               _ <- ZIO.logInfo(
-                s"${issues.length} to be sorted at level $level.\n${issues.mkString("\n")}"
+                s"${levelKeys.length} to be sorted at level $level.\n${levelKeys.mkString("\n")}"
               )
-              levelKeys = issues.map(_.key)
-              groups = levelKeys.distinct
+              groups = levelKeys
                 .grouped(51)
                 .toList // 50 issues to sort + 1 reference issue
               _ <- ZIO.logInfo(s"reranking level $level")

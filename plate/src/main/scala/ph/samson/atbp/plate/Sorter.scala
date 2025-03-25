@@ -23,8 +23,12 @@ object Sorter {
     override def sort(source: File): Task[Unit] = ZIO.logSpan("sort") {
       for {
         content <- ZIO.attemptBlockingIO(source.contentAsString)
-        sourceKeys = JiraKey.findAllMatchIn(content).map(_.group(1)).toList.distinct
-        _ <- ZIO.logInfo( s"Sorting ${sourceKeys.length} keys from $source" )
+        sourceKeys = JiraKey
+          .findAllMatchIn(content)
+          .map(_.group(1))
+          .toList
+          .distinct
+        _ <- ZIO.logInfo(s"Sorting ${sourceKeys.length} keys from $source")
         (sourceIssues, ancestors, descendants) <-
           client.getIssues(sourceKeys) <&>
             client.getAncestors(sourceKeys) <&>
@@ -42,9 +46,11 @@ object Sorter {
         descendants: List[Issue]
     ): Task[Unit] = {
       val levels = sourceIssues.map(_.fields.issuetype.hierarchyLevel).distinct
-      val lookup = (sourceIssues ++ ancestors ++ descendants).map(i => i.key -> i).toMap
+      val lookup =
+        (sourceIssues ++ ancestors ++ descendants).map(i => i.key -> i).toMap
 
-      def getChildren(issue: Issue) = descendants.filter(_.fields.parent.exists(_.key == issue.key))
+      def getChildren(issue: Issue) =
+        descendants.filter(_.fields.parent.exists(_.key == issue.key))
 
       def atLevel(level: Int)(issue: Issue): List[Issue] = {
         val issueLevel = issue.fields.issuetype.hierarchyLevel
@@ -77,12 +83,12 @@ object Sorter {
       }
 
       def sourceAtLevel(level: Int): List[Issue] =
-          for {
-            issue <- sourceKeys.map(lookup)
-            leveled <- atLevel(level)(issue)
-          } yield {
-            leveled
-          }
+        for {
+          issue <- sourceKeys.map(lookup)
+          leveled <- atLevel(level)(issue)
+        } yield {
+          leveled
+        }
 
       @tailrec
       def doSort(level: Int, sorts: List[Task[Unit]]): List[Task[Unit]] = {
@@ -91,8 +97,14 @@ object Sorter {
             for {
               _ <- ZIO.logInfo(s"sorting at level $level")
               issues = sourceAtLevel(level)
-              _ <- ZIO.attempt(require(issues.forall(_.fields.issuetype.hierarchyLevel == level)))
-              _ <- ZIO.logInfo(s"${issues.length} to be sorted at level $level")
+              _ <- ZIO.attempt(
+                require(
+                  issues.forall(_.fields.issuetype.hierarchyLevel == level)
+                )
+              )
+              _ <- ZIO.logInfo(
+                s"${issues.length} to be sorted at level $level.\n${issues.mkString("\n")}"
+              )
               levelKeys = issues.map(_.key)
               groups = levelKeys.distinct
                 .grouped(51)

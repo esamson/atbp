@@ -133,19 +133,23 @@ object Sorter {
         group.reverse match {
           case Nil => ZIO.none
           case last :: previous =>
-            for {
-              _ <- beforeKey match {
-                case None => ZIO.unit
-                case Some(before) =>
-                  client.rankIssuesBefore(List(last), before, None)
-              }
-              _ <- previous match {
-                case Nil => ZIO.unit
-                case nonEmpty =>
-                  val top = nonEmpty.reverse
-                  client.rankIssuesBefore(top, last, None)
-              }
-            } yield group.headOption
+            ZIO.logInfo(
+              s"rerank ${group.head} + ${group.tail.length} before $beforeKey"
+            ) *> {
+              for {
+                _ <- beforeKey match {
+                  case None => ZIO.unit
+                  case Some(before) =>
+                    client.rankIssuesBefore(List(last), before, None)
+                }
+                _ <- previous match {
+                  case Nil => ZIO.unit
+                  case nonEmpty =>
+                    val top = nonEmpty.reverse
+                    client.rankIssuesBefore(top, last, None)
+                }
+              } yield group.headOption
+            }
         }
       }
 

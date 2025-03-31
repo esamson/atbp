@@ -12,6 +12,8 @@ import scala.annotation.tailrec
 import JiraOps.*
 
 trait Sorter {
+
+  /** Rank Jira tickets according to their order in the given source file. */
   def sort(source: File): Task[Unit]
 }
 
@@ -52,7 +54,23 @@ object Sorter {
       def getChildren(issue: Issue) =
         descendants.filter(_.fields.parent.exists(_.key == issue.key))
 
-      def atLevel(level: Int)(issue: Issue): List[Issue] = {
+      /** Get the level equivalent of the given issue.
+        *
+        * Issue level is according to the issue type. For example, an epic is
+        * one level higher than a story.
+        *
+        * @param issue
+        *   source issue
+        * @param level
+        *   target level
+        * @return
+        *   If issue is already at the target level, return that issue. If it is
+        *   below the target level, find the ancestor at the target level. If it
+        *   is above the target level, list all descendants at the target level.
+        *   If there are no appropriate ancestors or descendants, return the
+        *   empty list.
+        */
+      def atLevel(issue: Issue, level: Int): List[Issue] = {
         val issueLevel = issue.fields.issuetype.hierarchyLevel
         if (issueLevel < level) {
           issue.fields.parent match {
@@ -62,7 +80,7 @@ object Sorter {
               // limit to only one level up
               // otherwise, we'd loop infinitely below and above the target level
               if (parent.fields.issuetype.hierarchyLevel == issueLevel + 1) {
-                atLevel(level)(parent)
+                atLevel(parent, level)
               } else {
                 Nil
               }
@@ -73,7 +91,7 @@ object Sorter {
             // limit to only one level down
             // otherwise, we'd loop infinitely below and above the target level
             if child.fields.issuetype.hierarchyLevel == issueLevel - 1
-            leveled <- atLevel(level)(child)
+            leveled <- atLevel(child, level)
           } yield {
             leveled
           }
@@ -85,7 +103,7 @@ object Sorter {
       def sourceAtLevel(level: Int): List[Issue] =
         for {
           issue <- sourceKeys.map(lookup)
-          leveled <- atLevel(level)(issue)
+          leveled <- atLevel(issue, level)
         } yield {
           leveled
         }
@@ -93,23 +111,21 @@ object Sorter {
       @tailrec
       def doSort(level: Int, sorts: List[Task[Unit]]): List[Task[Unit]] = {
         if (level <= levels.max) {
+          val issues = sourceAtLevel(level)
+          val levelKeys = issues.map(_.key).distinct
+          val groups = levelKeys
+            .grouped(51)
+            .toList // 50 issues to sort + 1 reference issue
           val levelSort = ZIO.logSpan(s"doSort $level") {
             for {
-              _ <- ZIO.logInfo(s"sorting at level $level")
-              issues = sourceAtLevel(level)
               _ <- ZIO.attempt(
                 require(
                   issues.forall(_.fields.issuetype.hierarchyLevel == level)
                 )
               )
-              levelKeys = issues.map(_.key).distinct
               _ <- ZIO.logInfo(
-                s"${levelKeys.length} to be sorted at level $level.\n${levelKeys.mkString("\n")}"
+                s"${levelKeys.length} to be sorted at level $level"
               )
-              groups = levelKeys
-                .grouped(51)
-                .toList // 50 issues to sort + 1 reference issue
-              _ <- ZIO.logInfo(s"reranking level $level")
               _ <- rerank(groups)
               _ <- ZIO.logInfo(s"sorted level $level")
             } yield ()
@@ -133,7 +149,7 @@ object Sorter {
         group.reverse match {
           case Nil => ZIO.none
           case last :: previous =>
-            ZIO.logInfo(
+            ZIO.logDebug(
               s"rerank ${group.head} + ${group.tail.length} before $beforeKey"
             ) *> {
               for {

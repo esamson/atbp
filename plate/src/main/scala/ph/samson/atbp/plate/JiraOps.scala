@@ -35,7 +35,6 @@ object JiraOps {
       }
     }
 
-    def getChildren(keys: String*): Task[List[Issue]] = getChildren(keys.toList)
     def getChildren(keys: List[String]): Task[List[Issue]] = {
       keys match {
         case Nil => ZIO.succeed(Nil)

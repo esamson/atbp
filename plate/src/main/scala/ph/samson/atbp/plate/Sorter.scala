@@ -112,10 +112,8 @@ object Sorter {
       def doSort(level: Int, sorts: List[Task[Unit]]): List[Task[Unit]] = {
         if (level <= levels.max) {
           val issues = sourceAtLevel(level)
-          val levelKeys = issues.map(_.key).distinct
-          val groups = levelKeys
-            .grouped(51)
-            .toList // 50 issues to sort + 1 reference issue
+          val targetOrder = issues.map(_.key).distinct
+
           val levelSort = ZIO.logSpan(s"doSort $level") {
             for {
               _ <- ZIO.attempt(
@@ -123,11 +121,13 @@ object Sorter {
                   issues.forall(_.fields.issuetype.hierarchyLevel == level)
                 )
               )
+              currentOrder <- client.getIssuesRanked(targetOrder)
+
               _ <- ZIO.logInfo(
-                s"${levelKeys.length} to be sorted at level $level"
+                s"${targetOrder.length} to be sorted at level $level"
               )
-              _ <- rerank(groups)
-              _ <- ZIO.logInfo(s"sorted level $level")
+              count <- reorder(currentOrder.map(_.key), targetOrder)
+              _ <- ZIO.logInfo(s"sorted level $level in $count rerankings")
             } yield ()
           }
           doSort(level + 1, levelSort :: sorts)
@@ -139,6 +139,70 @@ object Sorter {
       ZIO.logSpan("sort") {
         ZIO.collectAllParDiscard(doSort(levels.min, Nil))
       }
+    }
+
+    /** Rerank Jira items in the current list according to the order given by
+     * the target list.
+     * 
+     * Both lists must contain exactly the same elements, in possibly different
+     * orders.
+     *
+     * @param current keys ordered in the current Jira ranking
+     * @param target keys ordered in the desired ranking
+     * @return number of rerankings executed
+     */
+    def reorder(current: List[String], target: List[String]): Task[Int] = {
+
+      /** Actual work happens here.
+       * 
+       * @param curRemaining where we are in the current list
+       * @param tarRemaining where we are in the target list
+       * @param aside items in the current list we have set aside to be reranked
+       * @param count how many rerankings we have done so far
+       * @return total rerankings executed
+       */
+      def doRerank(curRemaining: List[String], tarRemaining: List[String], aside: List[String], count: Int): Task[Int] = {
+        curRemaining match {
+          case Nil => tarRemaining match {
+            case Nil =>
+              // Let's get the simple case out of the way.
+              // We have finished both lists.
+              ZIO.succeed(count)
+            case tarHead :: tarNext =>
+              // I don't know if I expect this to happen.
+              ZIO.fail(new IllegalStateException(s"current list finished while target at $tarHead :: $tarNext"))
+          }
+            
+          case curHead :: curNext => tarRemaining match {
+            case Nil =>
+              // I don't know if I expect this to happen.
+              ZIO.fail(new IllegalStateException(s"target list finished while current at $curHead :: $curNext"))
+            case tarHead :: tarNext =>
+              if (curHead == tarHead) {
+                if (aside.isEmpty) {
+                  // Order is correct, proceed with next item.
+                  doRerank(curNext, tarNext, Nil, count)
+                } else {
+                  // curHead should go next in the order.
+                  // Everything in aside should be ranked after it.
+                }
+              }
+          }
+        }
+      }
+
+      for {
+        _ <- ZIO.attempt {
+          require(current.length == target.length, s"current (${current.length}) length not equal to target (${target.length})")
+          require(current.forall(target.contains), s"current not in target: ${current.filterNot(target.contains)}")
+          require(target.forall(current.contains), s"target not in current: ${target.filterNot(current.contains)}")
+        }
+        count <- if (current == target) {
+          ZIO.succeed(0)
+        } else {
+          doRerank(current, target, Nil, 0)
+        }
+      } yield count
     }
 
     def rerank(groups: List[List[String]]): Task[Unit] = {

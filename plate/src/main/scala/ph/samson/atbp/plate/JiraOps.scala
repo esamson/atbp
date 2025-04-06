@@ -15,6 +15,14 @@ object JiraOps {
       }
     }
 
+    /** Issues ordered by Rank */
+    def getIssuesRanked(keys: List[String]): Task[List[Issue]] = {
+      keys match {
+        case Nil    => ZIO.succeed(Nil)
+        case issues => client.search(rankedIssuesJql(issues))
+      }
+    }
+
     def getDescendants(key: String*): Task[List[Issue]] = getDescendants(
       key.toList
     )
@@ -103,8 +111,11 @@ object JiraOps {
   }
 
   private def childrenJql(keys: List[String]) =
-    s"parent IN (${keys.mkString(",")}) ORDER BY Rank"
+    s"parent IN (${keys.mkString(",")})"
 
   private def issuesJql(keys: List[String]) =
     s"key IN (${keys.mkString(",")})"
+
+  private def rankedIssuesJql(keys: List[String]) =
+    s"key IN (${keys.mkString(",")}) ORDER BY Rank"
 }

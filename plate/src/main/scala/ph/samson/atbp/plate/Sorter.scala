@@ -156,18 +156,23 @@ object Sorter {
       /** Actual work happens here.
        * 
        * @param curRemaining where we are in the current list
+       *                     for example, we start with
+       *                     c = [A, B, C, D, E]
        * @param tarRemaining where we are in the target list
+       *                     for example, we start with
+       *                     t = [A, D, B, C, E]
        * @param aside items in the current list we have set aside to be reranked
-       * @param count how many rerankings we have done so far
-       * @return total rerankings executed
+       *              a = []
+       * @param reranks rerankings to be done
+       * @return rerankings to be executed
        */
-      def doRerank(curRemaining: List[String], tarRemaining: List[String], aside: List[String], count: Int): Task[Int] = {
+      def doRerank(curRemaining: List[String], tarRemaining: List[String], aside: List[String], reranks: List[Rerank]): Task[List[Rerank]] = {
         curRemaining match {
           case Nil => tarRemaining match {
             case Nil =>
               // Let's get the simple case out of the way.
               // We have finished both lists.
-              ZIO.succeed(count)
+              ZIO.succeed(reranks.reverse)
             case tarHead :: tarNext =>
               // I don't know if I expect this to happen.
               ZIO.fail(new IllegalStateException(s"current list finished while target at $tarHead :: $tarNext"))
@@ -181,14 +186,57 @@ object Sorter {
               if (curHead == tarHead) {
                 if (aside.isEmpty) {
                   // Order is correct, proceed with next item.
-                  doRerank(curNext, tarNext, Nil, count)
+                  //
+                  // For example, we get this on recursion 1:
+                  // c = [B, C, D, E]
+                  // t = [D, B, C, E]
+                  doRerank(curNext, tarNext, Nil, reranks)
                 } else {
                   // curHead should go next in the order.
                   // Everything in aside should be ranked after it.
+                  //
+                  // In recursion 4 we restore the keys we set aside.
+                  // Reversed because we accumulated them that way.
+                  //
+                  // We now know that current head should be ranked before the
+                  // restored keys.
+                  //
+                  // c = [B, C, E]
+                  // t = [B, C, E]
+                  // a = []
+                  // r = [D > B]
+                  val restore = aside.reverse
+                  val rerank = Rerank(curHead, restore.head)
+                  doRerank(restore ++ curNext, tarNext, Nil, rerank :: reranks)
                 }
+              } else {
+                // Put current head aside and find next match to target.
+                //
+                // We get this in recursion 2:
+                // c = [C, D, E]
+                // t = [D, B, C, E]
+                // a = [B]
+                //
+                // Then recursion 3:
+                // c = [D, E]
+                // t = [D, B, C, E]
+                // a = [C, B]
+                doRerank(curNext, tarRemaining, curHead :: aside, reranks)
               }
           }
         }
+      }
+
+      def executeReranks(reranks: List[Rerank]): Task[Int] = {
+        // Rerankings before the same key can be done in one call
+        val groups = reranks.groupBy(_.lowKey).view.mapValues(_.map(_.highKey))
+        val execs = ZIO.foreachParDiscard(groups) {
+          case (lowKey, highKeys) =>
+            ZIO.logInfo(s"rerank $highKeys before $lowKey") *>
+              client.rankIssuesBefore(highKeys, lowKey, None)
+        }
+
+        execs.as(groups.size)
       }
 
       for {
@@ -197,11 +245,9 @@ object Sorter {
           require(current.forall(target.contains), s"current not in target: ${current.filterNot(target.contains)}")
           require(target.forall(current.contains), s"target not in current: ${target.filterNot(current.contains)}")
         }
-        count <- if (current == target) {
-          ZIO.succeed(0)
-        } else {
-          doRerank(current, target, Nil, 0)
-        }
+        _ <- ZIO.logInfo(s"reordering\n${current.zip(target).zipWithIndex.mkString("\n")}")
+        reranks <- doRerank(current, target, Nil, Nil)
+        count <- executeReranks(reranks)
       } yield count
     }
 
@@ -256,4 +302,7 @@ object Sorter {
       client <- ZIO.service[Client]
     } yield LiveImpl(client): Sorter
   }
+
+  /** Command to rank highKey before lowKey */
+  private case class Rerank(highKey: String, lowKey: String)
 }

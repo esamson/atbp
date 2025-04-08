@@ -111,7 +111,7 @@ object JiraOps {
   }
 
   private def childrenJql(keys: List[String]) =
-    s"parent IN (${keys.mkString(",")})"
+    s"parent IN (${keys.mkString(",")}) ORDER BY Rank"
 
   private def issuesJql(keys: List[String]) =
     s"key IN (${keys.mkString(",")})"

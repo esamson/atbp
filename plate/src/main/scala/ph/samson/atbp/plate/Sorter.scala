@@ -154,15 +154,67 @@ object Sorter {
     def reorder(current: List[String], target: List[String]): Task[Int] = {
 
       /** Actual work happens here.
-       * 
+       *
+       * We process the current key order and target key order in a series of
+       * recursive steps and determine the list of rerankings to be executed
+       * on the current key order to arrive at the target key order.
+       *
+       * Let's work through an example.
+       *
+       * Step 0. Initial state.
+       * c = [A, B, C, D, E]
+       * t = [A, D, C, B, E]
+       * a = []
+       * r = []
+       *
+       * Step 1. Order is correct. Nothing to do to A. Proceed with next item.
+       * c = [B, C, D, E]
+       * t = [D, C, B, E]
+       * a = []
+       * r = []
+       *
+       * Step 2. Put current head, B, aside as we look for the match to target
+       * head, D.
+       * c = [C, D, E]
+       * t = [D, C, B, E]
+       * a = [B]
+       * r = []
+       *
+       * Step 3. Still no match, put C aside.
+       * c = [D, E]
+       * t = [D, C, B, E]
+       * a = [C, B]
+       * r = []
+       *
+       * Step 4. Match found. D goes before everything we've put aside. Because
+       * B is the top of the current order, we rerank D > B. Restore the items
+       * we've put aside back to the current order to be processed
+       * c = [B, C, E]
+       * t = [C, B, E]
+       * a = []
+       * r = [D > B]
+       *
+       * Step 5. Put B aside again.
+       * c = [C, E]
+       * t = [C, B, E]
+       * a = [B]
+       * r = [D > B]
+       *
+       * Step 6. Match found. C goes before B.
+       * c = [B, E]
+       * t = [B, E]
+       * a = []
+       * r = [C > B, D > B]
+       *
+       * Steps 7 and 8 find the remaining items to be in the correct order.
+       * The result is the reverse of the accumulated reranks.
+       * return [D > B, C > B]
+       *
        * @param curRemaining where we are in the current list
        *                     for example, we start with
-       *                     c = [A, B, C, D, E]
        * @param tarRemaining where we are in the target list
        *                     for example, we start with
-       *                     t = [A, D, B, C, E]
        * @param aside items in the current list we have set aside to be reranked
-       *              a = []
        * @param reranks rerankings to be done
        * @return rerankings to be executed
        */
@@ -232,8 +284,11 @@ object Sorter {
         val groups = reranks.groupBy(_.lowKey).view.mapValues(_.map(_.highKey))
         val execs = ZIO.foreachParDiscard(groups) {
           case (lowKey, highKeys) =>
-            ZIO.logInfo(s"rerank $highKeys before $lowKey") *>
-              client.rankIssuesBefore(highKeys, lowKey, None)
+            ZIO.logInfo(s"execute rerank $highKeys before $lowKey") *> (if (highKeys.length <= 50) {
+                client.rankIssuesBefore(highKeys, lowKey, None)
+              } else {
+                rerank((highKeys :+ lowKey).grouped(51).toList)
+              })
         }
 
         execs.as(groups.size)
@@ -260,7 +315,7 @@ object Sorter {
           case Nil => ZIO.none
           case last :: previous =>
             ZIO.logDebug(
-              s"rerank ${group.head} + ${group.tail.length} before $beforeKey"
+              s"rerankOne ${group.head} + ${group.tail.length} before $beforeKey"
             ) *> {
               for {
                 _ <- beforeKey match {
@@ -303,6 +358,8 @@ object Sorter {
     } yield LiveImpl(client): Sorter
   }
 
-  /** Command to rank highKey before lowKey */
+  /** Command to rank highKey before lowKey.
+   * That is, highKey > lowKey.
+   */
   private case class Rerank(highKey: String, lowKey: String)
 }

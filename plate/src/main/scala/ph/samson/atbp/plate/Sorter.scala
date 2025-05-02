@@ -137,7 +137,7 @@ object Sorter {
       }
 
       ZIO.logSpan("sort") {
-        ZIO.collectAllDiscard(doSort(levels.min, Nil))
+        ZIO.collectAllParDiscard(doSort(levels.min, Nil))
       }
     }
 
@@ -225,20 +225,13 @@ object Sorter {
         * @return
         *   rerankings to be executed
         */
-      def doRerank(
+      @tailrec
+      def computeReranks(
           curRemaining: List[String],
           tarRemaining: List[String],
           aside: List[String],
           reranks: List[Rerank]
       ): Task[List[Rerank]] = {
-        println(
-          s"""doRerank(
-             |  c = ${curRemaining.take(10)}[${curRemaining.length}]
-             |  t = ${tarRemaining.take(10)}[${tarRemaining.length}]
-             |  a = ${aside.take(3)}...${aside.takeRight(3)}[${aside.length}]
-             |  r = ${reranks.take(10)}[${reranks.length}]
-             |)""".stripMargin
-        )
         curRemaining match {
           case Nil =>
             tarRemaining match {
@@ -248,7 +241,7 @@ object Sorter {
                 // This is Step 9 in the example.
                 ZIO.succeed(reranks.reverse)
               case tarHead :: tarNext =>
-                // I don't expect this to happen.
+                // We don't expect this to happen.
                 ZIO.fail(
                   new IllegalStateException(
                     s"current list finished while target at $tarHead :: $tarNext"
@@ -259,7 +252,7 @@ object Sorter {
           case curHead :: curNext =>
             tarRemaining match {
               case Nil =>
-                // I don't expect this to happen.
+                // We don't expect this to happen.
                 ZIO.fail(
                   new IllegalStateException(
                     s"target list finished while current at $curHead :: $curNext"
@@ -271,7 +264,7 @@ object Sorter {
                     // Order is correct, proceed with next item.
                     //
                     // This happens in steps 1, 7, and 8 in the example.
-                    doRerank(curNext, tarNext, Nil, reranks)
+                    computeReranks(curNext, tarNext, Nil, reranks)
                   } else {
                     // curHead should go next in the order before everything
                     // that we've put aside so far.
@@ -279,10 +272,10 @@ object Sorter {
                     // aside (restore.head) because we don't know if the other
                     // items need to be reranked among themselves.
                     //
-                    // This is happens in steps 4 and 6 in the example.
+                    // This happens in steps 4 and 6 in the example.
                     val restore = aside.reverse
                     val rerank = Rerank(curHead, restore.head)
-                    doRerank(
+                    computeReranks(
                       restore ++ curNext,
                       tarNext,
                       Nil,
@@ -293,7 +286,12 @@ object Sorter {
                   // Put current head aside and find next match to target.
                   //
                   // This happens in steps 2, 3, and 5 in the example.
-                  doRerank(curNext, tarRemaining, curHead :: aside, reranks)
+                  computeReranks(
+                    curNext,
+                    tarRemaining,
+                    curHead :: aside,
+                    reranks
+                  )
                 }
             }
         }
@@ -308,7 +306,7 @@ object Sorter {
           lowKey -> reranks.filter(_.lowKey == lowKey).map(_.highKey)
         }
         val execs = ZIO.foreach(grouped) { case (lowKey, highKeys) =>
-          ZIO.logInfo(
+          ZIO.logDebug(
             s"execute rerank $highKeys before $lowKey"
           ) *> (if (highKeys.length <= 50) {
                   client.rankIssuesBefore(highKeys, lowKey, None).as(1)
@@ -335,11 +333,11 @@ object Sorter {
             s"target not in current: ${target.filterNot(current.contains)}"
           )
         }
-        _ <- ZIO.logInfo(
+        _ <- ZIO.logDebug(
           s"reordering ((current, target), position)\n${current.zip(target).zipWithIndex.mkString("\n")}"
         )
-        reranks <- doRerank(current, target, Nil, Nil)
-        _ <- ZIO.logInfo(s"reranks: ${reranks.mkString("\n")}")
+        reranks <- computeReranks(current, target, Nil, Nil)
+        _ <- ZIO.logDebug(s"reranks: ${reranks.mkString("\n")}")
         count <- executeReranks(reranks)
       } yield count
     }
@@ -351,25 +349,24 @@ object Sorter {
       ): Task[Option[String]] = {
         group.reverse match {
           case Nil => ZIO.none
-          case last :: previous => {
+          case last :: previous =>
             for {
               _ <- beforeKey match {
                 case None => ZIO.unit
                 case Some(before) =>
-                  ZIO.logInfo(
-                    s"rerankOne ${List(last)} before $before"
+                  ZIO.logDebug(
+                    s"rerankOne $last before $before"
                   ) *> client.rankIssuesBefore(List(last), before, None)
               }
               _ <- previous match {
                 case Nil => ZIO.unit
                 case nonEmpty =>
                   val top = nonEmpty.reverse
-                  ZIO.logInfo(
+                  ZIO.logDebug(
                     s"rerankOne ${top.head} + ${top.tail.length} before $last"
                   ) *> client.rankIssuesBefore(top, last, None)
               }
             } yield group.headOption
-          }
         }
       }
 

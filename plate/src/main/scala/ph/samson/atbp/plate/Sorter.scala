@@ -111,7 +111,7 @@ object Sorter {
       @tailrec
       def doSort(level: Int, sorts: List[Task[Unit]]): List[Task[Unit]] = {
         if (level <= levels.max) {
-          val issues = sourceAtLevel(level)
+          val issues = sourceAtLevel(level).filterNot(_.isDone)
           val targetOrder = issues.map(_.key).distinct
 
           val levelSort = ZIO.logSpan(s"doSort $level") {

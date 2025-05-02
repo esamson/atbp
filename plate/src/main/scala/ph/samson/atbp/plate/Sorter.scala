@@ -137,7 +137,7 @@ object Sorter {
       }
 
       ZIO.logSpan("sort") {
-        ZIO.collectAllParDiscard(doSort(levels.min, Nil))
+        ZIO.collectAllDiscard(doSort(levels.min, Nil))
       }
     }
 
@@ -231,6 +231,14 @@ object Sorter {
           aside: List[String],
           reranks: List[Rerank]
       ): Task[List[Rerank]] = {
+        println(
+          s"""doRerank(
+             |  c = ${curRemaining.take(10)}[${curRemaining.length}]
+             |  t = ${tarRemaining.take(10)}[${tarRemaining.length}]
+             |  a = ${aside.take(3)}...${aside.takeRight(3)}[${aside.length}]
+             |  r = ${reranks.take(10)}[${reranks.length}]
+             |)""".stripMargin
+        )
         curRemaining match {
           case Nil =>
             tarRemaining match {
@@ -293,18 +301,23 @@ object Sorter {
 
       def executeReranks(reranks: List[Rerank]): Task[Int] = {
         // Rerankings before the same key can be done in one call
-        val groups = reranks.groupBy(_.lowKey).view.mapValues(_.map(_.highKey))
-        val execs = ZIO.foreachParDiscard(groups) { case (lowKey, highKeys) =>
+        val lowKeys = reranks.map(_.lowKey).distinct
+        val grouped = for {
+          lowKey <- lowKeys
+        } yield {
+          lowKey -> reranks.filter(_.lowKey == lowKey).map(_.highKey)
+        }
+        val execs = ZIO.foreach(grouped) { case (lowKey, highKeys) =>
           ZIO.logInfo(
             s"execute rerank $highKeys before $lowKey"
           ) *> (if (highKeys.length <= 50) {
-                  client.rankIssuesBefore(highKeys, lowKey, None)
+                  client.rankIssuesBefore(highKeys, lowKey, None).as(1)
                 } else {
                   rerank((highKeys :+ lowKey).grouped(51).toList)
                 })
         }
 
-        execs.as(groups.size)
+        execs.map(_.sum)
       }
 
       for {
@@ -323,56 +336,59 @@ object Sorter {
           )
         }
         _ <- ZIO.logInfo(
-          s"reordering\n${current.zip(target).zipWithIndex.mkString("\n")}"
+          s"reordering ((current, target), position)\n${current.zip(target).zipWithIndex.mkString("\n")}"
         )
         reranks <- doRerank(current, target, Nil, Nil)
+        _ <- ZIO.logInfo(s"reranks: ${reranks.mkString("\n")}")
         count <- executeReranks(reranks)
       } yield count
     }
 
-    def rerank(groups: List[List[String]]): Task[Unit] = {
+    def rerank(groups: List[List[String]]): Task[Int] = {
       def rerankOne(
           group: List[String],
           beforeKey: Option[String]
       ): Task[Option[String]] = {
         group.reverse match {
           case Nil => ZIO.none
-          case last :: previous =>
-            ZIO.logDebug(
-              s"rerankOne ${group.head} + ${group.tail.length} before $beforeKey"
-            ) *> {
-              for {
-                _ <- beforeKey match {
-                  case None => ZIO.unit
-                  case Some(before) =>
-                    client.rankIssuesBefore(List(last), before, None)
-                }
-                _ <- previous match {
-                  case Nil => ZIO.unit
-                  case nonEmpty =>
-                    val top = nonEmpty.reverse
-                    client.rankIssuesBefore(top, last, None)
-                }
-              } yield group.headOption
-            }
+          case last :: previous => {
+            for {
+              _ <- beforeKey match {
+                case None => ZIO.unit
+                case Some(before) =>
+                  ZIO.logInfo(
+                    s"rerankOne ${List(last)} before $before"
+                  ) *> client.rankIssuesBefore(List(last), before, None)
+              }
+              _ <- previous match {
+                case Nil => ZIO.unit
+                case nonEmpty =>
+                  val top = nonEmpty.reverse
+                  ZIO.logInfo(
+                    s"rerankOne ${top.head} + ${top.tail.length} before $last"
+                  ) *> client.rankIssuesBefore(top, last, None)
+              }
+            } yield group.headOption
+          }
         }
       }
 
       def doRerank(
           toRank: List[List[String]],
-          lastKey: Option[String]
-      ): Task[Unit] = {
+          lastKey: Option[String],
+          count: Int
+      ): Task[Int] = {
         toRank match {
-          case Nil => ZIO.unit
+          case Nil => ZIO.succeed(count)
           case last :: previous =>
             for {
               lastTop <- rerankOne(last, lastKey)
-              _ <- doRerank(previous, lastTop)
-            } yield ()
+              c <- doRerank(previous, lastTop, count + 1)
+            } yield c
         }
       }
 
-      doRerank(groups.reverse, None)
+      doRerank(groups.reverse, None, 0)
     }
   }
 

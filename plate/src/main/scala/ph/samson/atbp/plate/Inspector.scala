@@ -43,32 +43,41 @@ object Inspector {
       *
       * @param source
       *   source file
-      * @param suffix
-      *   suffix for naming the target file
+      * @param target
+      *   output file
       * @param check
       *   criteria for deciding if a Jira key should be included
       * @return
       *   target file
       */
-    private def extract(source: File, suffix: String)(
+    private def extract(source: File, target: File)(
         check: String => Task[Boolean]
     ): Task[File] =
       for {
         sourceLines <- ZIO.attemptBlockingIO(source.lines.toList)
         targetLines <- ZIO.filterPar(sourceLines)(includeLine(check))
         outFile <- ZIO.attemptBlockingIO {
+          target.overwrite(prune(targetLines).mkString("\n"))
+        }
+      } yield outFile
+
+    private def extractToSibling(source: File, suffix: String)(
+        check: String => Task[Boolean]
+    ): Task[File] =
+      for {
+        target <- ZIO.attempt {
           val name = source.`extension`() match {
             case Some(ext) =>
               source.nameWithoutExtension(includeAll = false) + suffix + ext
             case None => source.name + suffix
           }
-          val out = source.sibling(name)
-          out.overwrite(prune(targetLines).mkString("\n"))
+          source.sibling(name)
         }
-      } yield outFile
+        out <- extract(source, target)(check)
+      } yield out
 
     override def done(source: File): Task[File] = ZIO.logSpan("done") {
-      extract(source, ".done") { key =>
+      extractToSibling(source, ".done") { key =>
         for {
           issue <- client.getIssue(key)
           descendants <- client.getDescendants(key)
@@ -78,7 +87,7 @@ object Inspector {
 
     override def cooking(source: File): Task[File] =
       ZIO.logSpan("cooking") {
-        extract(source, ".cooking") { key =>
+        extractToSibling(source, ".cooking") { key =>
           for {
             issue <- client.getIssue(key)
             result <-
@@ -117,7 +126,7 @@ object Inspector {
 
     override def stale(source: File): Task[File] =
       ZIO.logSpan("stale") {
-        extract(source, ".stale") { key =>
+        extractToSibling(source, ".stale") { key =>
           for {
             now <- Clock.instant
             freshLimit = now

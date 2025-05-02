@@ -79,7 +79,7 @@ object Client {
           } else reqs
         }
 
-        if (head.length < head.total) tailRequests(Nil) else Nil
+        if (head.length < head.total) tailRequests(Nil).reverse else Nil
       }
 
       ZIO.scoped(ZIO.logSpan("search") {

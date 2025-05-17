@@ -14,4 +14,5 @@ ThisBuild / developers := List(
   )
 )
 
+ThisBuild / sonatypeCredentialHost := Sonatype.sonatypeCentralHost
 sonatypeProfileName := "ph.samson"

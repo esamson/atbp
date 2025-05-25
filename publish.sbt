@@ -13,6 +13,3 @@ ThisBuild / developers := List(
     url("https://edward.samson.ph")
   )
 )
-
-ThisBuild / sonatypeCredentialHost := Sonatype.sonatypeCentralHost
-sonatypeProfileName := "ph.samson"

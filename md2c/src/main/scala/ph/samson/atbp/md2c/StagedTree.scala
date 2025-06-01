@@ -64,7 +64,7 @@ object StagedTree {
         )
       case MarkdownBranch(_, content, _) => Parser.parse(content)
       case MarkdownLeaf(_, content)      => Parser.parse(content)
-      case unhandled =>
+      case unhandled                     =>
         ZIO.fail(
           new IllegalArgumentException(s"No ADF Doc for content: $unhandled")
         )

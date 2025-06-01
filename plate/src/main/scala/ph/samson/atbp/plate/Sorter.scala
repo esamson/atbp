@@ -74,7 +74,7 @@ object Sorter {
         val issueLevel = issue.fields.issuetype.hierarchyLevel
         if (issueLevel < level) {
           issue.fields.parent match {
-            case None => Nil
+            case None    => Nil
             case Some(p) =>
               val parent = lookup(p.key)
               // limit to only one level up
@@ -348,18 +348,18 @@ object Sorter {
           beforeKey: Option[String]
       ): Task[Option[String]] = {
         group.reverse match {
-          case Nil => ZIO.none
+          case Nil              => ZIO.none
           case last :: previous =>
             for {
               _ <- beforeKey match {
-                case None => ZIO.unit
+                case None         => ZIO.unit
                 case Some(before) =>
                   ZIO.logDebug(
                     s"rerankOne $last before $before"
                   ) *> client.rankIssuesBefore(List(last), before, None)
               }
               _ <- previous match {
-                case Nil => ZIO.unit
+                case Nil      => ZIO.unit
                 case nonEmpty =>
                   val top = nonEmpty.reverse
                   ZIO.logDebug(
@@ -376,7 +376,7 @@ object Sorter {
           count: Int
       ): Task[Int] = {
         toRank match {
-          case Nil => ZIO.succeed(count)
+          case Nil              => ZIO.succeed(count)
           case last :: previous =>
             for {
               lastTop <- rerankOne(last, lastKey)

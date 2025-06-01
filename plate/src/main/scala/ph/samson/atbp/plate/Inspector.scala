@@ -179,7 +179,7 @@ object Inspector {
         in match {
           case Nil =>
             entries match { // this is the last section
-              case Nil => (Nil, Nil)
+              case Nil                                     => (Nil, Nil)
               case nonEmpty if nonEmpty.exists(_.nonEmpty) =>
                 (nonEmpty :+ start, Nil)
               case _ => (Nil, Nil) // entries are just blanks
@@ -220,7 +220,7 @@ object Inspector {
 
       def doPrune(in: List[String], out: List[String]): List[String] = {
         in match {
-          case Nil => out
+          case Nil          => out
           case line :: rest =>
             line.trim match {
               case "" =>

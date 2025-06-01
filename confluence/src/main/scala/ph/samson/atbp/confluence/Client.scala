@@ -227,7 +227,7 @@ object Client {
         codec: BinaryCodec[MultiEntityResult[T]]
     ): Task[List[T]] =
       links.next match {
-        case None => ZIO.succeed(Nil)
+        case None       => ZIO.succeed(Nil)
         case Some(next) =>
           ZIO.scoped(ZIO.logSpan("getNextPage") {
             for {

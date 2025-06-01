@@ -98,7 +98,7 @@ object RadarScanner {
         result: List[String]
     ): List[String] = {
       remaining match {
-        case Nil => result.reverse
+        case Nil          => result.reverse
         case head :: next =>
           if (head.projectKey == project) {
             doFormat(next, project, formatIssue(head) :: result)
@@ -142,10 +142,10 @@ object RadarScanner {
     @tailrec
     def doCollapse(remaining: List[Issue], result: List[Issue]): List[Issue] = {
       remaining match {
-        case Nil => result
+        case Nil          => result
         case head :: next =>
           head.fields.parent match {
-            case None => doCollapse(next, head :: result)
+            case None         => doCollapse(next, head :: result)
             case Some(parent) =>
               if (keys.contains(parent.key)) {
                 doCollapse(next, result)

@@ -17,7 +17,7 @@ case class Markdown2Confluence(sourceDir: File, cleanup: Boolean)
     extends ToolCommand {
   override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
     conf.confluenceConf match {
-      case None => ZIO.fail(new Exception("No confluence config."))
+      case None             => ZIO.fail(new Exception("No confluence config."))
       case Some(confluence) =>
         val md2cConf: md2c.Conf = conf.md2c.getOrElse(md2c.Conf.Empty)
 

@@ -54,10 +54,10 @@ object SourceTree {
       confCheck <- SourceConf.get(dir)
       found <- confCheck match {
         case Some(conf) => ZIO.succeed((dir, conf))
-        case None =>
+        case None       =>
           dir.parentOption match {
             case Some(parent) => sourceRoot(parent)
-            case None =>
+            case None         =>
               ZIO.fail(
                 new IllegalArgumentException(
                   s"No `.md2c.conf` file for $sourceDir or any of its ancestors"

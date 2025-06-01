@@ -29,7 +29,7 @@ object JiraOps {
 
     def getDescendants(keys: List[String]): Task[List[Issue]] = {
       keys match {
-        case Nil => ZIO.succeed(Nil)
+        case Nil     => ZIO.succeed(Nil)
         case parents =>
           ZIO.logSpan("getDescendants") {
             for {
@@ -45,7 +45,7 @@ object JiraOps {
 
     def getChildren(keys: List[String]): Task[List[Issue]] = {
       keys match {
-        case Nil => ZIO.succeed(Nil)
+        case Nil     => ZIO.succeed(Nil)
         case parents =>
           ZIO.logSpan("getChildren") {
             for {
@@ -57,7 +57,7 @@ object JiraOps {
 
     def getAncestors(keys: List[String]): Task[List[Issue]] = {
       keys match {
-        case Nil => ZIO.succeed(Nil)
+        case Nil      => ZIO.succeed(Nil)
         case children =>
           ZIO.logSpan("getAncestors") {
             for {
@@ -73,7 +73,7 @@ object JiraOps {
 
     def getParents(keys: List[String]): Task[List[Issue]] = {
       keys match {
-        case Nil => ZIO.succeed(Nil)
+        case Nil       => ZIO.succeed(Nil)
         case childKeys =>
           ZIO.logSpan("getParents") {
             for {

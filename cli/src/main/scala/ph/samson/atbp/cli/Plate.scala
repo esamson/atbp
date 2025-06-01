@@ -31,7 +31,7 @@ object Plate {
   private case class Label(source: File, value: String) extends Action {
     override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
       conf.jiraConf match {
-        case None => ZIO.fail(new Exception("No jira config."))
+        case None       => ZIO.fail(new Exception("No jira config."))
         case Some(jira) =>
           doRun().provide(ZClient.default, Client.layer(jira), Labeler.layer())
       }
@@ -55,7 +55,7 @@ object Plate {
   private case class Check(source: File, status: Status) extends Action {
     override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
       conf.jiraConf match {
-        case None => ZIO.fail(new Exception("No jira config."))
+        case None       => ZIO.fail(new Exception("No jira config."))
         case Some(jira) =>
           val check = for {
             inspector <- ZIO.service[Inspector]
@@ -93,7 +93,7 @@ object Plate {
   private case class Radar(source: File, exclude: List[String]) extends Action {
     override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
       conf.jiraConf match {
-        case None => ZIO.fail(new Exception("No jira config."))
+        case None       => ZIO.fail(new Exception("No jira config."))
         case Some(jira) =>
           val scan = for {
             scanner <- ZIO.service[RadarScanner]
@@ -124,7 +124,7 @@ object Plate {
   private case class Sort(source: File) extends Action {
     override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
       conf.jiraConf match {
-        case None => ZIO.fail(new Exception("No jira config."))
+        case None       => ZIO.fail(new Exception("No jira config."))
         case Some(jira) =>
           doRun().provide(ZClient.default, Client.layer(jira), Sorter.layer())
       }

@@ -7,8 +7,6 @@ import zio.schema.codec.JsonCodec
 
 import java.time.LocalDate
 import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import scala.util.Try
 
 import Issue.*
 
@@ -35,18 +33,6 @@ object Issue {
     "status",
     "parent"
   )
-
-  private val JiraDateTime =
-    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-  implicit val jdtSchema: Schema[ZonedDateTime] =
-    Schema[String].transformOrFail(
-      string =>
-        Try(
-          ZonedDateTime.parse(string, JiraDateTime)
-        ).toEither.left.map(_.toString),
-      zonedDateTime =>
-        Try(zonedDateTime.format(JiraDateTime)).toEither.left.map(_.toString)
-    )
 
   case class Fields(
       summary: String,
@@ -120,6 +106,7 @@ object Issue {
     )
   }
 
+  import Schemas.*
   implicit val schema: Schema[Issue] = DeriveSchema.gen
   implicit val codec: BinaryCodec[Issue] = JsonCodec.schemaBasedBinaryCodec
 }

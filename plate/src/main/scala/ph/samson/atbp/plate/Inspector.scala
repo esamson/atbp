@@ -3,6 +3,7 @@ package ph.samson.atbp.plate
 import better.files.File
 import ph.samson.atbp.jira.Client
 import ph.samson.atbp.jira.model.Changelog
+import ph.samson.atbp.jira.model.Comment
 import ph.samson.atbp.jira.model.Issue
 import ph.samson.atbp.plate.JiraOps.*
 import zio.Clock
@@ -91,12 +92,26 @@ object Inspector {
 
     private def hasProgress(issue: Issue): Task[Boolean] = {
       for {
-        changelogs <- client.getChangelogs(issue.key)
+        (changelogs, comments) <- client
+          .getChangelogs(issue.key)
+          .zipPar(client.getComments(issue.key))
       } yield {
         changelogs.exists {
           case Changelog(id, author, created, items, historyMetadata) =>
             created.isAfter(ZonedDateTime.now().minusDays(14)) &&
             !items.forall(_.field == "Rank")
+        } || comments.exists {
+          case Comment(
+                self,
+                id,
+                author,
+                updateAuthor,
+                created,
+                updated,
+                jsdPublic
+              ) =>
+            created.isAfter(ZonedDateTime.now().minusDays(14)) ||
+            updated.isAfter(ZonedDateTime.now().minusDays(14))
         }
       }
     }

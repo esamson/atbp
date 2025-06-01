@@ -13,6 +13,7 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit.DAYS
+import scala.util.control.NoStackTrace
 
 trait Inspector {
   def cooking(source: File): Task[File]
@@ -80,17 +81,40 @@ object Inspector {
         extract(source, ".cooking") { key =>
           for {
             issue <- client.getIssue(key)
-            result <-
-              if (issue.isDone) {
-                ZIO.succeed(false)
-              } else if (issue.inProgress) {
-                ZIO.succeed(true)
-              } else {
-                anyDescendantInProgress(key)
-              }
+            result <- ZIO.succeed(!issue.isDone) && (hasProgress(
+              issue
+            ) || anyDescendantHasProgress(issue))
           } yield result
         }
       }
+
+    private def hasProgress(issue: Issue): Task[Boolean] = {
+      for {
+        changelogs <- client.getChangelogs(issue.key)
+      } yield {
+        changelogs.exists(_.created.isAfter(ZonedDateTime.now().minusDays(14)))
+      }
+    }
+
+    private def anyDescendantHasProgress(issue: Issue): Task[Boolean] = {
+      def checkProgress(issue: Issue) =
+        hasProgress(issue).filterOrFail(_.self)(NoProgress)
+      ZIO.logSpan("anyDescendantHasProgress") {
+        for {
+          descendants <- client.getDescendants(issue.key)
+          progress = descendants match {
+            case Nil => ZIO.succeed(false)
+            case head :: next =>
+              checkProgress(head).raceAll(next.map(checkProgress))
+          }
+          result <- progress.catchSome { case NoProgress =>
+            ZIO.succeed(false)
+          }
+        } yield {
+          result
+        }
+      }
+    }
 
     def anyDescendantInProgress(key: String): Task[Boolean] =
       ZIO.logSpan("anyDescendantInProgress") {
@@ -241,6 +265,8 @@ object Inspector {
       doPrune(lines, Nil).reverse
     }
   }
+
+  private case object NoProgress extends Exception with NoStackTrace
 
   def layer() = ZLayer {
     for {

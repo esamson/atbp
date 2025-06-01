@@ -2,9 +2,11 @@ package ph.samson.atbp.jira
 
 import ph.samson.atbp.http.StatusCheck
 import ph.samson.atbp.jira.model.Changelog
+import ph.samson.atbp.jira.model.Comment
 import ph.samson.atbp.jira.model.EditIssueRequest
 import ph.samson.atbp.jira.model.Issue
 import ph.samson.atbp.jira.model.PageBean
+import ph.samson.atbp.jira.model.PageOfComments
 import ph.samson.atbp.jira.model.RankIssuesRequest
 import ph.samson.atbp.jira.model.SearchRequest
 import ph.samson.atbp.jira.model.SearchResults
@@ -40,6 +42,7 @@ import scala.annotation.tailrec
 trait Client {
   def getIssue(key: String): Task[Issue]
   def getChangelogs(key: String): Task[List[Changelog]]
+  def getComments(key: String): Task[List[Comment]]
   def search(jql: String): Task[List[Issue]]
   def addLabel(key: String, label: String): Task[Unit]
   def removeLabel(key: String, label: String): Task[Unit]
@@ -57,17 +60,18 @@ trait Client {
 
 object Client {
 
+  private case class PageRequest(
+      startAt: Int,
+      maxResults: Int,
+      issueIdOrKey: String
+  )
+
   private class LiveImpl(client: HttpClient) extends Client {
 
     val platformClient = client.addPath("/rest/api/3")
     val softwareClient = client.addPath("/rest/agile/1.0")
 
     override def getChangelogs(key: String): Task[List[Changelog]] = {
-      case class PageRequest(
-          startAt: Int,
-          maxResults: Int,
-          issueIdOrKey: String
-      )
       def tail(head: PageBean[Changelog]) = {
         @tailrec
         def tailRequests(
@@ -122,6 +126,68 @@ object Client {
         results <- res.body.to[PageBean[Changelog]]
         _ <- ZIO.logDebug(
           s"Got changelogs ${results.startAt + 1} to ${results.startAt + results.values.length}"
+        )
+      } yield {
+        results
+      }
+    }
+
+    override def getComments(key: String): Task[List[Comment]] = {
+      def tail(head: PageOfComments) = {
+        @tailrec
+        def tailRequests(
+            requests: List[PageRequest]
+        ): List[PageRequest] = {
+          val lastRequest = requests match {
+            case Nil       => PageRequest(head.startAt, head.maxResults, key)
+            case last :: _ => last
+          }
+
+          val nextStart = lastRequest.startAt + lastRequest.maxResults
+
+          if (nextStart < head.total) {
+            val nextRequest = lastRequest.copy(startAt = nextStart)
+            tailRequests(nextRequest :: requests)
+          } else requests
+        }
+
+        if (head.comments.length < head.total) tailRequests(Nil).reverse
+        else Nil
+      }
+      ZIO.scoped(ZIO.logSpan(s"getComments $key") {
+        for {
+          headResult <- doGetComments(key, 0, 100)
+          _ <- ZIO.logDebug(
+            s"Got ${headResult.comments.length} of ${headResult.total} comments in head"
+          )
+          tailResults <- ZIO.foreachPar(tail(headResult))(req =>
+            doGetComments(req.issueIdOrKey, req.startAt, req.maxResults)
+          )
+          tailChangelogs = tailResults.flatMap(_.comments)
+          _ <- ZIO.logDebug(s"Got ${tailChangelogs.length} comments in tail")
+        } yield {
+          headResult.comments ++ tailChangelogs
+        }
+      })
+    }
+
+    private def doGetComments(
+        issueIdOrKey: String,
+        startAt: Int,
+        maxResults: Int
+    ) = {
+      for {
+        _ <- ZIO.logDebug(
+          s"Requesting comments ${startAt + 1} to ${startAt + maxResults}"
+        )
+        res <- platformClient
+          .addHeader(ContentType(MediaType.application.json))
+          .addPath("issue")
+          .addPath(issueIdOrKey)
+          .get("/comment")
+        results <- res.body.to[PageOfComments]
+        _ <- ZIO.logDebug(
+          s"Got comments ${results.startAt + 1} to ${results.startAt + results.comments.length}"
         )
       } yield {
         results

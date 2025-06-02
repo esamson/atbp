@@ -102,24 +102,19 @@ object Inspector {
           .zipPar(client.getComments(issue.key))
       } yield {
         val hasNewChanges = changelogs.exists {
-          case Changelog(id, author, created, items, historyMetadata) =>
+          case Changelog(_, _, created, items, _) =>
             created.isAfter(progressLimit) &&
-            // reranking isn't counted as meaningful progress
-            !items.forall(_.field == "Rank")
+            !items.forall { item =>
+              // changes we don't count as progress
+              item.field == "Rank"
+              || item.field == "labels"
+            }
         }
 
         val hasNewComments = comments.exists {
-          case Comment(
-                self,
-                id,
-                author,
-                updateAuthor,
-                created,
-                updated,
-                jsdPublic
-              ) =>
-            created.isAfter(progressLimit) ||
-            updated.isAfter(progressLimit)
+          case Comment(_, _, _, _, created, updated, _) =>
+            created.isAfter(progressLimit)
+            || updated.isAfter(progressLimit)
         }
 
         hasNewChanges || hasNewComments

@@ -92,15 +92,23 @@ object Inspector {
 
     private def hasProgress(issue: Issue): Task[Boolean] = {
       for {
+        now <- Clock.instant
+        progressLimit = now
+          .atZone(ZoneId.systemDefault())
+          .minus(14, DAYS)
+          .`with`(LocalTime.MIDNIGHT)
         (changelogs, comments) <- client
           .getChangelogs(issue.key)
           .zipPar(client.getComments(issue.key))
       } yield {
-        changelogs.exists {
+        val hasNewChanges = changelogs.exists {
           case Changelog(id, author, created, items, historyMetadata) =>
-            created.isAfter(ZonedDateTime.now().minusDays(14)) &&
+            created.isAfter(progressLimit) &&
+            // reranking isn't counted as meaningful progress
             !items.forall(_.field == "Rank")
-        } || comments.exists {
+        }
+
+        val hasNewComments = comments.exists {
           case Comment(
                 self,
                 id,
@@ -110,9 +118,11 @@ object Inspector {
                 updated,
                 jsdPublic
               ) =>
-            created.isAfter(ZonedDateTime.now().minusDays(14)) ||
-            updated.isAfter(ZonedDateTime.now().minusDays(14))
+            created.isAfter(progressLimit) ||
+            updated.isAfter(progressLimit)
         }
+
+        hasNewChanges || hasNewComments
       }
     }
 
@@ -123,7 +133,7 @@ object Inspector {
         for {
           descendants <- client.getDescendants(issue.key)
           progress = descendants match {
-            case Nil => ZIO.succeed(false)
+            case Nil          => ZIO.succeed(false)
             case head :: next =>
               checkProgress(head).raceAll(next.map(checkProgress))
           }

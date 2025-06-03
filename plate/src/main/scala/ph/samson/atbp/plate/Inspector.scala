@@ -13,7 +13,6 @@ import zio.ZLayer
 
 import java.time.LocalTime
 import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit.DAYS
 import scala.util.control.NoStackTrace
 
@@ -26,6 +25,8 @@ trait Inspector {
 object Inspector {
 
   val JiraLink = """.*\(https://.*/browse/([A-Z]+-\d+)\).*""".r
+  val CookingProgressDays = 14
+  val StaleProgressDays = 28
 
   private def includeLine(
       check: String => Task[Boolean]
@@ -83,19 +84,20 @@ object Inspector {
         extract(source, ".cooking") { key =>
           for {
             issue <- client.getIssue(key)
-            result <- ZIO.succeed(!issue.isDone) && (hasProgress(
-              issue
-            ) || anyDescendantHasProgress(issue))
+            result <- ZIO.succeed(!issue.isDone) && (
+              hasProgress(issue, CookingProgressDays)
+                || anyDescendantHasProgress(issue, CookingProgressDays)
+            )
           } yield result
         }
       }
 
-    private def hasProgress(issue: Issue): Task[Boolean] = {
+    private def hasProgress(issue: Issue, sinceDays: Int): Task[Boolean] = {
       for {
         now <- Clock.instant
         progressLimit = now
           .atZone(ZoneId.systemDefault())
-          .minus(14, DAYS)
+          .minus(sinceDays, DAYS)
           .`with`(LocalTime.MIDNIGHT)
         (changelogs, comments) <- client
           .getChangelogs(issue.key)
@@ -121,9 +123,12 @@ object Inspector {
       }
     }
 
-    private def anyDescendantHasProgress(issue: Issue): Task[Boolean] = {
+    private def anyDescendantHasProgress(
+        issue: Issue,
+        sinceDays: Int
+    ): Task[Boolean] = {
       def checkProgress(issue: Issue) =
-        hasProgress(issue).filterOrFail(_.self)(NoProgress)
+        hasProgress(issue, sinceDays).filterOrFail(_.self)(NoProgress)
       ZIO.logSpan("anyDescendantHasProgress") {
         for {
           descendants <- client.getDescendants(issue.key)
@@ -140,15 +145,6 @@ object Inspector {
         }
       }
     }
-
-    def anyDescendantInProgress(key: String): Task[Boolean] =
-      ZIO.logSpan("anyDescendantInProgress") {
-        for {
-          descendants <- client.getDescendants(key)
-        } yield {
-          aggregateInProgress(descendants)
-        }
-      }
 
     /** A set of issues, considered together, is determined to be "In Progress"
       * if some of them are In Progress or some are Done while there are others
@@ -167,40 +163,30 @@ object Inspector {
       ZIO.logSpan("stale") {
         extract(source, ".stale") { key =>
           for {
-            now <- Clock.instant
-            freshLimit = now
-              .atZone(ZoneId.systemDefault())
-              .minus(28, DAYS)
-              .`with`(LocalTime.MIDNIGHT)
             issue <- client.getIssue(key)
             result <-
               if (issue.isDone) {
                 ZIO.succeed(false)
-              } else if (
-                issue.inProgress &&
-                issue.fields.updated.isAfter(freshLimit)
-              ) {
-                ZIO.succeed(false)
+              } else if (issue.inProgress) {
+                (
+                  hasProgress(issue, StaleProgressDays)
+                    || anyDescendantHasProgress(issue, StaleProgressDays)
+                ).negate
               } else {
-                allDescendantsStale(key, freshLimit)
+                allDescendantsStale(issue, StaleProgressDays)
               }
           } yield result
         }
       }
 
-    def allDescendantsStale(
-        key: String,
-        freshLimit: ZonedDateTime
-    ): Task[Boolean] =
+    def allDescendantsStale(issue: Issue, sinceDays: Int): Task[Boolean] =
       ZIO.logSpan("allDescendantsStale") {
         for {
-          descendants <- client.getDescendants(key)
+          descendants <- client.getDescendants(issue.key)
           inProgress = aggregateInProgress(descendants)
+          hasProgress <- anyDescendantHasProgress(issue, sinceDays)
         } yield {
-          inProgress &&
-          descendants
-            .filterNot(_.isDone)
-            .forall(_.fields.updated.isBefore(freshLimit))
+          inProgress && !hasProgress
         }
       }
 

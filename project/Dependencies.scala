@@ -39,6 +39,8 @@ object Dependencies {
 
     val pprint = "com.lihaoyi" %% "pprint" % "0.9.0"
 
+    val scalaCsv = "com.github.tototoshi" %% "scala-csv" % "2.0.0"
+
     val zio = "dev.zio" %% "zio" % Zio
 
     val zioCli = "dev.zio" %% "zio-cli" % "0.7.2"
@@ -154,6 +156,12 @@ object Dependencies {
     TestLibs.zioTest,
     TestLibs.zioTestMagnolia,
     TestLibs.zioTestSbt
+  )
+
+  val traceviz = libraryDependencies ++= Seq(
+    zio,
+    betterFiles,
+    scalaCsv
   )
 
   val adfBuilder = libraryDependencies ++= Seq(

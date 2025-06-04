@@ -37,7 +37,8 @@ object Main extends ZIOCliDefault {
   val atbp = Command(Name, logging)
     .subcommands(
       Markdown2Confluence.command,
-      Plate.command
+      Plate.command,
+      TraceViz.command
     )
     .withHelp(
       blocks(

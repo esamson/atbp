@@ -50,7 +50,7 @@ jobs:
         run: sbt '++ ${{ matrix.scala }}' test
 
       - name: Compress target directories
-        run: tar cf targets.tar plate/target target jira/target confluence/target md2c/target cli/target http/target adf-builder/target project/target
+        run: tar cf targets.tar plate/target target traceviz/target jira/target confluence/target md2c/target cli/target http/target adf-builder/target project/target
 
       - name: Upload target directories
         uses: actions/upload-artifact@v4
@@ -89,12 +89,12 @@ jobs:
       - name: Setup sbt
         uses: sbt/setup-sbt@v1
 
-      - name: Download target directories (3.7.0)
+      - name: Download target directories (3.7.1)
         uses: actions/download-artifact@v4
         with:
-          name: target-${{ matrix.os }}-3.7.0-${{ matrix.java }}
+          name: target-${{ matrix.os }}-3.7.1-${{ matrix.java }}
 
-      - name: Inflate target directories (3.7.0)
+      - name: Inflate target directories (3.7.1)
         run: |
           tar xf targets.tar
           rm targets.tar

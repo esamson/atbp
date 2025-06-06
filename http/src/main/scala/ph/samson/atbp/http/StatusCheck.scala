@@ -1,5 +1,6 @@
 package ph.samson.atbp.http
 
+import io.netty.handler.codec.PrematureChannelClosureException
 import zio.Clock
 import zio.Duration
 import zio.Schedule
@@ -122,7 +123,8 @@ object StatusCheck {
                         }
                       case _ => ZIO.succeed(false)
                     }
-                  case _ => ZIO.succeed(false)
+                  case _: PrematureChannelClosureException => ZIO.succeed(true)
+                  case _                                   => ZIO.succeed(false)
                 }
             policy.tapOutput(o =>
               ZIO.logWarning(s"retrying $method $url after $o")

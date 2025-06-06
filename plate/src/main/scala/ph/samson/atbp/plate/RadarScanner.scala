@@ -14,7 +14,11 @@ import JiraOps.*
 
 trait RadarScanner {
 
-  def scan(source: File, excludeProjects: List[String]): Task[File]
+  def scan(
+      source: File,
+      target: Option[File],
+      excludeProjects: List[String]
+  ): Task[File]
 }
 
 object RadarScanner {
@@ -23,7 +27,11 @@ object RadarScanner {
 
   private class LiveImpl(client: Client) extends RadarScanner {
 
-    def scan(source: File, excludeProjects: List[String]): Task[File] =
+    override def scan(
+        source: File,
+        target: Option[File],
+        excludeProjects: List[String]
+    ): Task[File] =
       ZIO.logSpan("scan") {
         for {
           _ <- ZIO.logInfo(
@@ -31,15 +39,19 @@ object RadarScanner {
           )
           sourceLines <- ZIO.attemptBlockingIO(source.lines.toList)
           outputLines <- doScan(sourceLines, excludeProjects)
-          outFile <- ZIO.attemptBlockingIO {
-            val name = source.`extension`() match {
-              case Some(ext) =>
-                source.nameWithoutExtension(includeAll = false) + Suffix + ext
-              case None => source.name + Suffix
-            }
-            val out = source.sibling(name)
-            out.overwrite(outputLines.mkString("\n"))
+          out = target match {
+            case Some(t) => t
+            case None    =>
+              val name = source.`extension`() match {
+                case Some(ext) =>
+                  source.nameWithoutExtension(includeAll = false) + Suffix + ext
+                case None => source.name + Suffix
+              }
+              source.sibling(name)
           }
+          outFile <- ZIO.attemptBlockingIO(
+            out.overwrite(outputLines.mkString("\n"))
+          )
         } yield outFile
       }
 

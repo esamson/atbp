@@ -25,6 +25,7 @@ object Plate {
   import ph.samson.atbp.cli.Plate.Check.Status
 
   private val source = Args.file("source", Yes)
+  private val target = Options.file("target", Yes).optional
 
   sealed trait Action extends ToolCommand
 
@@ -90,14 +91,18 @@ object Plate {
     }
   }
 
-  private case class Radar(source: File, exclude: List[String]) extends Action {
+  private case class Radar(
+      source: File,
+      target: Option[File],
+      exclude: List[String]
+  ) extends Action {
     override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
       conf.jiraConf match {
         case None       => ZIO.fail(new Exception("No jira config."))
         case Some(jira) =>
           val scan = for {
             scanner <- ZIO.service[RadarScanner]
-            result <- scanner.scan(source, exclude)
+            result <- scanner.scan(source, target, exclude)
             _ <- ZIO.logInfo(s"radar result: $result")
           } yield ()
 
@@ -116,8 +121,9 @@ object Plate {
       .map(_.split(',').toList.map(_.trim))
       .withDefault(Nil) ?? "Projects to exclude"
 
-    val command = Command("radar", exclude, source).map {
-      case (exclude, source) => Radar(source, exclude)
+    val command = Command("radar", target ++ exclude, source).map {
+      case ((target, exclude), source) =>
+        Radar(source, target.map(File(_)), exclude)
     }
   }
 

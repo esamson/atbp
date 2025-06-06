@@ -39,28 +39,36 @@ object TefJson {
           )
         case other => ZIO.fail(BadRow(other))
       }
-      tef = entries.zipWithIndex.flatMap { (entry, idx) =>
-        val startMicros = TimeUnit.SECONDS.toMicros(entry.start.toEpochSecond)
-        val endMicros = TimeUnit.SECONDS.toMicros(entry.end.toEpochSecond)
-        List(
-          s"""{
-             |    "name": "${entry.name}",
-             |    "cat": "PERF",
-             |    "ph": "B",
-             |    "pid": "${source.nameWithoutExtension}",
-             |    "tid": "${entry.name}",
-             |    "ts": $startMicros
-             |}""".stripMargin,
-          s"""{
-             |    "name": "${entry.name}",
-             |    "cat": "PERF",
-             |    "ph": "E",
-             |    "pid": "${source.nameWithoutExtension}",
-             |    "tid": "${entry.name}",
-             |    "ts": $endMicros
-             |}""".stripMargin
+      tef = entries
+        .sortWith((left, right) =>
+          if (left.start != right.start) {
+            left.start.isBefore(right.start)
+          } else {
+            right.end.isBefore(left.end)
+          }
         )
-      }
+        .flatMap { entry =>
+          val startMicros = TimeUnit.SECONDS.toMicros(entry.start.toEpochSecond)
+          val endMicros = TimeUnit.SECONDS.toMicros(entry.end.toEpochSecond)
+          List(
+            s"""{
+               |    "name": "${entry.name}",
+               |    "cat": "PERF",
+               |    "ph": "B",
+               |    "pid": "${source.nameWithoutExtension}",
+               |    "tid": "${entry.name}",
+               |    "ts": $startMicros
+               |}""".stripMargin,
+            s"""{
+               |    "name": "${entry.name}",
+               |    "cat": "PERF",
+               |    "ph": "E",
+               |    "pid": "${source.nameWithoutExtension}",
+               |    "tid": "${entry.name}",
+               |    "ts": $endMicros
+               |}""".stripMargin
+          )
+        }
       _ <- Console.printLine(tef.mkString("[", ",\n", "]"))
     } yield ()
   }

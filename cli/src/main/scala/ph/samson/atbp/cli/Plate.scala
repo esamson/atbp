@@ -62,9 +62,9 @@ object Plate {
           val check = for {
             inspector <- ZIO.service[Inspector]
             result <- status match {
-              case Check.Cooking => inspector.cooking(source)
+              case Check.Cooking => inspector.cooking(source, target)
               case Check.Stale   => inspector.stale(source, target)
-              case Check.Done    => inspector.done(source)
+              case Check.Done    => inspector.done(source, target)
             }
             _ <- ZIO.logInfo(s"check result: $result")
           } yield ()

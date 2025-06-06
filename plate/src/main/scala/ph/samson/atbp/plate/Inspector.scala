@@ -17,9 +17,9 @@ import java.time.temporal.ChronoUnit.DAYS
 import scala.util.control.NoStackTrace
 
 trait Inspector {
-  def cooking(source: File): Task[File]
+  def cooking(source: File, target: Option[File]): Task[File]
   def stale(source: File, target: Option[File]): Task[File]
-  def done(source: File): Task[File]
+  def done(source: File, target: Option[File]): Task[File]
 }
 
 object Inspector {
@@ -73,18 +73,19 @@ object Inspector {
       source.sibling(name)
     }
 
-    override def done(source: File): Task[File] = ZIO.logSpan("done") {
-      extract(source, sibling(source, ".done")) { key =>
-        for {
-          issue <- client.getIssue(key)
-          descendants <- client.getDescendants(key)
-        } yield issue.isDone && descendants.forall(_.isDone)
+    override def done(source: File, target: Option[File]): Task[File] =
+      ZIO.logSpan("done") {
+        extract(source, target.getOrElse(sibling(source, ".done"))) { key =>
+          for {
+            issue <- client.getIssue(key)
+            descendants <- client.getDescendants(key)
+          } yield issue.isDone && descendants.forall(_.isDone)
+        }
       }
-    }
 
-    override def cooking(source: File): Task[File] =
+    override def cooking(source: File, target: Option[File]): Task[File] =
       ZIO.logSpan("cooking") {
-        extract(source, sibling(source, ".cooking")) { key =>
+        extract(source, target.getOrElse(sibling(source, ".cooking"))) { key =>
           for {
             issue <- client.getIssue(key)
             result <- ZIO.succeed(!issue.isDone) && (

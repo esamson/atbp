@@ -53,7 +53,8 @@ object Plate {
     }
   }
 
-  private case class Check(source: File, status: Status) extends Action {
+  private case class Check(source: File, target: Option[File], status: Status)
+      extends Action {
     override def run(conf: Conf): ZIO[Any, Throwable, Unit] = {
       conf.jiraConf match {
         case None       => ZIO.fail(new Exception("No jira config."))
@@ -62,7 +63,7 @@ object Plate {
             inspector <- ZIO.service[Inspector]
             result <- status match {
               case Check.Cooking => inspector.cooking(source)
-              case Check.Stale   => inspector.stale(source)
+              case Check.Stale   => inspector.stale(source, target)
               case Check.Done    => inspector.done(source)
             }
             _ <- ZIO.logInfo(s"check result: $result")
@@ -85,9 +86,9 @@ object Plate {
       "done" -> Done
     )
 
-    val command = Command("check", status, source).map {
-      case (status, source) =>
-        Check(source, status)
+    val command = Command("check", status ++ target, source).map {
+      case ((status, target), source) =>
+        Check(source, target.map(File(_)), status)
     }
   }
 

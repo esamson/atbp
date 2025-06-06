@@ -18,7 +18,7 @@ import scala.util.control.NoStackTrace
 
 trait Inspector {
   def cooking(source: File): Task[File]
-  def stale(source: File): Task[File]
+  def stale(source: File, target: Option[File]): Task[File]
   def done(source: File): Task[File]
 }
 
@@ -53,25 +53,28 @@ object Inspector {
       * @return
       *   target file
       */
-    private def extract(source: File, suffix: String)(
+    private def extract(source: File, target: File)(
         check: String => Task[Boolean]
     ): Task[File] =
       for {
         sourceLines <- ZIO.attemptBlockingIO(source.lines.toList)
         targetLines <- ZIO.filterPar(sourceLines)(includeLine(check))
         outFile <- ZIO.attemptBlockingIO {
-          val name = source.`extension`() match {
-            case Some(ext) =>
-              source.nameWithoutExtension(includeAll = false) + suffix + ext
-            case None => source.name + suffix
-          }
-          val out = source.sibling(name)
-          out.overwrite(prune(targetLines).mkString("\n"))
+          target.overwrite(prune(targetLines).mkString("\n"))
         }
       } yield outFile
 
+    private def sibling(source: File, suffix: String) = {
+      val name = source.`extension`() match {
+        case Some(ext) =>
+          source.nameWithoutExtension(includeAll = false) + suffix + ext
+        case None => source.name + suffix
+      }
+      source.sibling(name)
+    }
+
     override def done(source: File): Task[File] = ZIO.logSpan("done") {
-      extract(source, ".done") { key =>
+      extract(source, sibling(source, ".done")) { key =>
         for {
           issue <- client.getIssue(key)
           descendants <- client.getDescendants(key)
@@ -81,7 +84,7 @@ object Inspector {
 
     override def cooking(source: File): Task[File] =
       ZIO.logSpan("cooking") {
-        extract(source, ".cooking") { key =>
+        extract(source, sibling(source, ".cooking")) { key =>
           for {
             issue <- client.getIssue(key)
             result <- ZIO.succeed(!issue.isDone) && (
@@ -159,9 +162,9 @@ object Inspector {
       someInProgress || partialDone
     }
 
-    override def stale(source: File): Task[File] =
+    override def stale(source: File, target: Option[File]): Task[File] =
       ZIO.logSpan("stale") {
-        extract(source, ".stale") { key =>
+        extract(source, target.getOrElse(sibling(source, ".stale"))) { key =>
           for {
             issue <- client.getIssue(key)
             result <-

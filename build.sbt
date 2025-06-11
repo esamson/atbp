@@ -10,10 +10,10 @@ lazy val root = Project("atbp", file("."))
     name := "atbp-root",
     publish / skip := true
   )
-  .aggregate(cli, confluence, http, jira, md2c, plate, traceviz)
+  .aggregate(cli, confluence, http, jira, md2c, plate, retext, traceviz)
 
 lazy val cli = atbpModule("cli")
-  .dependsOn(md2c, plate, traceviz)
+  .dependsOn(md2c, plate, retext, traceviz)
   .enablePlugins(
     DockerPlugin,
     JavaAppPackaging
@@ -73,6 +73,9 @@ lazy val md2c = atbpModule("md2c")
 lazy val plate = atbpModule("plate")
   .dependsOn(jira)
   .settings(Dependencies.plate)
+
+lazy val retext = atbpModule("retext")
+  .settings(Dependencies.retext)
 
 lazy val traceviz = atbpModule("traceviz")
   .settings(Dependencies.traceviz)

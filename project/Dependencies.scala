@@ -35,6 +35,8 @@ object Dependencies {
       "org.commonmark" % "commonmark-ext-image-attributes" % CommonMark
     val commonmarkExtIns = "org.commonmark" % "commonmark-ext-ins" % CommonMark
 
+    val commonsIo = "commons-io" % "commons-io" % "2.19.0"
+
     val plantuml = "net.sourceforge.plantuml" % "plantuml" % "1.2025.3"
 
     val pprint = "com.lihaoyi" %% "pprint" % "0.9.0"
@@ -156,6 +158,12 @@ object Dependencies {
     TestLibs.zioTest,
     TestLibs.zioTestMagnolia,
     TestLibs.zioTestSbt
+  )
+
+  val retext = libraryDependencies ++= Seq(
+    zio,
+    betterFiles,
+    commonsIo
   )
 
   val traceviz = libraryDependencies ++= Seq(

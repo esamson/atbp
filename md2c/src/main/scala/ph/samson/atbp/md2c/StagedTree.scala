@@ -93,12 +93,13 @@ object StagedTree {
       for {
         Parsed(frontMatter, sourceDoc, contentHash) <- parse(node)
         plantUmlRendered <- PlantUml.transform(sourceDoc)
+        extensionsRendered = Extensions.transform(plantUmlRendered)
         children <- ZIO.foreachPar(children(node))(convert)
       } yield Page(
         node.name,
         node.source,
         frontMatter,
-        plantUmlRendered,
+        extensionsRendered,
         contentHash,
         children
       )

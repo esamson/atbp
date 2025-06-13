@@ -7,6 +7,7 @@ import com.atlassian.adf.model.node.Text
 import com.atlassian.adf.model.node.`type`.DocContent
 import com.typesafe.config.ConfigFactory
 
+import java.util.Map.of as jMap
 import scala.jdk.CollectionConverters.*
 import scala.util.Failure
 import scala.util.Success
@@ -54,5 +55,31 @@ object Extensions {
 
     adf
   }
+
+  /** Child pages macro
+    *
+    * Display a custom list of content nested under a page.
+    */
+  def childPages: Extension = {
+    Extension
+      .extension()
+      .extensionKey("children")
+      .extensionType("com.atlassian.confluence.macro.core")
+      .parameters(
+        jMap(
+          "macroParams",
+          jMap(
+            "all",
+            value("true"),
+            "depth",
+            value("0"),
+            "allChildren",
+            value("true")
+          )
+        )
+      )
+  }
+
+  private def value(v: String) = jMap("value", v)
 
 }

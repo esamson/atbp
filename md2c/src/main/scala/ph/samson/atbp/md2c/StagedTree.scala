@@ -60,7 +60,11 @@ object StagedTree {
     def parse(node: Node): Task[Parsed] = node match {
       case Directory(name, _, _) =>
         ZIO.succeed(
-          Parsed(FrontMatter.Empty, Doc.doc(Heading.h1(name)), "directory")
+          Parsed(
+            FrontMatter.Empty,
+            Doc.doc(Extensions.childPages),
+            "directory listing"
+          )
         )
       case MarkdownBranch(_, content, _) => Parser.parse(content)
       case MarkdownLeaf(_, content)      => Parser.parse(content)

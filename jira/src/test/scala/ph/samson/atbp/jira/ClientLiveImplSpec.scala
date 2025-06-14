@@ -34,6 +34,15 @@ object ClientLiveImplSpec extends JiraSpec {
       } yield result
 
       for (s <- Live.live(rank).exit) yield assertTrue(s.isSuccess)
+    },
+    test("getIssue") {
+      val rank = for {
+        client <- ZIO.service[Client]
+        result <- client.getIssue("CHRONOS-10393")
+        _ <- ZIO.log(s"result\n${pprint(result)}")
+      } yield result
+
+      for (s <- Live.live(rank).exit) yield assertTrue(s.isSuccess)
     }
   ) @@ ifEnv(EnvVars.Site)(!_.isBlank)
     @@ ifEnv(EnvVars.User)(!_.isBlank)

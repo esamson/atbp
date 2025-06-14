@@ -1,5 +1,7 @@
 package ph.samson.atbp.jira.model
 
+import ph.samson.atbp.jira.Conf.CustomFields
+import zio.Task
 import zio.schema.DeriveSchema
 import zio.schema.Schema
 import zio.schema.codec.BinaryCodec
@@ -15,7 +17,15 @@ case class SearchResults(
 }
 
 object SearchResults {
-  implicit val schema: Schema[SearchResults] = DeriveSchema.gen
-  implicit val codec: BinaryCodec[SearchResults] =
-    JsonCodec.schemaBasedBinaryCodec
+  def schema(customFields: CustomFields): Task[Schema[SearchResults]] = {
+    for {
+      given Schema[Issue] <- Issue.schema(customFields)
+    } yield DeriveSchema.gen
+  }
+  def codec(customFields: CustomFields): Task[BinaryCodec[SearchResults]] = {
+    for {
+      given Schema[SearchResults] <- schema(customFields)
+
+    } yield JsonCodec.schemaBasedBinaryCodec
+  }
 }

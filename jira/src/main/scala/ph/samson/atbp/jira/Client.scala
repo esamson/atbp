@@ -1,6 +1,7 @@
 package ph.samson.atbp.jira
 
 import ph.samson.atbp.http.StatusCheck
+import ph.samson.atbp.jira.Conf.CustomFields
 import ph.samson.atbp.jira.model.Changelog
 import ph.samson.atbp.jira.model.Comment
 import ph.samson.atbp.jira.model.EditIssueRequest
@@ -29,6 +30,7 @@ import zio.http.Status
 import zio.http.URL
 import zio.http.ZClient
 import zio.http.ZClientAspect
+import zio.schema.codec.BinaryCodec
 
 import scala.annotation.tailrec
 
@@ -66,7 +68,12 @@ object Client {
       issueIdOrKey: String
   )
 
-  private class LiveImpl(client: HttpClient) extends Client {
+  private class LiveImpl(client: HttpClient, customFields: CustomFields)(using
+      BinaryCodec[Issue],
+      BinaryCodec[SearchResults]
+  ) extends Client {
+
+    val fieldNames = Issue.fieldNames(customFields)
 
     val platformClient = client.addPath("/rest/api/3")
     val softwareClient = client.addPath("/rest/agile/1.0")
@@ -195,7 +202,7 @@ object Client {
     }
 
     override def search(jql: String): Task[List[Issue]] = {
-      val request = SearchRequest(jql, Issue.FieldNames, maxResults = 100)
+      val request = SearchRequest(jql, fieldNames, maxResults = 100)
 
       def tail(head: SearchResults): List[SearchRequest] = {
 
@@ -323,6 +330,8 @@ object Client {
     )
 
     for {
+      given BinaryCodec[Issue] <- Issue.codec(conf.customFields)
+      given BinaryCodec[SearchResults] <- SearchResults.codec(conf.customFields)
       version <- ZIO
         .attempt({
           // read version info from JAR manifest
@@ -342,7 +351,7 @@ object Client {
         ) @@ loggingAspect @@ StatusCheck.successOnly()
       )
     } yield {
-      LiveImpl(client): Client
+      LiveImpl(client, conf.customFields): Client
     }
   }
 }

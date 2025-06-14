@@ -1,5 +1,6 @@
 package ph.samson.atbp.jira
 
+import ph.samson.atbp.jira.Conf.CustomFields
 import zio.Runtime
 import zio.System
 import zio.ZLayer
@@ -14,6 +15,7 @@ abstract class JiraSpec extends ZIOSpec[Client] {
     val Site = "JIRA_SITE"
     val User = "JIRA_USER"
     val Token = "JIRA_TOKEN"
+    val StartDate = "JIRA_START_DATE"
     val Search = "JIRA_QUERY"
   }
 
@@ -22,8 +24,9 @@ abstract class JiraSpec extends ZIOSpec[Client] {
       site <- System.envOrElse(EnvVars.Site, "bogus")
       user <- System.envOrElse(EnvVars.User, "bogus")
       token <- System.envOrElse(EnvVars.Token, "bogus")
+      startDate <- System.envOrElse(EnvVars.StartDate, "bogus")
     } yield {
-      Conf(site, user, token)
+      Conf(site, user, token, CustomFields(startDate))
     }
   }
 

@@ -20,4 +20,5 @@ object Schemas {
         Try(zonedDateTime.format(JiraDateTime)).toEither.left.map(_.toString)
     )
 
+  class OutdatedSchema(msg: String) extends Exception(msg)
 }

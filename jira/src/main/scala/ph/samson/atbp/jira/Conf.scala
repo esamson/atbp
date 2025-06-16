@@ -8,13 +8,13 @@ case class Conf(
 )
 
 object Conf {
-  case class CustomFields(startDate: String)
+  case class CustomFields(sprints: String, startDate: String)
   object CustomFields {
 
     /** Default values if no custom fields are given.
       *
       * This will result in these fields always being empty in results.
       */
-    val Default: CustomFields = CustomFields("startDate")
+    val Default: CustomFields = CustomFields("sprintField", "startDateField")
   }
 }

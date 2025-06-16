@@ -9,7 +9,7 @@ import scala.util.Try
 object Schemas {
 
   private val JiraDateTime =
-    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+    DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX")
   implicit val jdtSchema: Schema[ZonedDateTime] =
     Schema[String].transformOrFail(
       string =>

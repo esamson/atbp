@@ -15,6 +15,7 @@ abstract class JiraSpec extends ZIOSpec[Client] {
     val Site = "JIRA_SITE"
     val User = "JIRA_USER"
     val Token = "JIRA_TOKEN"
+    val Sprints = "JIRA_SPRINTS"
     val StartDate = "JIRA_START_DATE"
     val Search = "JIRA_QUERY"
   }
@@ -24,9 +25,10 @@ abstract class JiraSpec extends ZIOSpec[Client] {
       site <- System.envOrElse(EnvVars.Site, "bogus")
       user <- System.envOrElse(EnvVars.User, "bogus")
       token <- System.envOrElse(EnvVars.Token, "bogus")
+      sprints <- System.envOrElse(EnvVars.Sprints, "bogus")
       startDate <- System.envOrElse(EnvVars.StartDate, "bogus")
     } yield {
-      Conf(site, user, token, CustomFields(startDate))
+      Conf(site, user, token, CustomFields(sprints, startDate))
     }
   }
 

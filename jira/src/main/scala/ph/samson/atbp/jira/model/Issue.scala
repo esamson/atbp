@@ -5,7 +5,7 @@ import zio.Task
 import zio.ZIO
 import zio.schema.DeriveSchema
 import zio.schema.Schema
-import zio.schema.Schema.CaseClass14
+import zio.schema.Schema.CaseClass15
 import zio.schema.Schema.CaseClass4
 import zio.schema.Schema.Field
 import zio.schema.codec.BinaryCodec
@@ -39,6 +39,7 @@ object Issue {
     "issuetype",
     "status",
     "parent",
+    customFields.sprints,
     customFields.startDate
   )
 
@@ -56,8 +57,14 @@ object Issue {
       priority: Option[Priority],
       issuetype: IssueType,
       status: Status,
-      parent: Option[Parent]
-  )
+      parent: Option[Parent],
+      sprints: Option[List[Sprint]]
+  ) {
+    def getSprints: List[Sprint] = sprints match {
+      case Some(list) => list
+      case None       => Nil
+    }
+  }
 
   case class Resolution(
       id: String,
@@ -115,13 +122,65 @@ object Issue {
     )
   }
 
+  /** A Sprint.
+    *
+    * On the Jira Software Cloud API, there is a "sprint" field, which is a
+    * single Sprint object.
+    *
+    * On the Jira Cloud platform REST API, sprint is a custom field, which is an
+    * array of similar but not exactly the same Sprint objects.
+    *
+    * {{{
+    * {
+    *     "id": "1381729",
+    *     "self": "https://xxxx.atlassian.net/rest/agile/1.0/issue/1081120",
+    *     "key": "XXX-318",
+    *     "fields": {
+    *         "customfield_10736": [
+    *             {
+    *                 "id": 19718,
+    *                 "name": "my-sprint",
+    *                 "state": "active",
+    *                 "boardId": 2398,
+    *                 "goal": "",
+    *                 "startDate": "2025-06-11T09:18:26.610Z",
+    *                 "endDate": "2025-06-24T12:00:00.000Z"
+    *             }
+    *         ],
+    *         "sprint": {
+    *             "id": 11721,
+    *             "self": "https://xxxx.atlassian.net/rest/agile/1.0/sprint/19718",
+    *             "state": "active",
+    *             "name": "my-sprint",
+    *             "startDate": "2025-06-11T09:18:26.610Z",
+    *             "endDate": "2025-06-24T12:00:00.000Z",
+    *             "createdDate": "2025-06-11T08:10:00.645Z",
+    *             "originBoardId": 2398,
+    *             "goal": ""
+    *         }
+    *     }
+    * }
+    * }}}
+    *
+    * We use the platform version as least common denominator.
+    */
+  case class Sprint(
+      id: Int,
+      name: String,
+      state: String,
+      boardId: Int,
+      goal: String,
+      startDate: ZonedDateTime,
+      endDate: ZonedDateTime
+  )
+
   def schema(customFields: CustomFields): Task[Schema[Issue]] = {
     import Schemas.*
 
     val customFieldsSchema: Task[Schema[Fields]] = {
       val fieldsSchema: Schema[Fields] = DeriveSchema.gen
       fieldsSchema match {
-        case CaseClass14(
+        case CaseClass15(
               id,
               summaryField,
               statuscategorychangedateField,
@@ -137,6 +196,7 @@ object Issue {
               issuetypeField,
               statusField,
               parentField,
+              sprintsField,
               construct,
               annotations
             ) =>
@@ -151,8 +211,19 @@ object Issue {
                 set
               )
           }
+          val customSprintsField = sprintsField match {
+            case Field(name, schema, annotations, validation, get, set) =>
+              Field(
+                customFields.sprints,
+                schema,
+                annotations,
+                validation,
+                get,
+                set
+              )
+          }
           ZIO.succeed(
-            CaseClass14(
+            CaseClass15(
               id,
               summaryField,
               statuscategorychangedateField,
@@ -168,6 +239,7 @@ object Issue {
               issuetypeField,
               statusField,
               parentField,
+              customSprintsField,
               construct,
               annotations
             )
@@ -175,7 +247,7 @@ object Issue {
         case other =>
           ZIO.fail(
             OutdatedSchema(
-              s"expected Issue.Fields to be CaseClass14 but got $other"
+              s"expected Issue.Fields to be CaseClass15 but got $other"
             )
           )
       }

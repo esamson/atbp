@@ -64,6 +64,23 @@ object Inspector {
         }
       } yield outFile
 
+    case class Enriched[T](line: String, aux: Option[T])
+    private def unenriched[T](line: String) = Enriched[T](line, None)
+
+    private def report[T](source: File, target: File)(
+        enrichLine: String => Task[Enriched[T]],
+        synthesize: List[Enriched[T]] => List[String]
+    ): Task[File] =
+      for {
+        sourceLines <- ZIO.attemptBlockingIO(source.lines.toList)
+        enrichedLines <- ZIO.foreachPar(sourceLines)(enrichLine)
+        reportLines = synthesize(enrichedLines)
+        pruned = prune(reportLines)
+        outFile <- ZIO.attemptBlockingIO {
+          target.overwrite(pruned.mkString("\n"))
+        }
+      } yield outFile
+
     private def sibling(source: File, suffix: String) = {
       val name = source.`extension`() match {
         case Some(ext) =>
@@ -73,15 +90,43 @@ object Inspector {
       source.sibling(name)
     }
 
-    override def done(source: File, target: Option[File]): Task[File] =
-      ZIO.logSpan("done") {
-        extract(source, target.getOrElse(sibling(source, ".done"))) { key =>
-          for {
-            issue <- client.getIssue(key)
-            descendants <- client.getDescendants(key)
-          } yield issue.isDone && descendants.forall(_.isDone)
-        }
+    case class IssueTree(issue: Issue, descendants: List[Issue])
+
+    def enrichKey[T](
+        enrich: String => Task[T]
+    )(line: String): Task[Enriched[T]] =
+      line match {
+        case JiraLink(key) => enrich(key).map(t => Enriched(line, Some(t)))
+        case _             => ZIO.succeed(unenriched[T](line))
       }
+
+    override def done(source: File, target: Option[File]): Task[File] = {
+      val enrichLine: String => Task[Enriched[IssueTree]] = enrichKey { key =>
+        for {
+          issue <- client.getIssue(key)
+          descendants <- client.getDescendants(key)
+        } yield IssueTree(issue, descendants)
+      }
+
+      def synthesize(lines: List[Enriched[IssueTree]]): List[String] = {
+        def process(
+            remaining: List[Enriched[IssueTree]],
+            result: List[String]
+        ): List[String] = remaining match {
+          case Nil          => result.reverse
+          case head :: next => ???
+        }
+
+        process(lines, Nil)
+      }
+
+      ZIO.logSpan("done") {
+        report(source, target.getOrElse(sibling(source, ".done")))(
+          enrichLine,
+          synthesize
+        )
+      }
+    }
 
     override def cooking(source: File, target: Option[File]): Task[File] =
       ZIO.logSpan("cooking") {

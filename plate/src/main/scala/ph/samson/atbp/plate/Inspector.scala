@@ -111,13 +111,52 @@ object Inspector {
       def synthesize(lines: List[Enriched[IssueTree]]): List[String] = {
         def process(
             remaining: List[Enriched[IssueTree]],
+            succeedsIncludedJiraLine: Boolean, // true if last Jira line was included
             result: List[String]
         ): List[String] = remaining match {
           case Nil          => result.reverse
-          case head :: next => ???
+          case head :: next =>
+            head match {
+              case Enriched(line, None) =>
+                line match {
+                  case "" =>
+                    process(next, succeedsIncludedJiraLine, "" :: result)
+                  case heading if heading.startsWith("#") =>
+                    process(next, false, heading :: result)
+                  case other =>
+                    if (succeedsIncludedJiraLine) {
+                      process(next, true, other :: result)
+                    } else {
+                      process(next, false, result)
+                    }
+                }
+
+              case Enriched(line, Some(IssueTree(issue, descendants))) =>
+                if (issue.isDone) {
+                  val reportLine =
+                    if (issue.fields.resolution.exists(_.name == "Done")) {
+                      line
+                    } else {
+                      s"$line <${issue.fields.resolution.map(_.name)}>"
+                    }
+
+                  if (descendants.forall(_.isDone)) {
+                    process(next, true, reportLine :: result)
+                  } else {
+                    val flagReport =
+                      s"$reportLine [But NOT DONE: ${descendants.filterNot(_.isDone).map(_.key).mkString(", ")}]"
+                    process(next, true, flagReport :: result)
+                  }
+                } else if (descendants.forall(_.isDone)) {
+                  val flagReport = s"$line [ALL DESCENDANTS DONE]"
+                  process(next, true, flagReport :: result)
+                } else {
+                  process(next, false, result)
+                }
+            }
         }
 
-        process(lines, Nil)
+        process(lines, false, Nil)
       }
 
       ZIO.logSpan("done") {

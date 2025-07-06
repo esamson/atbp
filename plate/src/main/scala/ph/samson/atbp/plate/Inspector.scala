@@ -137,14 +137,18 @@ object Inspector {
                     if (issue.fields.resolution.exists(_.name == "Done")) {
                       line
                     } else {
-                      s"$line <${issue.fields.resolution.map(_.name)}>"
+                      val resolution = issue.fields.resolution
+                        .map(_.name)
+                        .getOrElse("NO RESOLUTION")
+                      s"$line [RESOLVED as $resolution]"
                     }
 
                   if (descendants.forall(_.isDone)) {
                     process(next, true, reportLine :: result)
                   } else {
-                    val flagReport =
-                      s"$reportLine [But NOT DONE: ${descendants.filterNot(_.isDone).map(_.key).mkString(", ")}]"
+                    val notDone =
+                      descendants.filterNot(_.isDone).map(_.key).mkString(", ")
+                    val flagReport = s"$reportLine [But NOT DONE: $notDone]"
                     process(next, true, flagReport :: result)
                   }
                 } else if (descendants.forall(_.isDone)) {

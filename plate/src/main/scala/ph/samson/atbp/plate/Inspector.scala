@@ -151,7 +151,9 @@ object Inspector {
                     val flagReport = s"$reportLine [But NOT DONE: $notDone]"
                     process(next, true, flagReport :: result)
                   }
-                } else if (descendants.forall(_.isDone)) {
+                } else if (
+                  descendants.nonEmpty && descendants.forall(_.isDone)
+                ) {
                   val flagReport = s"$line [ALL DESCENDANTS DONE]"
                   process(next, true, flagReport :: result)
                 } else {

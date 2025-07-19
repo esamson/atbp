@@ -35,7 +35,7 @@ object Dependencies {
       "org.commonmark" % "commonmark-ext-image-attributes" % CommonMark
     val commonmarkExtIns = "org.commonmark" % "commonmark-ext-ins" % CommonMark
 
-    val commonsIo = "commons-io" % "commons-io" % "2.19.0"
+    val commonsIo = "commons-io" % "commons-io" % "2.20.0"
 
     val plantuml = "net.sourceforge.plantuml" % "plantuml" % "1.2025.4"
 

@@ -103,8 +103,9 @@ object Inspector {
     override def done(source: File, target: Option[File]): Task[File] = {
       val enrichLine: String => Task[Enriched[IssueTree]] = enrichKey { key =>
         for {
-          issue <- client.getIssue(key)
-          descendants <- client.getDescendants(key)
+          (issue, descendants) <- client
+            .getIssue(key)
+            .zipPar(client.getDescendants(key))
         } yield IssueTree(issue, descendants)
       }
 

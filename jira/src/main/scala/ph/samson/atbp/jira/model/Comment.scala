@@ -9,5 +9,6 @@ case class Comment(
     updateAuthor: UserDetails,
     created: ZonedDateTime,
     updated: ZonedDateTime,
+    renderedBody: String,
     jsdPublic: Boolean
 )

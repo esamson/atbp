@@ -11,9 +11,11 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit.DAYS
+import scala.annotation.tailrec
 import scala.util.control.NoStackTrace
 
 trait Inspector {
@@ -110,6 +112,7 @@ object Inspector {
       }
 
       def synthesize(lines: List[Enriched[IssueTree]]): List[String] = {
+        @tailrec
         def process(
             remaining: List[Enriched[IssueTree]],
             succeedsIncludedJiraLine: Boolean, // true if last Jira line was included
@@ -174,7 +177,196 @@ object Inspector {
       }
     }
 
-    override def cooking(source: File, target: Option[File]): Task[File] =
+    case class FatIssue(
+        issue: Issue,
+        changelogs: List[Changelog],
+        comments: List[Comment]
+    ) {
+      def progress(sinceDays: Int)(using now: Instant) = {
+        val limit = now
+          .atZone(ZoneId.systemDefault())
+          .minus(sinceDays, DAYS)
+          .`with`(LocalTime.MIDNIGHT)
+
+        val progressLogs = changelogs.filter {
+          case Changelog(id, author, created, items, historyMetadata) =>
+            created.isAfter(limit) &&
+            !items.forall { item =>
+              // changes we don't count as progress
+              item.field == "Rank"
+              || item.field == "labels"
+            }
+        } map { case Changelog(id, author, created, items, historyMetadata) =>
+          s"$created [${author.displayName}]: ${items.map(i => s"${i.field} -> ${i.toAsString}").mkString("; ")}"
+        }
+
+        val progressComments = comments.filter {
+          case Comment(
+                self,
+                id,
+                author,
+                updateAuthor,
+                created,
+                updated,
+                renderedBody,
+                jsdPublic
+              ) =>
+            updated.isAfter(limit)
+        } map {
+          case Comment(
+                self,
+                id,
+                author,
+                updateAuthor,
+                created,
+                updated,
+                renderedBody,
+                jsdPublic
+              ) =>
+            s"$updated [${updateAuthor.displayName}]: $renderedBody"
+        }
+
+        progressLogs ++ progressComments
+      }
+
+      def hasProgress(sinceDays: Int)(using now: Instant): Boolean = {
+        val limit = now
+          .atZone(ZoneId.systemDefault())
+          .minus(sinceDays, DAYS)
+          .`with`(LocalTime.MIDNIGHT)
+
+        val hasNewLogs = changelogs.exists {
+          case Changelog(id, author, created, items, historyMetadata) =>
+            created.isAfter(limit) &&
+            !items.forall { item =>
+              // changes we don't count as progress
+              item.field == "Rank"
+              || item.field == "labels"
+            }
+        }
+
+        val hasNewComments = comments.exists {
+          case Comment(
+                self,
+                id,
+                author,
+                updateAuthor,
+                created,
+                updated,
+                renderedBody,
+                jsdPublic
+              ) =>
+            updated.isAfter(limit)
+        }
+
+        hasNewLogs || hasNewComments
+      }
+    }
+
+    object FatIssue {
+      def of(issue: Issue) = for {
+        (changelogs, comments) <- client
+          .getChangelogs(issue.key)
+          .zipPar(client.getComments(issue.key))
+      } yield FatIssue(issue, changelogs, comments)
+    }
+
+    case class FatTree(issue: FatIssue, descendants: List[FatIssue])
+
+    override def cooking(source: File, target: Option[File]): Task[File] = {
+      val enrichLine: String => Task[Enriched[FatTree]] = enrichKey { key =>
+        for {
+          issueReq <- client.getIssue(key).fork
+          descendantsReq <- client.getDescendants(key).fork
+          issue <- issueReq.join
+          fatIssueReq <- FatIssue.of(issue).fork
+          descendants <- descendantsReq.join
+          fatDescendantsReq <- ZIO.foreachPar(descendants)(FatIssue.of).fork
+          (fatIssue, fatDescendants) <- fatIssueReq.join.zipPar(
+            fatDescendantsReq.join
+          )
+        } yield FatTree(fatIssue, fatDescendants)
+      }
+
+      def synthesize(
+          lines: List[Enriched[FatTree]]
+      )(using now: Instant): List[String] = {
+        @tailrec
+        def process(
+            remaining: List[Enriched[FatTree]],
+            succeedsIncludedJiraLine: Boolean, // true if last Jira line was included
+            result: List[String]
+        ): List[String] = remaining match {
+          case Nil          => result.reverse
+          case head :: next =>
+            head match {
+              case Enriched(line, None) =>
+                line match {
+                  case "" =>
+                    process(next, succeedsIncludedJiraLine, "" :: result)
+                  case heading if heading.startsWith("#") =>
+                    process(next, false, heading :: result)
+                  case other =>
+                    if (succeedsIncludedJiraLine) {
+                      process(next, true, other :: result)
+                    } else {
+                      process(next, false, result)
+                    }
+                }
+
+              case Enriched(line, Some(FatTree(fatIssue, descendants))) =>
+                if (
+                  !fatIssue.issue.isDone && (fatIssue.hasProgress(
+                    CookingProgressDays
+                  ) || descendants.exists(_.hasProgress(CookingProgressDays)))
+                ) {
+                  val indent =
+                    " ".repeat(line.takeWhile(_.isWhitespace).length + 4)
+                  val issueDetails = for {
+                    detail <- fatIssue.progress(CookingProgressDays)
+                  } yield {
+                    s"$indent* $detail"
+                  }
+                  val descendantDetails = for {
+                    descendant <- descendants
+                  } yield {
+                    val header =
+                      s"$indent* [${descendant.issue.key} ${descendant.issue.fields.summary}]"
+                    val details = for {
+                      detail <- descendant.progress(CookingProgressDays)
+                    } yield {
+                      s"$indent    * $detail"
+                    }
+                    header :: details
+                  }
+
+                  val lines =
+                    line :: (issueDetails ++ descendantDetails.flatten)
+                  process(next, true, lines.reverse ++ result)
+                } else {
+                  process(next, false, result)
+                }
+            }
+        }
+
+        process(lines, false, Nil)
+      }
+
+      ZIO.logSpan("done") {
+        for {
+          now <- Clock.instant
+          given Instant = now
+          result <- report(source, target.getOrElse(sibling(source, ".done")))(
+            enrichLine,
+            synthesize
+          )
+
+        } yield result
+      }
+
+    }
+
+    def Xcooking(source: File, target: Option[File]): Task[File] =
       ZIO.logSpan("cooking") {
         extract(source, target.getOrElse(sibling(source, ".cooking"))) { key =>
           for {
@@ -209,7 +401,7 @@ object Inspector {
         }
 
         val hasNewComments = comments.exists {
-          case Comment(_, _, _, _, created, updated, _) =>
+          case Comment(_, _, _, _, created, updated, _, _) =>
             created.isAfter(progressLimit)
             || updated.isAfter(progressLimit)
         }

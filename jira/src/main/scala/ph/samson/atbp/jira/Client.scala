@@ -184,6 +184,7 @@ object Client {
           .addHeader(ContentType(MediaType.application.json))
           .addPath("issue")
           .addPath(issueIdOrKey)
+          .addQueryParam("expand", "renderedBody")
           .get("/comment")
         results <- res.body.to[PageOfComments]
         _ <- ZIO.logDebug(

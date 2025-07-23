@@ -195,9 +195,11 @@ object Inspector {
               // changes we don't count as progress
               item.field == "Rank"
               || item.field == "labels"
+              || item.field == "Sprint"
+              || (item.field == "status" && item.toAsString.contains("Todo"))
             }
         } map { case Changelog(id, author, created, items, historyMetadata) =>
-          s"$created [${author.displayName}]: ${items.map(i => s"${i.field} -> ${i.toAsString}").mkString("; ")}"
+          s"$created change by [${author.displayName}]: ${items.map(i => s"${i.field} -> ${i.toAsString.getOrElse("NONE").take(50).replace("\n", "_n_")}").mkString("; ")}"
         }
 
         val progressComments = comments.filter {
@@ -223,7 +225,7 @@ object Inspector {
                 renderedBody,
                 jsdPublic
               ) =>
-            s"$updated [${updateAuthor.displayName}]: $renderedBody"
+            s"$updated comment by [${updateAuthor.displayName}]"
         }
 
         progressLogs ++ progressComments
@@ -242,6 +244,8 @@ object Inspector {
               // changes we don't count as progress
               item.field == "Rank"
               || item.field == "labels"
+              || item.field == "Sprint"
+              || (item.field == "status" && item.toAsString.contains("Todo"))
             }
         }
 
@@ -259,7 +263,7 @@ object Inspector {
             updated.isAfter(limit)
         }
 
-        hasNewLogs || hasNewComments
+        issue.inProgress && (hasNewLogs || hasNewComments)
       }
     }
 
@@ -325,17 +329,18 @@ object Inspector {
                   val issueDetails = for {
                     detail <- fatIssue.progress(CookingProgressDays)
                   } yield {
-                    s"$indent* $detail"
+                    s"$indent* <small>progress</small> $detail"
                   }
                   val descendantDetails = for {
                     descendant <- descendants
+                    if descendant.hasProgress(CookingProgressDays)
                   } yield {
                     val header =
-                      s"$indent* [${descendant.issue.key} ${descendant.issue.fields.summary}]"
+                      s"$indent* <small>sub-item</small> [${descendant.issue.key} ${descendant.issue.fields.summary}](${descendant.issue.webUrl})"
                     val details = for {
                       detail <- descendant.progress(CookingProgressDays)
                     } yield {
-                      s"$indent    * $detail"
+                      s"$indent    * <small>progress</small> $detail"
                     }
                     header :: details
                   }

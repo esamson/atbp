@@ -1,6 +1,7 @@
 package ph.samson.atbp.plate
 
 import better.files.File
+import org.jsoup.Jsoup
 import ph.samson.atbp.jira.Client
 import ph.samson.atbp.jira.model.Changelog
 import ph.samson.atbp.jira.model.Changelog.ChangeDetails
@@ -241,7 +242,7 @@ object Inspector {
                 jsdPublic
               ) =>
             updated.isAfter(limit)
-        } map {
+        } flatMap {
           case Comment(
                 self,
                 id,
@@ -252,7 +253,15 @@ object Inspector {
                 renderedBody,
                 jsdPublic
               ) =>
-            s"* <small>📝</small> $updated comment by [${updateAuthor.displayName}]"
+            val body = Jsoup
+              .parseBodyFragment(renderedBody)
+              .text()
+              .take(300)
+              .replace("\n", "_n_")
+            List(
+              s"* <small>📝</small> $updated comment by [${updateAuthor.displayName}]",
+              s"    * $body"
+            )
         }
 
         progressLogs ++ progressComments

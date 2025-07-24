@@ -37,6 +37,8 @@ object Dependencies {
 
     val commonsIo = "commons-io" % "commons-io" % "2.20.0"
 
+    val jsoup = "org.jsoup" % "jsoup" % "1.21.1"
+
     val plantuml = "net.sourceforge.plantuml" % "plantuml" % "1.2025.4"
 
     val pprint = "com.lihaoyi" %% "pprint" % "0.9.0"
@@ -145,8 +147,9 @@ object Dependencies {
   )
 
   val plate = libraryDependencies ++= Seq(
-    zio,
     betterFiles,
+    jsoup,
+    zio,
     zioConfig,
     zioConfigMagnolia,
     zioConfigTypesafe,

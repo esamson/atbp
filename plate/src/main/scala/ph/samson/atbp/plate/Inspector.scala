@@ -182,13 +182,13 @@ object Inspector {
         changelogs: List[Changelog],
         comments: List[Comment]
     ) {
-      def progress(sinceDays: Int)(using now: Instant) = {
+      def progress(sinceDays: Int)(using now: Instant): List[String] = {
         val limit = now
           .atZone(ZoneId.systemDefault())
           .minus(sinceDays, DAYS)
           .`with`(LocalTime.MIDNIGHT)
 
-        val progressLogs = changelogs.filter {
+        val progressLogs: List[String] = changelogs.filter {
           case Changelog(id, author, created, items, historyMetadata) =>
             created.isAfter(limit) &&
             !items.forall { item =>
@@ -198,8 +198,18 @@ object Inspector {
               || item.field == "Sprint"
               || (item.field == "status" && item.toAsString.contains("Todo"))
             }
-        } map { case Changelog(id, author, created, items, historyMetadata) =>
-          s"$created change by [${author.displayName}]: ${items.map(i => s"${i.field} -> ${i.toAsString.getOrElse("NONE").take(50).replace("\n", "_n_")}").mkString("; ")}"
+        } flatMap {
+          case Changelog(id, author, created, items, historyMetadata) =>
+            val details = for {
+              item <- items
+              toValue = item.toAsString
+                .getOrElse("NONE")
+                .take(50)
+                .replace("\n", "_n_")
+            } yield {
+              s"    * ${item.field} -> $toValue"
+            }
+            s"* <small>🚧</small> $created change by [${author.displayName}]" :: details
         }
 
         val progressComments = comments.filter {
@@ -225,7 +235,7 @@ object Inspector {
                 renderedBody,
                 jsdPublic
               ) =>
-            s"$updated comment by [${updateAuthor.displayName}]"
+            s"* <small>📝</small> $updated comment by [${updateAuthor.displayName}]"
         }
 
         progressLogs ++ progressComments
@@ -329,18 +339,18 @@ object Inspector {
                   val issueDetails = for {
                     detail <- fatIssue.progress(CookingProgressDays)
                   } yield {
-                    s"$indent* <small>progress</small> $detail"
+                    s"$indent$detail"
                   }
                   val descendantDetails = for {
                     descendant <- descendants
                     if descendant.hasProgress(CookingProgressDays)
                   } yield {
                     val header =
-                      s"$indent* <small>sub-item</small> [${descendant.issue.key} ${descendant.issue.fields.summary}](${descendant.issue.webUrl})"
+                      s"$indent* <small>📌</small> [${descendant.issue.key} ${descendant.issue.fields.summary}](${descendant.issue.webUrl})"
                     val details = for {
                       detail <- descendant.progress(CookingProgressDays)
                     } yield {
-                      s"$indent    * <small>progress</small> $detail"
+                      s"$indent    $detail"
                     }
                     header :: details
                   }

@@ -152,10 +152,17 @@ object Inspector {
                   if (descendants.forall(_.isDone)) {
                     process(next, true, reportLine :: result)
                   } else {
-                    val notDone =
-                      descendants.filterNot(_.isDone).map(_.key).mkString(", ")
-                    val flagReport = s"$reportLine [But NOT DONE: $notDone]"
-                    process(next, true, flagReport :: result)
+                    val indent =
+                      " ".repeat(line.takeWhile(_.isWhitespace).length + 4)
+                    val notDone = for {
+                      descendant <- descendants
+                      if !descendant.isDone
+                    } yield {
+                      s"$indent* <small>❎</small> [${descendant.key} ${descendant.fields.summary}](${descendant.webUrl})"
+                    }
+                    val flagReport =
+                      s"$reportLine [But descendants NOT DONE]" :: notDone
+                    process(next, true, flagReport.reverse ++ result)
                   }
                 } else if (
                   descendants.nonEmpty && descendants.forall(_.isDone)

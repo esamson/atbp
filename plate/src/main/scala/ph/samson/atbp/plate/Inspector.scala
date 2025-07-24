@@ -3,6 +3,7 @@ package ph.samson.atbp.plate
 import better.files.File
 import ph.samson.atbp.jira.Client
 import ph.samson.atbp.jira.model.Changelog
+import ph.samson.atbp.jira.model.Changelog.ChangeDetails
 import ph.samson.atbp.jira.model.Comment
 import ph.samson.atbp.jira.model.Issue
 import ph.samson.atbp.plate.JiraOps.*
@@ -177,11 +178,34 @@ object Inspector {
       }
     }
 
+    def nonProgress(item: ChangeDetails): Boolean = {
+      // changes we don't count as progress
+      item.field == "Rank"
+      || item.field == "labels"
+      || item.field == "Sprint"
+      || item.field == "IssueParentAssociation"
+      || item.field == "assignee"
+      || item.field == "summary"
+      || item.field == "description"
+      || item.field == "Mesh Group"
+      || item.field == "Component"
+      || item.field == "Link"
+      || item.field == "Attachment"
+      || item.field == "Story Points"
+      || item.field == "timeoriginalestimate"
+      || item.field == "timeestimate"
+      || item.field == "WorklogId"
+      || item.field == "Project / Market"
+      || item.field == "issuetype"
+      || (item.field == "status" && item.toAsString.contains("Todo"))
+    }
+
     case class FatIssue(
         issue: Issue,
         changelogs: List[Changelog],
         comments: List[Comment]
     ) {
+
       def progress(sinceDays: Int)(using now: Instant): List[String] = {
         val limit = now
           .atZone(ZoneId.systemDefault())
@@ -190,14 +214,7 @@ object Inspector {
 
         val progressLogs: List[String] = changelogs.filter {
           case Changelog(id, author, created, items, historyMetadata) =>
-            created.isAfter(limit) &&
-            !items.forall { item =>
-              // changes we don't count as progress
-              item.field == "Rank"
-              || item.field == "labels"
-              || item.field == "Sprint"
-              || (item.field == "status" && item.toAsString.contains("Todo"))
-            }
+            created.isAfter(limit) && !items.forall(nonProgress)
         } flatMap {
           case Changelog(id, author, created, items, historyMetadata) =>
             val details = for {
@@ -249,14 +266,7 @@ object Inspector {
 
         val hasNewLogs = changelogs.exists {
           case Changelog(id, author, created, items, historyMetadata) =>
-            created.isAfter(limit) &&
-            !items.forall { item =>
-              // changes we don't count as progress
-              item.field == "Rank"
-              || item.field == "labels"
-              || item.field == "Sprint"
-              || (item.field == "status" && item.toAsString.contains("Todo"))
-            }
+            created.isAfter(limit) && !items.forall(nonProgress)
         }
 
         val hasNewComments = comments.exists {
@@ -381,19 +391,6 @@ object Inspector {
 
     }
 
-    def Xcooking(source: File, target: Option[File]): Task[File] =
-      ZIO.logSpan("cooking") {
-        extract(source, target.getOrElse(sibling(source, ".cooking"))) { key =>
-          for {
-            issue <- client.getIssue(key)
-            result <- ZIO.succeed(!issue.isDone) && (
-              hasProgress(issue, CookingProgressDays)
-                || anyDescendantHasProgress(issue, CookingProgressDays)
-            )
-          } yield result
-        }
-      }
-
     private def hasProgress(issue: Issue, sinceDays: Int): Task[Boolean] = {
       for {
         now <- Clock.instant
@@ -407,12 +404,7 @@ object Inspector {
       } yield {
         val hasNewChanges = changelogs.exists {
           case Changelog(_, _, created, items, _) =>
-            created.isAfter(progressLimit) &&
-            !items.forall { item =>
-              // changes we don't count as progress
-              item.field == "Rank"
-              || item.field == "labels"
-            }
+            created.isAfter(progressLimit) && !items.forall(nonProgress)
         }
 
         val hasNewComments = comments.exists {

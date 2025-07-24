@@ -393,7 +393,7 @@ object Inspector {
         process(lines, false, Nil)
       }
 
-      ZIO.logSpan("done") {
+      ZIO.logSpan("cooking") {
         for {
           now <- Clock.instant
           given Instant = now

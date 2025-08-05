@@ -38,6 +38,7 @@ object Main extends ZIOCliDefault {
     .subcommands(
       Markdown2Confluence.command,
       Plate.command,
+      Retext.command,
       TraceViz.command
     )
     .withHelp(

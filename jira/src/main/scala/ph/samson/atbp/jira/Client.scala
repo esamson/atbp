@@ -11,6 +11,7 @@ import ph.samson.atbp.jira.model.RankIssuesRequest
 import ph.samson.atbp.jira.model.SearchRequest
 import ph.samson.atbp.jira.model.SearchResults
 import zio.LogLevel
+import zio.Schedule
 import zio.Scope
 import zio.Task
 import zio.ZIO
@@ -29,7 +30,9 @@ import zio.http.Status
 import zio.http.URL
 import zio.http.ZClient
 import zio.http.ZClientAspect
+import zio.schema.codec.DecodeError
 
+import java.time.Duration
 import scala.annotation.tailrec
 
 /** Jira REST API client.
@@ -92,21 +95,31 @@ object Client {
 
         if (head.values.length < head.total) tailRequests(Nil).reverse else Nil
       }
-      ZIO.scoped(ZIO.logSpan(s"getChangelog $key") {
-        for {
-          headResult <- doGetChangelogs(0, 100, key)
-          _ <- ZIO.logDebug(
-            s"Got ${headResult.values.length} of ${headResult.total} changelogs in head"
-          )
-          tailResults <- ZIO.foreachPar(tail(headResult))(req =>
-            doGetChangelogs(req.startAt, req.maxResults, req.issueIdOrKey)
-          )
-          tailChangelogs = tailResults.flatMap(_.values)
-          _ <- ZIO.logDebug(s"Got ${tailChangelogs.length} changelogs in tail")
-        } yield {
-          headResult.values ++ tailChangelogs
-        }
-      })
+      ZIO
+        .scoped(ZIO.logSpan(s"getChangelog $key") {
+          for {
+            headResult <- doGetChangelogs(0, 100, key)
+            _ <- ZIO.logDebug(
+              s"Got ${headResult.values.length} of ${headResult.total} changelogs in head"
+            )
+            tailResults <- ZIO.foreachPar(tail(headResult))(req =>
+              doGetChangelogs(req.startAt, req.maxResults, req.issueIdOrKey)
+            )
+            tailChangelogs = tailResults.flatMap(_.values)
+            _ <- ZIO.logDebug(
+              s"Got ${tailChangelogs.length} changelogs in tail"
+            )
+          } yield {
+            headResult.values ++ tailChangelogs
+          }
+        })
+        .retry(Schedule.recurWhileZIO {
+          case DecodeError.ReadError(cause, message) =>
+            for {
+              _ <- ZIO.logError(s"bad response <$message>")
+            } yield message == "unexpected end of input"
+          case _ => ZIO.succeed(false)
+        })
     }
 
     private def doGetChangelogs(
@@ -235,7 +248,9 @@ object Client {
       })
     }
 
-    private def doSearch(request: SearchRequest) = {
+    private def doSearch(
+        request: SearchRequest
+    ): ZIO[Scope, Throwable, SearchResults] = {
       for {
         _ <- ZIO.logDebug(
           s"Requesting ${request.startAt + 1} to ${request.startAt + request.maxResults}"
@@ -243,7 +258,13 @@ object Client {
         res <- platformClient
           .addHeader(ContentType(MediaType.application.json))
           .post("/search")(Body.from(request))
-        results <- res.body.to[SearchResults]
+        results <- res.body.to[SearchResults].catchSome {
+          case DecodeError.ReadError(cause, message) =>
+            for {
+              _ <- ZIO.logError(s"bad response <$message>; retrying $request")
+              retry <- doSearch(request).delay(Duration.ofSeconds(10))
+            } yield retry
+        }
         _ <- ZIO.logDebug(
           s"Got results ${results.startAt + 1} to ${results.startAt + results.length}"
         )

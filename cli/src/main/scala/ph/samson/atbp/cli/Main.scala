@@ -66,32 +66,38 @@ object Main extends ZIOCliDefault {
       )
     )
 
-  override def cliApp = CliApp.make(
-    name = Name,
-    version = Version,
-    summary = text("Assorted tooling bits and pieces"),
-    command = atbp
-  ) { case ((verbose, quiet), toolCommand) =>
-    val run = for {
-      conf <- Conf.appConf
-      _ <- toolCommand.run(conf)
-    } yield ()
+  override def cliApp = {
+    val app: CliApp[Any, Throwable, Unit] = CliApp.make(
+      name = Name,
+      version = Version,
+      summary = text("Assorted tooling bits and pieces"),
+      command = atbp
+    ) { case ((verbose, quiet), toolCommand) =>
+      val run = for {
+        conf <- Conf.appConf
+        _ <- toolCommand.run(conf)
+      } yield ()
 
-    val logger = if (quiet) {
-      quietLogger
-    } else if (verbose) {
-      verboseLogger
-    } else {
-      regularLogger
-    }
-
-    val exitHandler = run.catchSomeCause { case f @ Cause.Fail(throwable, _) =>
-      throwable match {
-        case _: IllegalArgumentException => logAndExit(f, ExitCode(1))
+      val logger = if (quiet) {
+        quietLogger
+      } else if (verbose) {
+        verboseLogger
+      } else {
+        regularLogger
       }
-    }
 
-    exitHandler.provide(logger)
+      val exitHandler = run.catchSomeCause { case f @ Cause.Fail(throwable, _) =>
+        throwable match {
+          case _: IllegalArgumentException => logAndExit(f, ExitCode(1))
+        }
+      }
+
+      exitHandler.provide(logger)
+    }
+    
+    new CliApp[Any, Throwable, Unit] {
+      override def 
+    }
   }
 
   def logAndExit(cause: Cause.Fail[Throwable], exitCode: ExitCode) =

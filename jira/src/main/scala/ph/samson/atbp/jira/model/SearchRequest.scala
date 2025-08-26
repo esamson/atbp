@@ -9,7 +9,7 @@ case class SearchRequest(
     jql: String,
     fields: List[String],
     maxResults: Int = 50,
-    startAt: Int = 0
+    nextPageToken: Option[String] = None
 )
 
 object SearchRequest {

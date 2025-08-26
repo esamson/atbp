@@ -198,57 +198,37 @@ object Client {
     override def search(jql: String): Task[List[Issue]] = {
       val request = SearchRequest(jql, Issue.FieldNames, maxResults = 100)
 
-      def tail(head: SearchResults): List[SearchRequest] = {
-
-        def tailRequests(
-            reqs: List[SearchRequest]
-        ): List[SearchRequest] = {
-          val lastRequest = reqs match {
-            case Nil       => request
-            case last :: _ => last
-          }
-
-          val nextStart = lastRequest.startAt + lastRequest.maxResults
-
-          if (nextStart < head.total) {
-            val nextRequest = lastRequest.copy(startAt = nextStart)
-            tailRequests(nextRequest :: reqs)
-          } else reqs
-        }
-
-        if (head.length < head.total) tailRequests(Nil).reverse else Nil
-      }
-
       ZIO.scoped(ZIO.logSpan("search") {
         for {
           _ <- ZIO.logDebug(s"jql: $jql")
-          headResult <- doSearch(request)
+          result <- doSearch(request, 1)
           _ <- ZIO.logDebug(
-            s"Got ${headResult.issues.length} of ${headResult.total} results in head"
+            s"Got ${result.length} issues"
           )
-          tailResults <- ZIO.foreachPar(tail(headResult))(doSearch)
-          tailIssues = tailResults.flatMap(_.issues)
-          _ <- ZIO.logDebug(s"Got ${tailIssues.length} results in tails")
         } yield {
-          headResult.issues ++ tailIssues
+          result
         }
       })
     }
 
-    private def doSearch(request: SearchRequest) = {
+    private def doSearch(
+        request: SearchRequest,
+        page: Int
+    ): ZIO[Scope, Throwable, List[Issue]] = ZIO.logSpan(s"page $page") {
       for {
-        _ <- ZIO.logDebug(
-          s"Requesting ${request.startAt + 1} to ${request.startAt + request.maxResults}"
-        )
         res <- platformClient
           .addHeader(ContentType(MediaType.application.json))
-          .post("/search")(Body.from(request))
+          .post("/search/jql")(Body.from(request))
         results <- res.body.to[SearchResults]
         _ <- ZIO.logDebug(
-          s"Got results ${results.startAt + 1} to ${results.startAt + results.length}"
+          s"Got ${results.length} results in page $page."
         )
+        nextPage <- results.nextPageToken match {
+          case None  => ZIO.succeed(Nil)
+          case token => doSearch(request.copy(nextPageToken = token), page + 1)
+        }
       } yield {
-        results
+        results.issues ++ nextPage
       }
     }
 

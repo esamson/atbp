@@ -6,9 +6,8 @@ import zio.schema.codec.BinaryCodec
 import zio.schema.codec.JsonCodec
 
 case class SearchResults(
-    startAt: Int,
-    maxResults: Int,
-    total: Int,
+    isLast: Boolean,
+    nextPageToken: Option[String],
     issues: List[Issue]
 ) {
   def length = issues.length

@@ -4,7 +4,7 @@ import sbt.Keys.*
 object Dependencies {
 
   object Versions {
-    val AdfBuilderJava = "1.8.0"
+    val AdfBuilderJava = "1.8.4"
     val CommonMark = "0.26.0"
     val Zio = "2.1.21"
     val ZioConfig = "4.0.5"

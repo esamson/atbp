@@ -2,7 +2,7 @@ import com.typesafe.sbt.packager.docker.Cmd
 import sbtdynver.DynVer
 
 ThisBuild / organization := "samson.ph"
-ThisBuild / scalaVersion := "3.7.3"
+ThisBuild / scalaVersion := "3.7.4"
 ThisBuild / versionScheme := Some("semver-spec")
 
 lazy val root = Project("atbp", file("."))

@@ -39,7 +39,7 @@ object Dependencies {
 
     val jsoup = "org.jsoup" % "jsoup" % "1.22.1"
 
-    val plantuml = "net.sourceforge.plantuml" % "plantuml" % "1.2025.10"
+    val plantuml = "net.sourceforge.plantuml" % "plantuml" % "1.2026.0"
 
     val pprint = "com.lihaoyi" %% "pprint" % "0.9.6"
 

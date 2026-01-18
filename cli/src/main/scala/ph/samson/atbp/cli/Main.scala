@@ -40,6 +40,7 @@ object Main extends ZIOCliDefault {
       MarkdownMerge.command,
       Plate.command,
       Retext.command,
+      Stmt2Csv.command,
       TraceViz.command
     )
     .withHelp(

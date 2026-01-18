@@ -39,6 +39,8 @@ object Dependencies {
 
     val jsoup = "org.jsoup" % "jsoup" % "1.22.1"
 
+    val pdfbox = "org.apache.pdfbox" % "pdfbox" % "3.0.6"
+
     val plantuml = "net.sourceforge.plantuml" % "plantuml" % "1.2026.1"
 
     val pprint = "com.lihaoyi" %% "pprint" % "0.9.6"
@@ -169,6 +171,13 @@ object Dependencies {
     zio,
     betterFiles,
     commonsIo
+  )
+
+  val stmt2csv = libraryDependencies ++= Seq(
+    zio,
+    betterFiles,
+    pdfbox,
+    scalaCsv
   )
 
   val traceviz = libraryDependencies ++= Seq(

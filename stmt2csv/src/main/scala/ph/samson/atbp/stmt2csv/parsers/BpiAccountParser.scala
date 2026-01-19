@@ -5,14 +5,17 @@ import ph.samson.atbp.stmt2csv.CsvEntry
 import zio.Task
 import zio.ZIO
 
+import java.time.LocalDate
 import java.time.MonthDay
 import java.time.format.DateTimeFormatter
+import scala.annotation.tailrec
 
 import NoWhitespace.*
 
 object BpiAccountParser {
 
   case class Statement(
+      info: StatementInfo,
       beginningBalance: BigDecimal,
       transactions: List[Transaction]
   )
@@ -23,25 +26,60 @@ object BpiAccountParser {
   }
 
   def convert(stmt: Statement): List[CsvEntry] = {
-    println(
-      s"convert: ${stmt.beginningBalance}\n${stmt.transactions.mkString("\n")}"
-    )
 
-    Nil
+    @tailrec
+    def doConvert(
+        unprocessed: List[Transaction],
+        lastBalance: BigDecimal,
+        converted: List[CsvEntry]
+    ): List[CsvEntry] = unprocessed match {
+      case Nil => converted.reverse
+      case Transaction(date, description, amount, balance) :: next =>
+        val (debit, credit) = if (balance > lastBalance) {
+          (BigDecimal(0), amount)
+        } else {
+          (amount, BigDecimal(0))
+        }
+        val entry = CsvEntry(fix(date, stmt.info), description, debit, credit)
+
+        doConvert(next, balance, entry :: converted)
+    }
+
+    doConvert(stmt.transactions, stmt.beginningBalance, Nil)
+  }
+
+  def fix(date: MonthDay, info: StatementInfo): LocalDate = {
+    val fromYear = date.atYear(info.from.getYear)
+    if (!fromYear.isBefore(info.from) && !fromYear.isAfter(info.to)) {
+      fromYear
+    } else {
+      date.atYear(info.to.getYear)
+    }
   }
 
   def statement[T: P]: P[Statement] = P(
-    (!beginningBalance ~ anyLine).rep ~
+    (!statementInfo ~ anyLine).rep ~
+      statementInfo ~
+      (!beginningBalance ~ anyLine).rep ~
       beginningBalance ~
       (transaction | anyLine.map(Boring.apply)).rep
-  ).map { case (_, balance, lines) =>
+  ).map { case (_, info, _, balance, lines) =>
     Statement(
+      info,
       balance.amount,
       lines.toList.collect { case t: Transaction =>
         t
       }
     )
   }
+
+  def statementInfo[T: P] =
+    P(
+      "PERIOD COVERED " ~ date ~ " - " ~ date ~
+        " NO: " ~ (!eol ~ AnyChar).rep.! ~ eol.rep
+    ).map({ case (from, to, account) =>
+      StatementInfo(from, to, account)
+    })
 
   def beginningBalance[T: P] =
     P("BEGINNING BALANCE " ~ amount ~ eol.rep).map(BeginningBalance.apply)
@@ -63,6 +101,8 @@ object BpiAccountParser {
 
   sealed abstract class Line
   case class Boring(s: String) extends Line
+  case class StatementInfo(from: LocalDate, to: LocalDate, account: String)
+      extends Line
   case class BeginningBalance(amount: BigDecimal) extends Line
   case class Transaction(
       date: MonthDay,
@@ -79,9 +119,18 @@ object BpiAccountParser {
         "." ~ digit ~ digit).!
     ).map(amount => BigDecimal(amount.replace(",", "")))
 
+  val LocalDateFmt = DateTimeFormatter.ofPattern("MMM dd, yyyy")
+  def date[T: P] =
+    P((month ~ " " ~ day ~ ", " ~ year).!)
+      .map(s => LocalDate.parse(camel(s), LocalDateFmt))
+
   val MonthDayFmt = DateTimeFormatter.ofPattern("MMM dd")
   def monthDay[T: P] =
     P((month ~ " " ~ day).!).map(s => MonthDay.parse(s, MonthDayFmt))
+
+  def camel(s: String): String = s"${s.head.toUpper}${s.tail.toLowerCase()}"
+
+  def year[T: P] = P(digit ~ digit ~ digit ~ digit)
 
   def month[T: P] = P(
     IgnoreCase("Jan") |

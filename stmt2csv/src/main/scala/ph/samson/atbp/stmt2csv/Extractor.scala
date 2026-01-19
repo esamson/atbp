@@ -15,7 +15,7 @@ object Extractor {
     doc <- ZIO.attemptBlockingIO(Loader.loadPDF(source.toJava))
     text <- bpiExtract(doc)
     parsed <- BpiAccountParser(text)
-    _ <- ZIO.logDebug(s"result:\n$parsed")
+    _ <- ZIO.logDebug(s"result:\n${parsed.mkString("\n")}")
   } yield {
     target
   }

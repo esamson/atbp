@@ -1,6 +1,7 @@
 package ph.samson.atbp.stmt2csv
 
 import better.files.File
+import com.github.tototoshi.csv.CSVWriter
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
@@ -16,6 +17,14 @@ object Extractor {
     text <- bpiExtract(doc)
     parsed <- BpiAccountParser(text)
     _ <- ZIO.logDebug(s"result:\n${parsed.mkString("\n")}")
+    - <- ZIO.acquireReleaseWith(
+      ZIO.attemptBlockingIO(CSVWriter.open(target.toJava))
+    )(w => ZIO.succeedBlocking(w.close())) { writer =>
+      ZIO.attemptBlockingIO(writer.writeAll(parsed.map {
+        case CsvEntry(date, description, debit, credit) =>
+          List(date, description, debit, credit)
+      }))
+    }
   } yield {
     target
   }

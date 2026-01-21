@@ -2,20 +2,24 @@ package ph.samson.atbp.stmt2csv
 
 import better.files.File
 import com.github.tototoshi.csv.CSVWriter
-import org.apache.pdfbox.Loader
-import org.apache.pdfbox.pdmodel.PDDocument
-import org.apache.pdfbox.text.PDFTextStripper
 import ph.samson.atbp.stmt2csv.parsers.BpiAccountParser
+import ph.samson.atbp.stmt2csv.parsers.BpiCreditCardParser
+import ph.samson.atbp.stmt2csv.parsers.StatementParser
 import zio.Task
 import zio.ZIO
 
 object Extractor {
 
+  val parsers: List[StatementParser] =
+    List(BpiAccountParser, BpiCreditCardParser)
+
   def extract(source: File, target: File): Task[File] = for {
     _ <- ZIO.logInfo(s"loading $source (${source.size()} bytes)")
-    doc <- ZIO.attemptBlockingIO(Loader.loadPDF(source.toJava))
-    text <- bpiExtract(doc)
-    parsed <- BpiAccountParser(text)
+    parsed <- parsers match {
+      case head :: next =>
+        ZIO.raceAll(head.apply(source), next.map(_.apply(source)))
+      case Nil => ZIO.fail(new IllegalStateException("No parsers"))
+    }
     _ <- ZIO.logDebug(s"result:\n${parsed.mkString("\n")}")
     - <- ZIO.acquireReleaseWith(
       ZIO.attemptBlockingIO(CSVWriter.open(target.toJava))
@@ -29,22 +33,4 @@ object Extractor {
     target
   }
 
-  def bpiExtract(doc: PDDocument): Task[String] = for {
-    text <- ZIO.attempt {
-      val stripper = new PDFTextStripper
-      stripper.setAverageCharTolerance(0.9f)
-      stripper.setSpacingTolerance(1.5f)
-
-      stripper.getText(doc)
-    }
-    _ <- ZIO.debug(text)
-    bpiText <-
-      if (text.contains("www.bpi.com.ph")) {
-        ZIO.succeed(text)
-      } else {
-        ZIO.fail(new IllegalArgumentException("Not a BPI Statement"))
-      }
-  } yield {
-    bpiText
-  }
 }

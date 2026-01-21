@@ -33,7 +33,7 @@ object BpiAccountParser extends StatementParser {
   ) {
     ZIO.succeed(text)
   } else {
-    ZIO.fail(new IllegalArgumentException("Not a BPI Statement"))
+    ZIO.fail(new IllegalArgumentException("Not a BPI Account Statement"))
   }
 
   override def parseEntries(text: String): Task[List[CsvEntry]] = ZIO.attempt {
@@ -127,14 +127,6 @@ object BpiAccountParser extends StatementParser {
       balance: BigDecimal
   ) extends Line
 
-  def amount[T: P] =
-    P(
-      ("-".? ~
-        digit.rep(1) ~
-        ("," ~ digit ~ digit ~ digit).rep ~
-        "." ~ digit ~ digit).!
-    ).map(amount => BigDecimal(amount.replace(",", "")))
-
   val LocalDateFmt = DateTimeFormatter.ofPattern("MMM dd, yyyy")
   def date[T: P] =
     P((month ~ " " ~ day ~ ", " ~ year).!)
@@ -143,10 +135,6 @@ object BpiAccountParser extends StatementParser {
   val MonthDayFmt = DateTimeFormatter.ofPattern("MMM dd")
   def monthDay[T: P] =
     P((month ~ " " ~ day).!).map(s => MonthDay.parse(s, MonthDayFmt))
-
-  def camel(s: String): String = s"${s.head.toUpper}${s.tail.toLowerCase()}"
-
-  def year[T: P] = P(digit ~ digit ~ digit ~ digit)
 
   def month[T: P] = P(
     IgnoreCase("Jan") |
@@ -163,10 +151,4 @@ object BpiAccountParser extends StatementParser {
       IgnoreCase("Dec")
   )
   def day[T: P] = P(digit.rep(min = 1, max = 2))
-
-  def digit[T: P] = P(CharIn("0-9"))
-
-  def anyLine[T: P] = P((!eol ~ AnyChar).rep.! ~ eol)
-
-  def eol[T: P] = P("\n" | "\r\n" | "\r" | "\f")
 }

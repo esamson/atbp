@@ -18,7 +18,6 @@ trait StatementParser extends (File => Task[List[CsvEntry]]) {
 
   private def extractText(doc: PDDocument): Task[String] = for {
     text <- ZIO.attempt(stripper.getText(doc))
-    _ <- ZIO.debug(text)
     validated <- validate(text)
   } yield {
     validated

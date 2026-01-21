@@ -1,7 +1,6 @@
 package ph.samson.atbp.stmt2csv.parsers
 
 import fastparse.*
-import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
 import ph.samson.atbp.stmt2csv.CsvEntry
 import zio.Task
@@ -22,23 +21,19 @@ object BpiAccountParser extends StatementParser {
       transactions: List[Transaction]
   )
 
-  override def extractText(doc: PDDocument): Task[String] = for {
-    text <- ZIO.attempt {
-      val stripper = new PDFTextStripper
-      stripper.setAverageCharTolerance(0.9f)
-      stripper.setSpacingTolerance(1.5f)
+  override def stripper: PDFTextStripper = {
+    val s = new PDFTextStripper
+    s.setAverageCharTolerance(0.9f)
+    s.setSpacingTolerance(1.5f)
+    s
+  }
 
-      stripper.getText(doc)
-    }
-    _ <- ZIO.debug(text)
-    bpiText <-
-      if (text.contains("www.bpi.com.ph")) {
-        ZIO.succeed(text)
-      } else {
-        ZIO.fail(new IllegalArgumentException("Not a BPI Statement"))
-      }
-  } yield {
-    bpiText
+  override def validate(text: String): Task[String] = if (
+    text.contains("www.bpi.com.ph")
+  ) {
+    ZIO.succeed(text)
+  } else {
+    ZIO.fail(new IllegalArgumentException("Not a BPI Statement"))
   }
 
   override def parseEntries(text: String): Task[List[CsvEntry]] = ZIO.attempt {

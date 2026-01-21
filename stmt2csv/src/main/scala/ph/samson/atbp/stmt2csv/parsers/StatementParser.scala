@@ -3,15 +3,26 @@ package ph.samson.atbp.stmt2csv.parsers
 import better.files.File
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.text.PDFTextStripper
 import ph.samson.atbp.stmt2csv.CsvEntry
 import zio.Task
 import zio.ZIO
 
 trait StatementParser extends (File => Task[List[CsvEntry]]) {
 
-  def extractText(doc: PDDocument): Task[String]
+  def stripper: PDFTextStripper
+
+  def validate(text: String): Task[String]
 
   def parseEntries(text: String): Task[List[CsvEntry]]
+
+  private def extractText(doc: PDDocument): Task[String] = for {
+    text <- ZIO.attempt(stripper.getText(doc))
+    _ <- ZIO.debug(text)
+    validated <- validate(text)
+  } yield {
+    validated
+  }
 
   final override def apply(source: File): Task[List[CsvEntry]] = {
     def acquire = ZIO.attemptBlockingIO(Loader.loadPDF(source.toJava))

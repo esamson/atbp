@@ -1,0 +1,71 @@
+EXPRESS TELLER CHECKING - PHP
+Page 1 of 4GEORGE I GARRET
+JANE A GARRET
+7942-2789-68
+#4321 FIRST STREET BEL AIR VILLAGE
+BGRY UNO CEBU CEBU
+CEBU CEBU 6000
+ACCOUNT SUMMARY FOR THE PERIOD DEC 14, 2025 - JAN 14, 2026
+Beginning Balance 109.89
+Plus: Total Credits 532.07
+from Branch Over-the-Counter Deposit Transactions 207.59
+from ATM Deposit Transactions 0.00
+from ExpressPhone Transactions 0.00
+from EOL / Mobile Transactions 41.36
+from Credit Memos 283.12
+from Checks Warehoused 0.00
+from Interest Earned 0.00
+Less: Total Debits 377.40
+from Branch Over-the-Counter Transactions 50.00
+from ATM / EPS Transactions 9.00
+from ExpressPhone Transactions 0.00
+from EOL / Mobile Transactions 266.95
+from Debit Memos 110.45
+from Checks Issued / Charges 0.00
+from Service Charges / Withholding Tax 0.00
+Ending Balance 264.56
+For inquiries and comments, please send us a message through
+www.bpi.com.ph/contactus or call our 24-hour BPI Contact Center
+at (+632) 889-10000.
+Bank of the Philippine Islands is regulated by the Bangko Sentral ng Pilipinas,
+https://www.bsp.gov.ph
+Deposits are insured by PDIC up to P1 Million per depositor.
+Please examine this statement and enclosed paid checks, more particularly the
+signatures and endorsements therein and report immediately any discrepancy
+to our 24-hour customer service.
+It is agreed and understood that if no complaint is received within 20 days from
+statement cut-off date, said statement and all transactions therein as well as
+the enclosed paid or imaged checks shall be considered correct and any claim
+against the bank shall be waived.
+Please advise us of any change of address
+hejkgnay
+tnp3981738
+10
+Page 2 of 4
+EXPRESS TELLER CHECKING - PHP
+Page 3 of 4
+PERIOD COVERED DEC 14, 2025 - JAN 14, 2026 NO: 7942-2789-68
+DATE DESCRIPTION REF DETAILS DEBIT AMOUNT CREDIT AMOUNT BALANCE
+BEGINNING BALANCE 109.89
+Dec 15 0314 LOCAL CHECK DEPOSIT 0271 LCL CK DEP 17.59 127.48
+Dec 15 ATM Withdrawal-BPI@Cebu 8534 30.00 97.48
+Jan 02 Fund Transfer 0852 FROM:JANE GARRET 5,000.00 5097.48
+EXPRESS TELLER CHECKING - PHP
+Page 4 of 4
+PERIOD COVERED DEC 14, 2025 - JAN 14, 2026 NO: 7942-2789-68
+DATE DESCRIPTION REF DETAILS DEBIT AMOUNT CREDIT AMOUNT BALANCE
+Jan 02 Fund Transfer 0143 TO: GEORGE I GARRET,A/C#8294710987 1,000.00 4097.48
+Jan 05 Payment to Merchant PAYMENT TO MERCHANT 830.00 3267.48
+Jan 14 InstaPay Transfer Fee TRANSFER TO OTHER BANK 10.00 3257.48
+BALANCE THIS STATEMENT 3257.48
+TOTAL DEBIT 377.40
+TOTAL CREDIT 532.07
+# OF CHECKS = 1
+EXPRESS TELLER CHECKING - PHP
+GEORGE I GARRET
+JANE A GARRET
+#4321 FIRST STREET BEL AIR VILLAGE
+BGRY UNO CEBU CEBU
+CEBU CEBU 6000
+THISMONTH'SCHECKS
+

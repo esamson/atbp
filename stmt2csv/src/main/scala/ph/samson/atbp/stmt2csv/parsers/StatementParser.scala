@@ -16,19 +16,25 @@ trait StatementParser extends (File => Task[List[CsvEntry]]) {
 
   def parseEntries(text: String): Task[List[CsvEntry]]
 
-  private def extractText(doc: PDDocument): Task[String] = for {
+  private def extract(doc: PDDocument): Task[String] = for {
     text <- ZIO.attempt(stripper.getText(doc))
     validated <- validate(text)
   } yield {
     validated
   }
 
-  final override def apply(source: File): Task[List[CsvEntry]] = {
+  final def extractText(source: File): Task[String] = {
     def acquire = ZIO.attemptBlockingIO(Loader.loadPDF(source.toJava))
     def release(doc: PDDocument) = ZIO.succeedBlocking(doc.close())
 
     for {
-      text <- ZIO.acquireReleaseWith(acquire)(release)(extractText)
+      text <- ZIO.acquireReleaseWith(acquire)(release)(extract)
+    } yield text
+  }
+
+  final override def apply(source: File): Task[List[CsvEntry]] = {
+    for {
+      text <- extractText(source)
       entries <- parseEntries(text)
     } yield entries
   }

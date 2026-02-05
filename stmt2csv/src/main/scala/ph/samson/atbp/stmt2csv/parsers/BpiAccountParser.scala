@@ -129,26 +129,10 @@ object BpiAccountParser extends StatementParser {
 
   val LocalDateFmt = DateTimeFormatter.ofPattern("MMM dd, yyyy")
   def date[T: P] =
-    P((month ~ " " ~ day ~ ", " ~ year).!)
+    P((shortMonth ~ " " ~ shortDay ~ ", " ~ year).!)
       .map(s => LocalDate.parse(camel(s), LocalDateFmt))
 
   val MonthDayFmt = DateTimeFormatter.ofPattern("MMM dd")
   def monthDay[T: P] =
-    P((month ~ " " ~ day).!).map(s => MonthDay.parse(s, MonthDayFmt))
-
-  def month[T: P] = P(
-    IgnoreCase("Jan") |
-      IgnoreCase("Feb") |
-      IgnoreCase("Mar") |
-      IgnoreCase("Apr") |
-      IgnoreCase("May") |
-      IgnoreCase("Jun") |
-      IgnoreCase("Jul") |
-      IgnoreCase("Aug") |
-      IgnoreCase("Sep") |
-      IgnoreCase("Oct") |
-      IgnoreCase("Nov") |
-      IgnoreCase("Dec")
-  )
-  def day[T: P] = P(digit.rep(min = 1, max = 2))
+    P((shortMonth ~ " " ~ shortDay).!).map(s => MonthDay.parse(s, MonthDayFmt))
 }

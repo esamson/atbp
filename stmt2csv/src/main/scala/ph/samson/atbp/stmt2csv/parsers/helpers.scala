@@ -19,15 +19,32 @@ def longMonth[T: P] = P(
     IgnoreCase("December")
 )
 
+def shortMonth[T: P] = P(
+  IgnoreCase("Jan") |
+    IgnoreCase("Feb") |
+    IgnoreCase("Mar") |
+    IgnoreCase("Apr") |
+    IgnoreCase("May") |
+    IgnoreCase("Jun") |
+    IgnoreCase("Jul") |
+    IgnoreCase("Aug") |
+    IgnoreCase("Sep") |
+    IgnoreCase("Oct") |
+    IgnoreCase("Nov") |
+    IgnoreCase("Dec")
+)
+
+def shortDay[T: P] = P(digit ~ digit.?)
+
 def year[T: P] = P(digit ~ digit ~ digit ~ digit)
 
 def amount[T: P] =
   P(
-    ("-".? ~
+    (("-" ~ " ".?).? ~
       digit.rep(1) ~
       ("," ~ digit ~ digit ~ digit).rep ~
       "." ~ digit ~ digit).!
-  ).map(amount => BigDecimal(amount.replace(",", "")))
+  ).map(amount => BigDecimal(amount.replace(",", "").replace(" ", "")))
 
 def digit[T: P] = P(CharIn("0-9"))
 

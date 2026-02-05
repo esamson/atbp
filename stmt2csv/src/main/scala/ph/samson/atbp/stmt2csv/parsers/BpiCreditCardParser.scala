@@ -92,8 +92,6 @@ object BpiCreditCardParser extends StatementParser {
   def longMonthDay[T: P] =
     P((longMonth ~ " " ~ shortDay).!).map((s => MonthDay.parse(s, LongDayFmt)))
 
-  def shortDay[T: P] = P(digit ~ digit.?)
-
   def transaction[T: P] =
     P(
       longMonthDay ~ " " ~

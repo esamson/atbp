@@ -1,31 +1,36 @@
 package ph.samson.atbp.stmt2csv.parsers
 
+import fastparse.*
 import org.apache.pdfbox.text.PDFTextStripper
 import ph.samson.atbp.stmt2csv.CsvEntry
-import zio.{Task, ZIO}
-import fastparse.*
-import NoWhitespace.*
+import zio.Task
+import zio.ZIO
 
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.MonthDay
 import java.time.format.DateTimeFormatter
-import java.time.{LocalDate, LocalTime, MonthDay}
+
+import NoWhitespace.*
 
 object MayaSavingsParser extends StatementParser {
 
   case class Statement(
-                        date: LocalDate,
-                        transactions: List[Transaction]
-                      )
+      date: LocalDate,
+      transactions: List[Transaction]
+  )
 
   sealed abstract class Line
   case class Boring(value: String) extends Line
   case class StatementDate(date: LocalDate) extends Line
   case class Transaction(
-                          date: MonthDay,
-                          time: LocalTime,
-                          description: String,
-                          amount: BigDecimal,
-                          balance: BigDecimal
-                        ) extends Line
+      date: MonthDay,
+      time: LocalTime,
+      description: String,
+      amount: BigDecimal,
+      balance: BigDecimal
+  ) extends Line
+  case class ExtraDetail(value: String) extends Line
 
   override def stripper: PDFTextStripper = {
     val s = new PDFTextStripper
@@ -43,7 +48,7 @@ object MayaSavingsParser extends StatementParser {
   }
 
   override def parseEntries(text: String): Task[List[CsvEntry]] = ZIO.attempt {
-    val stmt = parse(text, statement(using _)).get.value
+    parse(text, statement(using _)).get.value
     ???
   }
 
@@ -57,7 +62,7 @@ object MayaSavingsParser extends StatementParser {
     Statement(date.date, Nil)
   }
 
-  def statementDate[T:P] = P(
+  def statementDate[T: P] = P(
     "Statement date: " ~ longDate ~ eol.rep
   ).map(StatementDate.apply)
 
@@ -72,11 +77,17 @@ object MayaSavingsParser extends StatementParser {
       time ~ " " ~
       (!(amount ~ " " ~ amount ~ eol) ~ AnyChar).rep.! ~
       amount ~ " " ~
-      amount ~ eol.rep
-  ).map {
-    case (date, time, description, amount, balance) => 
-      Transaction(date, time, description.trim, amount, balance)
+      amount ~ eol ~
+      extraDetail.rep ~
+      eol.rep
+  ).map { case (date, time, mainDesc, amount, balance, extraDesc) =>
+    val description = mainDesc.trim :: extraDesc.toList.map(_.value.trim)
+    Transaction(date, time, description.mkString(" | "), amount, balance)
   }
+
+  def extraDetail[T: P] = P(
+    !("Page" | monthDay) ~ anyLine
+  ).map(ExtraDetail.apply)
 
   val MonthDayFmt = DateTimeFormatter.ofPattern("d MMM")
   def monthDay[T: P] =
@@ -84,5 +95,7 @@ object MayaSavingsParser extends StatementParser {
 
   val TimeFmt = DateTimeFormatter.ofPattern("hh:mm a")
   def time[T: P] =
-    P((digit.rep(2) ~ ":" ~ digit.rep(2) ~ (" AM" | " PM")).!).map(s => LocalTime.parse(s, TimeFmt))
+    P((digit.rep(2) ~ ":" ~ digit.rep(2) ~ (" AM" | " PM")).!).map(s =>
+      LocalTime.parse(s, TimeFmt)
+    )
 }

@@ -2,7 +2,10 @@ package ph.samson.atbp.stmt2csv
 
 import better.files.File
 import com.github.tototoshi.csv.CSVWriter
-import ph.samson.atbp.stmt2csv.parsers.{BpiAccountParser, BpiCreditCardParser, MayaSavingsParser, StatementParser}
+import ph.samson.atbp.stmt2csv.parsers.BpiAccountParser
+import ph.samson.atbp.stmt2csv.parsers.BpiCreditCardParser
+import ph.samson.atbp.stmt2csv.parsers.MayaSavingsParser
+import ph.samson.atbp.stmt2csv.parsers.StatementParser
 import zio.Task
 import zio.ZIO
 

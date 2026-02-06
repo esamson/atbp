@@ -56,7 +56,7 @@ object Dependencies {
 
     val zioHttp = "dev.zio" %% "zio-http" % ZioHttp
 
-    val zioJson = "dev.zio" %% "zio-json" % "0.8.0"
+    val zioJson = "dev.zio" %% "zio-json" % "0.9.0"
 
     val zioLogging = "dev.zio" %% "zio-logging" % ZioLogging
     val zioLoggingSlf4j2 = "dev.zio" %% "zio-logging-slf4j2" % ZioLogging

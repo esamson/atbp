@@ -41,15 +41,30 @@ object MayaSavingsParser extends StatementParser {
   override def validate(text: String): Task[String] = if (
     text.contains("Maya Bank, Inc.")
   ) {
-    println(text)
     ZIO.succeed(text)
   } else {
     ZIO.fail(new IllegalArgumentException("Not a Maya Savings Statement"))
   }
 
   override def parseEntries(text: String): Task[List[CsvEntry]] = ZIO.attempt {
-    parse(text, statement(using _)).get.value
-    ???
+    val stmt = parse(text, statement(using _)).get.value
+    convert(stmt)
+  }
+
+  def convert(stmt: Statement): List[CsvEntry] = {
+
+    def fix(date: MonthDay): LocalDate = {
+      val atYear = date.atYear(stmt.date.getYear)
+      if (atYear.isAfter(stmt.date)) {
+        atYear.minusYears(1)
+      } else {
+        atYear
+      }
+    }
+
+    stmt.transactions.map { case Transaction(date, _, description, amount, _) =>
+      CsvEntry(fix(date), description, BigDecimal(0), amount)
+    }
   }
 
   def statement[T: P]: P[Statement] = P(
@@ -57,9 +72,7 @@ object MayaSavingsParser extends StatementParser {
       statementDate ~
       (transaction | anyLine.map(Boring.apply)).rep
   ).map { case (prelude, date, lines) =>
-    println(s"prelude:\n${prelude.mkString("\n")}")
-    println(s"lines:\n${lines.mkString("\n")}")
-    Statement(date.date, Nil)
+    Statement(date.date, lines.toList.collect { case t: Transaction => t })
   }
 
   def statementDate[T: P] = P(

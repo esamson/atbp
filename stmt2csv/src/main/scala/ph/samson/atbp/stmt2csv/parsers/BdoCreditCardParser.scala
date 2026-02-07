@@ -11,33 +11,30 @@ import java.time.format.DateTimeFormatter
 
 import NoWhitespace.*
 
-object UnionBankCreditCardParser extends StatementParser {
+object BdoCreditCardParser extends StatementParser {
 
   override def stripper: PDFTextStripper = new PDFTextStripper
 
   override def validate(text: String): Task[String] =
-    if (text.contains("UnionBank Credit Card")) {
+    if (text.contains("BDO Credit Card")) {
       ZIO.succeed(text)
     } else {
-      ZIO.fail(
-        new IllegalArgumentException("Not a UnionBank Credit Card Statement")
-      )
+      ZIO.fail(new IllegalArgumentException("Not a BDO Credit Card Statement"))
     }
 
   override def parseEntries(text: String): Task[List[CsvEntry]] = ZIO.attempt {
     val transactions = parse(text, statement(using _)).get.value
-    transactions.toList.map {
-      case Transaction(transactionDate, _, description, amount) =>
-        CsvEntry(transactionDate, description, amount)
+    transactions.toList.map { case Transaction(saleDate, _, details, amount) =>
+      CsvEntry(saleDate, details, amount)
     }
   }
 
   sealed abstract class Line
   case class Boring(value: String) extends Line
   case class Transaction(
-      transactionDate: LocalDate,
+      saleDate: LocalDate,
       postDate: LocalDate,
-      description: String,
+      details: String,
       amount: BigDecimal
   ) extends Line
 
@@ -51,11 +48,18 @@ object UnionBankCreditCardParser extends StatementParser {
   def transaction[T: P] = P(
     date ~ " " ~
       date ~ " " ~
-      (!" PHP " ~ AnyChar).rep.! ~ " PHP " ~
-      amount ~ eol.rep
-  ).map { case (transactionDate, postDate, description, amount) =>
-    Transaction(transactionDate, postDate, description, amount)
+      (!(amount ~ eol) ~ AnyChar).rep.! ~
+      amount ~ eol ~
+      extraDetail.rep ~
+      eol.rep
+  ).map { case (saleDate, postDate, details, amount, extra) =>
+    val description = details.trim :: extra.toList.map(_.trim)
+    Transaction(saleDate, postDate, description.mkString(" | "), amount)
   }
+
+  def extraDetail[T: P] = P(
+    !("SUBTOTAL" | date) ~ anyLine
+  )
 
   val DateFmt = DateTimeFormatter.ofPattern("MM/dd/yy")
   def date[T: P] = P(

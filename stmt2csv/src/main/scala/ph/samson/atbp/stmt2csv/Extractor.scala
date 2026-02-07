@@ -2,6 +2,7 @@ package ph.samson.atbp.stmt2csv
 
 import better.files.File
 import com.github.tototoshi.csv.CSVWriter
+import ph.samson.atbp.stmt2csv.parsers.BdoCreditCardParser
 import ph.samson.atbp.stmt2csv.parsers.BpiAccountParser
 import ph.samson.atbp.stmt2csv.parsers.BpiCreditCardParser
 import ph.samson.atbp.stmt2csv.parsers.MayaSavingsParser
@@ -14,6 +15,7 @@ object Extractor {
 
   val parsers: List[StatementParser] =
     List(
+      BdoCreditCardParser,
       BpiAccountParser,
       BpiCreditCardParser,
       MayaSavingsParser,

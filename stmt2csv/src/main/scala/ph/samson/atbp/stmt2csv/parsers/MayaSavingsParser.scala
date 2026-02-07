@@ -63,7 +63,7 @@ object MayaSavingsParser extends StatementParser {
     }
 
     stmt.transactions.map { case Transaction(date, _, description, amount, _) =>
-      CsvEntry(fix(date), description, BigDecimal(0), amount)
+      CsvEntry(fix(date), description, amount)
     }
   }
 

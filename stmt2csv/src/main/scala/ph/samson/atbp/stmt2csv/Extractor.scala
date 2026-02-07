@@ -26,8 +26,8 @@ object Extractor {
       ZIO.attemptBlockingIO(CSVWriter.open(target.toJava))
     )(w => ZIO.succeedBlocking(w.close())) { writer =>
       ZIO.attemptBlockingIO(writer.writeAll(parsed.map {
-        case CsvEntry(date, description, debit, credit) =>
-          List(date, description, debit, credit)
+        case CsvEntry(date, description, amount) =>
+          List(date, description, amount)
       }))
     }
   } yield {

@@ -62,7 +62,7 @@ object BpiCreditCardParser extends StatementParser {
 
     stmt.transactions.map {
       case Transaction(date, posted, description, amount) =>
-        CsvEntry(fix(date), description, BigDecimal(0), amount)
+        CsvEntry(fix(date), description, amount)
     }
   }
 

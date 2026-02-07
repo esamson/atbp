@@ -51,12 +51,12 @@ object BpiAccountParser extends StatementParser {
     ): List[CsvEntry] = unprocessed match {
       case Nil => converted.reverse
       case Transaction(date, description, amount, balance) :: next =>
-        val (debit, credit) = if (balance > lastBalance) {
-          (BigDecimal(0), amount)
+        val signedAmount = if (balance > lastBalance) {
+          amount
         } else {
-          (amount, BigDecimal(0))
+          -amount
         }
-        val entry = CsvEntry(fix(date, stmt.info), description, debit, credit)
+        val entry = CsvEntry(fix(date, stmt.info), description, signedAmount)
 
         doConvert(next, balance, entry :: converted)
     }

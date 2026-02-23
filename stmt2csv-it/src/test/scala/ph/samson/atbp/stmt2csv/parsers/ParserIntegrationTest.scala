@@ -30,12 +30,13 @@ abstract class ParserIntegrationTest(parser: StatementParser)
 }
 
 /** Parser tests rely on bank statements stored somewhere else.
- *
- * Set the system property `stmt2csv.test.dir` to point to the directory
- * containing the bank statements.
- *
- * You can also set the configuration in your `~/.config/atbp/application.conf`.
- */
+  *
+  * Set the system property `stmt2csv.test.dir` to point to the directory
+  * containing the bank statements.
+  *
+  * You can also set the configuration in your
+  * `~/.config/atbp/application.conf`.
+  */
 object ParserIntegrationTest {
 
   val Path = "stmt2csv.test.dir"

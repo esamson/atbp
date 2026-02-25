@@ -29,7 +29,7 @@ lazy val cli = atbpModule("cli")
     DockerPlugin,
     JavaAppPackaging
   )
-  .settings(Dependencies.cli, Dependencies.cliOverrides)
+  .settings(Dependencies.cli)
   .settings(
     // sbt-native-packager
     packageName := "atbp",

@@ -51,7 +51,7 @@ object Dependencies {
 
     val zio = "dev.zio" %% "zio" % Zio
 
-    val zioCli = "dev.zio" %% "zio-cli" % "0.7.5"
+    val zioCli = "dev.zio" %% "zio-cli" % "0.8.0"
 
     val zioConfig = "dev.zio" %% "zio-config" % ZioConfig
     val zioConfigMagnolia = "dev.zio" %% "zio-config-magnolia" % ZioConfig
@@ -94,8 +94,6 @@ object Dependencies {
     zioConfigTypesafe,
     zioLogging
   )
-  // override needed until https://github.com/zio/zio-cli/pull/534
-  val cliOverrides = dependencyOverrides += zioJson
 
   val confluence = libraryDependencies ++= Seq(
     betterFiles,

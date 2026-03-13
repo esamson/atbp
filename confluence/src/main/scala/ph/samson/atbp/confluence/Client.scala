@@ -231,9 +231,11 @@ object Client {
         case Some(next) =>
           ZIO.scoped(ZIO.logSpan("getNextPage") {
             for {
+              nextBase <- ZIO.fromEither(URL.decode(links.base))
               nextUrl <- ZIO.fromEither(URL.decode(next))
+              // TODO: fix when base ends with "/wiki" and next starts with "/wiki"
               _ <- ZIO.logDebug(s"getNextPage: $nextUrl")
-              res <- client.addUrl(nextUrl).get("")
+              res <- client.url(nextBase).addUrl(nextUrl).get("")
               result <- res.body.to[MultiEntityResult[T]]
               _ <- ZIO.logDebug(s"result: $result")
               next <- getNextPage(result._links)

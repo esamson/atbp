@@ -226,16 +226,14 @@ object Client {
     private def getNextPage[T](links: MultiEntityLinks)(implicit
         codec: BinaryCodec[MultiEntityResult[T]]
     ): Task[List[T]] =
-      links.next match {
+      links.nextUrl match {
         case None       => ZIO.succeed(Nil)
         case Some(next) =>
           ZIO.scoped(ZIO.logSpan("getNextPage") {
             for {
-              nextBase <- ZIO.fromEither(URL.decode(links.base))
               nextUrl <- ZIO.fromEither(URL.decode(next))
-              // TODO: fix when base ends with "/wiki" and next starts with "/wiki"
               _ <- ZIO.logDebug(s"getNextPage: $nextUrl")
-              res <- client.url(nextBase).addUrl(nextUrl).get("")
+              res <- client.url(nextUrl).get("")
               result <- res.body.to[MultiEntityResult[T]]
               _ <- ZIO.logDebug(s"result: $result")
               next <- getNextPage(result._links)

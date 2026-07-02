@@ -53,7 +53,7 @@ trait Client {
       isPrivate: Boolean = false
   ): Task[PageSingle]
 
-  def getPage(id: String): Task[PageSingle]
+  def getPage(id: String, bodyFormat: Option[String] = None): Task[PageSingle]
 
   def updatePage(request: UpdatePageRequest): Task[PageSingle]
 
@@ -127,14 +127,26 @@ object Client {
         } yield result
       })
 
-    override def getPage(id: String): Task[PageSingle] =
+    override def getPage(
+        id: String,
+        bodyFormat: Option[String]
+    ): Task[PageSingle] =
       ZIO.scoped(ZIO.logSpan("getPage") {
         for {
-          _ <- ZIO.logDebug(s"getPage $id")
-          res <- client
-            .addPath(V2Base)
-            .addPath("/pages")
-            .get(id)
+          _ <- ZIO.logDebug(s"getPage $id bodyFormat=$bodyFormat")
+          res <- bodyFormat match {
+            case None =>
+              client
+                .addPath(V2Base)
+                .addPath("/pages")
+                .get(id)
+            case Some(format) =>
+              client
+                .addPath(V2Base)
+                .addPath("/pages")
+                .addQueryParam("body-format", format)
+                .get(id)
+          }
           result <- res.body.to[PageSingle]
         } yield result
       })

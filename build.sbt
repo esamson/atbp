@@ -4,6 +4,7 @@ import sbtdynver.DynVer
 ThisBuild / organization := "samson.ph"
 ThisBuild / scalaVersion := "3.8.4"
 ThisBuild / versionScheme := Some("semver-spec")
+ThisBuild / javacOptions ++= Seq("-source", "25", "-target", "25")
 
 lazy val root = Project("atbp", file("."))
   .settings(
@@ -11,6 +12,7 @@ lazy val root = Project("atbp", file("."))
     publish / skip := true
   )
   .aggregate(
+    c2md,
     cli,
     confluence,
     http,
@@ -25,7 +27,7 @@ lazy val root = Project("atbp", file("."))
   )
 
 lazy val cli = atbpModule("cli")
-  .dependsOn(hubad, md2c, plate, retext, stmt2csv, traceviz)
+  .dependsOn(c2md, hubad, md2c, plate, retext, stmt2csv, traceviz)
   .enablePlugins(
     DockerPlugin,
     JavaAppPackaging
@@ -36,7 +38,7 @@ lazy val cli = atbpModule("cli")
     packageName := "atbp",
     maintainer := "edward@samson.ph",
     executableScriptName := packageName.value,
-    dockerBaseImage := "eclipse-temurin:21-jre-noble",
+    dockerBaseImage := "eclipse-temurin:25-jre-noble",
     dockerRepository := Some("ghcr.io/esamson"),
     Docker / version := (version.value)
       .replace("+", ".")
@@ -62,6 +64,10 @@ lazy val cli = atbpModule("cli")
       )
     )
   )
+
+lazy val c2md = atbpModule("c2md")
+  .dependsOn(confluence)
+  .settings(Dependencies.c2md)
 
 lazy val confluence = atbpModule("confluence")
   .dependsOn(adfBuilder, http)

@@ -1,0 +1,23 @@
+{
+  "type": "doc",
+  "version": 1,
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "level": 2 },
+      "content": [{ "type": "text", "text": "Overview" }]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        { "type": "text", "text": "Hello " },
+        {
+          "type": "text",
+          "text": "world",
+          "marks": [{ "type": "strong" }]
+        },
+        { "type": "text", "text": "!" }
+      ]
+    }
+  ]
+}

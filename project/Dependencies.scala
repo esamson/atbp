@@ -4,6 +4,7 @@ import sbt.Keys.*
 object Dependencies {
 
   object Versions {
+    val Adf4j = "1.0.0"
     val AdfBuilderJava = "2.6.0"
     val CommonMark = "0.28.0"
     val Zio = "2.1.26"
@@ -14,6 +15,8 @@ object Dependencies {
 
   object Libs {
     import Versions.*
+
+    val adf4j = "dev.nthings" % "adf4j" % Adf4j
 
     val adfBuilderJava =
       "com.atlassian.adf" % s"adf-builder-java" % AdfBuilderJava
@@ -86,6 +89,17 @@ object Dependencies {
   }
 
   import Libs.*
+
+  val c2md = libraryDependencies ++= Seq(
+    adf4j,
+    zio,
+    TestLibs.slf4jSimple,
+    TestLibs.zioLogging,
+    TestLibs.zioLoggingSlf4j2,
+    TestLibs.zioTest,
+    TestLibs.zioTestMagnolia,
+    TestLibs.zioTestSbt
+  )
 
   val cli = libraryDependencies ++= Seq(
     basedir,

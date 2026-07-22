@@ -112,6 +112,30 @@ object SeedSpec extends ZIOSpecDefault {
             _.rating == 1700
           )
       )
+    },
+    test("seeds 3-player tournament into size-4 bracket") {
+      val players = List(Player("P1"), Player("P2"), Player("P3"))
+      val state = lockedState(players).copy(
+        raceToByScope = RaceToTestSupport.uniformRaceTo(3)
+      )
+      val ratings = players.map(p => rating(p.name, 1700))
+      val result =
+        Seed.buildEvents(
+          state,
+          ratings,
+          RaceToTestSupport.uniformRaceTo(3),
+          startSeq = 2,
+          at
+        )
+      val bracket = result.toOption.get.collect {
+        case event: events.TournamentEvent.BracketSeeded =>
+          event.payload.bracket
+      }.last
+      assertTrue(
+        result.isRight,
+        bracket.size == 4,
+        bracket.matches.size == 6
+      )
     }
   )
 }

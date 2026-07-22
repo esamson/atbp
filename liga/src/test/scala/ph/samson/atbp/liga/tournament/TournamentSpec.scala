@@ -444,6 +444,13 @@ object TournamentSpec extends ZIOSpecDefault {
         )
         assertTrue(Tournament.lockPlayers(state, seq = 2, at).isLeft)
       },
+      test("lockPlayers succeeds with 3 players") {
+        val state = TournamentState(
+          name = "Open",
+          players = List(Player("Alice"), Player("Bob"), Player("Carol"))
+        )
+        assertTrue(Tournament.lockPlayers(state, seq = 2, at).isRight)
+      },
       test("lockPlayers succeeds with 8 players") {
         val state = TournamentState(
           name = "Open",

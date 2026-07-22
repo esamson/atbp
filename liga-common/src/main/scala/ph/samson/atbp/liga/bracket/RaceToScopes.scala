@@ -21,7 +21,7 @@ object RaceToScopes {
     }
 
   def requiredKeys(playerCount: Int): List[String] = {
-    val size = bracketSize(playerCount)
+    val size = TournamentBounds.bracketSize(playerCount)
     val wb = (1 to winnersRounds(size)).map(n => s"wb-$n")
     val lb = (1 to losersRounds(size)).map(n => s"lb-$n")
     wb.toList ++ lb.toList :+ "gf"
@@ -37,17 +37,6 @@ object RaceToScopes {
         ScopeLabel(Section.GrandFinal, "Grand Final")
       case _ =>
         ScopeLabel(Section.Winners, scope)
-    }
-
-  private def bracketSize(playerCount: Int): Int =
-    if (playerCount <= 8) {
-      8
-    } else if (playerCount <= 16) {
-      16
-    } else if (playerCount <= 32) {
-      32
-    } else {
-      64
     }
 
   private def winnersRounds(bracketSize: Int): Int =

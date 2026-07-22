@@ -2,6 +2,7 @@ package ph.samson.atbp.liga.tournament
 
 import ph.samson.atbp.liga.bracket.BracketGen
 import ph.samson.atbp.liga.bracket.RaceToScopes
+import ph.samson.atbp.liga.bracket.TournamentBounds
 import ph.samson.atbp.liga.glicko.Tuning
 import ph.samson.atbp.liga.model.*
 import ph.samson.atbp.liga.tournament.events.TournamentEvent
@@ -28,7 +29,7 @@ object Seed {
   }
 
   final case class InvalidPlayerCountError(count: Int) extends Error {
-    val message: String = s"player count $count must be between 8 and 64"
+    val message: String = TournamentBounds.invalidPlayerCountMessage(count)
   }
 
   final case class MissingPlayerError(name: String) extends Error {
@@ -133,10 +134,8 @@ object Seed {
   }
 
   private def validatePlayerCount(count: Int): Either[Error, Unit] =
-    if (count >= 8 && count <= 64) {
-      Right(())
-    } else {
-      Left(InvalidPlayerCountError(count))
+    TournamentValidation.validatePlayerCount(count).left.map { _ =>
+      InvalidPlayerCountError(count)
     }
 
   private def resolveRatings(

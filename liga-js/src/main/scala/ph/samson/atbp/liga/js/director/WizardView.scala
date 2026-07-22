@@ -3,6 +3,7 @@ package ph.samson.atbp.liga.js.director
 import com.raquo.laminar.api.L.*
 import ph.samson.atbp.liga.bracket.RaceToScopes
 import ph.samson.atbp.liga.bracket.RaceToWizard
+import ph.samson.atbp.liga.bracket.TournamentBounds
 import ph.samson.atbp.liga.js.api.Models.*
 import ph.samson.atbp.liga.model.Player as CommonPlayer
 import ph.samson.atbp.liga.model.PlayerRating as CommonPlayerRating
@@ -77,7 +78,7 @@ object WizardView {
       p(
         "Paste the signup list (one name per line). " +
           "Exact matches keep period ratings; others show as guests. " +
-          "Lock when you have 8–64 players."
+          s"Lock when you have ${TournamentBounds.MinPlayers}–${TournamentBounds.MaxPlayers} players."
       ),
       div(
         cls := "roster-paste",

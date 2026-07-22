@@ -1,5 +1,6 @@
 package ph.samson.atbp.liga.js.director
 
+import ph.samson.atbp.liga.bracket.TournamentBounds
 import ph.samson.atbp.liga.handicap.HandicapCap
 import ph.samson.atbp.liga.js.api.Models.BracketMatch
 import ph.samson.atbp.liga.js.api.Models.BracketMatchState
@@ -18,10 +19,10 @@ object DirectorGuidance {
     "Director controls are localhost-only. Open /audience on the club TV."
 
   def lockRosterHint(playerCount: Int): String =
-    if (playerCount < 8) {
-      s"Need at least 8 players to lock (currently $playerCount)."
-    } else if (playerCount > 64) {
-      s"At most 64 players allowed (currently $playerCount)."
+    if (playerCount < TournamentBounds.MinPlayers) {
+      s"Need at least ${TournamentBounds.MinPlayers} players to lock (currently $playerCount)."
+    } else if (playerCount > TournamentBounds.MaxPlayers) {
+      s"At most ${TournamentBounds.MaxPlayers} players allowed (currently $playerCount)."
     } else {
       ""
     }
@@ -82,11 +83,8 @@ object DirectorGuidance {
       "Winner's scoreboard total must match the race-to for this round."
     } else if (lower.contains("loser score must be less than")) {
       "Loser's scoreboard total must be below the race-to."
-    } else if (
-      lower.contains("player count must be 8-64") ||
-      lower.contains("player count must be 8–64")
-    ) {
-      raw.replace("player count must be 8-64", "Roster must have 8–64 players")
+    } else if (lower.startsWith("player count must be")) {
+      s"Roster must have ${TournamentBounds.MinPlayers}–${TournamentBounds.MaxPlayers} players"
     } else {
       raw
     }

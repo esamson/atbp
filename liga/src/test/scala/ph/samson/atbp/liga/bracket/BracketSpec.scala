@@ -68,8 +68,22 @@ object BracketSpec extends ZIOSpecDefault {
           byeWinners.sorted == List("P1", "P2", "P3", "P4")
         )
       },
-      test("supports bracket sizes 8, 16, 32, and 64") {
-        val sizes = List(8, 16, 32, 64)
+      test("3 players in 4 bracket auto-advances bye match") {
+        val players = ratings(List("P1", "P2", "P3"))
+        val bracket = BracketGen.generate(players)
+        val byeMatches = bracket.matches.filter(m =>
+          m.id.startsWith("wb-1-") && m.state == BracketMatchState.Completed
+        )
+        assertTrue(
+          bracket.size == 4,
+          bracket.matches.size == 6,
+          byeMatches.size == 1,
+          byeMatches.head.id == "wb-1-1",
+          byeMatches.head.playerA.contains(Player("P1"))
+        )
+      },
+      test("supports bracket sizes 4, 8, 16, 32, and 64") {
+        val sizes = List(4, 8, 16, 32, 64)
         val checks = sizes.map { size =>
           val players = ratings((1 to size).map(i => s"P$i").toList)
           val bracket = BracketGen.generate(players)

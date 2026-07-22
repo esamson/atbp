@@ -1,6 +1,7 @@
 package ph.samson.atbp.liga.tournament
 
 import ph.samson.atbp.liga.bracket.RaceToScopes
+import ph.samson.atbp.liga.bracket.TournamentBounds
 import ph.samson.atbp.liga.handicap.Handicap
 import ph.samson.atbp.liga.model.*
 import ph.samson.atbp.liga.tournament.events.TournamentEvent
@@ -36,7 +37,7 @@ object Tournament {
   }
 
   final case class InvalidPlayerCountError(count: Int) extends WizardError {
-    val message: String = s"player count must be 8–64: $count"
+    val message: String = TournamentBounds.invalidPlayerCountMessage(count)
   }
 
   final case class EmptyTournamentNameError() extends WizardError {
@@ -109,7 +110,7 @@ object Tournament {
       Left(RosterAlreadyLockedError())
     } else if (state.players.isEmpty) {
       Left(NoPlayersError())
-    } else if (state.players.size < 8 || state.players.size > 64) {
+    } else if (!TournamentBounds.validPlayerCount(state.players.size)) {
       Left(InvalidPlayerCountError(state.players.size))
     } else {
       Right(

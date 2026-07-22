@@ -1,10 +1,18 @@
 package ph.samson.atbp.liga.tournament
 
+import ph.samson.atbp.liga.bracket.TournamentBounds
 import ph.samson.atbp.liga.handicap.HandicapCap
 import ph.samson.atbp.liga.model.*
 
 /** Pure validators shared by command handlers and event replay. */
 object TournamentValidation {
+
+  def validatePlayerCount(count: Int): Either[String, Unit] =
+    if (TournamentBounds.validPlayerCount(count)) {
+      Right(())
+    } else {
+      Left(TournamentBounds.invalidPlayerCountMessage(count))
+    }
 
   def validateRaceTo(raceTo: Int): Either[String, Unit] =
     if (raceTo < 2) {

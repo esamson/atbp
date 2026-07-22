@@ -2,6 +2,7 @@ package ph.samson.atbp.liga.tournament
 
 import better.files.File
 import ph.samson.atbp.liga.bracket.Advancement
+import ph.samson.atbp.liga.bracket.TournamentBounds
 import ph.samson.atbp.liga.model.*
 import ph.samson.atbp.liga.tournament.events.TournamentEvent
 import zio.Task
@@ -63,8 +64,8 @@ object Replay {
           Left("roster is already locked")
         } else if (state.players.isEmpty) {
           Left("cannot lock roster with no players")
-        } else if (state.players.size < 8 || state.players.size > 64) {
-          Left(s"player count must be 8–64: ${state.players.size}")
+        } else if (!TournamentBounds.validPlayerCount(state.players.size)) {
+          Left(TournamentBounds.invalidPlayerCountMessage(state.players.size))
         } else {
           Right(state.copy(playersLocked = true))
         }

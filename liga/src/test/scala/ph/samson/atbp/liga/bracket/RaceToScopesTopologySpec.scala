@@ -6,7 +6,7 @@ object RaceToScopesTopologySpec extends ZIOSpecDefault {
 
   def spec = suite("RaceToScopes topology alignment")(
     test("requiredKeys matches scopes from BracketTopology match ids") {
-      val mismatches = (8 to 64).flatMap { playerCount =>
+      val mismatches = (3 to 64).flatMap { playerCount =>
         val bracketSize = Seeding.bracketSize(playerCount)
         val fromTopology =
           BracketTopology(bracketSize).matches.keys

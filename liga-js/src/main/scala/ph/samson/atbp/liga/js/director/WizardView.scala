@@ -107,8 +107,11 @@ object WizardView {
             if (dirty) {
               hints += p(cls := "hint", DirectorGuidance.applyPasteHint)
             }
-            if (count > 64) {
-              hints += p(cls := "hint", DirectorGuidance.lockRosterHint(count))
+            if (count > 0) {
+              val lockHint = DirectorGuidance.lockRosterHint(count)
+              if (lockHint.nonEmpty) {
+                hints += p(cls := "hint", lockHint)
+              }
             }
             if (hints.result().isEmpty) emptyNode
             else div(hints.result())
@@ -164,7 +167,7 @@ object WizardView {
         ),
         button(
           disabled <-- busy.combineWith(lockCount).map { case (isBusy, count) =>
-            isBusy || count < 8 || count > 64
+            isBusy || !TournamentBounds.validPlayerCount(count)
           },
           onClick.mapTo(()) --> Observer[Unit] { _ =>
             val rosterNames = RosterPaste.parsePaste(pasteText.now())

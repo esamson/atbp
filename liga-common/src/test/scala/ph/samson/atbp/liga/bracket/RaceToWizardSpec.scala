@@ -10,6 +10,15 @@ object RaceToWizardSpec extends ZIOSpecDefault {
     state.raceToByScope(key)
 
   def spec = suite("RaceToWizard")(
+    test("initialState(3) pre-fills all scopes for size-4 bracket") {
+      val keys = RaceToScopes.requiredKeys(3)
+      val state = RaceToWizard.initialState(3)
+      assertTrue(
+        keys == List("wb-1", "wb-2", "lb-1", "lb-2", "gf"),
+        keys.forall(key => mapAt(state, key) == 7),
+        !state.gfPinned
+      )
+    },
     test("initialState(8) pre-fills all scopes with synced losers and gf") {
       val state = RaceToWizard.initialState(8)
       assertTrue(

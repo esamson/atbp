@@ -248,6 +248,33 @@ object ReplaySpec extends ZIOSpecDefault {
         TournamentPhase.derive(state, hasDir = true) == TournamentPhase.Defining
       )
     },
+    test("PlayersLocked sets playersLocked for 3 players") {
+      val players = List(Player("P1"), Player("P2"), Player("P3"))
+      val events = List(
+        TournamentEvent.Created(
+          seq = 1,
+          at = at,
+          payload = TournamentCreatedPayload("Open", Nil)
+        ),
+        TournamentEvent.PlayersSet(
+          seq = 2,
+          at = at,
+          payload = PlayersSetPayload(players = players)
+        ),
+        TournamentEvent.PlayersLocked(
+          seq = 3,
+          at = at,
+          payload = PlayersLockedPayload()
+        )
+      )
+      for {
+        state <- ZIO.fromEither(Replay.replay(events))
+      } yield assertTrue(
+        state.playersLocked,
+        state.players.size == 3,
+        TournamentPhase.derive(state, hasDir = true) == TournamentPhase.Locked
+      )
+    },
     test("PlayersLocked sets playersLocked when count is valid") {
       val players = (1 to 8).map(i => Player(s"P$i")).toList
       val events = List(

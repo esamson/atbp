@@ -12,22 +12,14 @@ object TournamentBounds {
   def invalidPlayerCountMessage(count: Int): String =
     s"player count must be $MinPlayers–$MaxPlayers: $count"
 
+  private val BracketSizes: List[Int] = List(4, 8, 16, 32, 64)
+
   /** Smallest power-of-two bracket that fits `playerCount` players. */
   def bracketSize(playerCount: Int): Int = {
     require(
       validPlayerCount(playerCount),
       invalidPlayerCountMessage(playerCount)
     )
-    if (playerCount <= 4) {
-      4
-    } else if (playerCount <= 8) {
-      8
-    } else if (playerCount <= 16) {
-      16
-    } else if (playerCount <= 32) {
-      32
-    } else {
-      64
-    }
+    BracketSizes.find(_ >= playerCount).get
   }
 }

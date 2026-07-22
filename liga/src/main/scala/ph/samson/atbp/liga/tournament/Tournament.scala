@@ -110,16 +110,20 @@ object Tournament {
       Left(RosterAlreadyLockedError())
     } else if (state.players.isEmpty) {
       Left(NoPlayersError())
-    } else if (!TournamentBounds.validPlayerCount(state.players.size)) {
-      Left(InvalidPlayerCountError(state.players.size))
     } else {
-      Right(
-        TournamentEvent.PlayersLocked(
-          seq = seq,
-          at = at,
-          payload = PlayersLockedPayload()
+      TournamentValidation
+        .validatePlayerCount(state.players.size)
+        .fold(
+          _ => Left(InvalidPlayerCountError(state.players.size)),
+          _ =>
+            Right(
+              TournamentEvent.PlayersLocked(
+                seq = seq,
+                at = at,
+                payload = PlayersLockedPayload()
+              )
+            )
         )
-      )
     }
 
   def setRaceToByScope(

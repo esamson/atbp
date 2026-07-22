@@ -29,6 +29,28 @@ object RaceToScopesSpec extends ZIOSpecDefault {
       }
     ),
     suite("requiredKeys")(
+      test("requiredKeys(3) returns five scope keys for size-4 bracket") {
+        assertTrue(
+          RaceToScopes.requiredKeys(3) == List(
+            "wb-1",
+            "wb-2",
+            "lb-1",
+            "lb-2",
+            "gf"
+          )
+        )
+      },
+      test("requiredKeys(4) returns five scope keys for size-4 bracket") {
+        assertTrue(
+          RaceToScopes.requiredKeys(4) == List(
+            "wb-1",
+            "wb-2",
+            "lb-1",
+            "lb-2",
+            "gf"
+          )
+        )
+      },
       test("requiredKeys(8) returns eight scope keys") {
         assertTrue(
           RaceToScopes.requiredKeys(8) == List(

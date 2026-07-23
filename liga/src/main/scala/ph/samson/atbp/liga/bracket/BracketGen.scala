@@ -86,7 +86,13 @@ object BracketGen {
           val winner = matchDef.playerA.orElse(matchDef.playerB).get
           val after =
             Advancement.advance(current, matchId, winner, topology).toOption.get
-          loop(after.bracket)
+          val marked = after.bracket.copy(
+            matches = after.bracket.matches.map {
+              case m if m.id == matchId => m.copy(isBye = true)
+              case m                    => m
+            }
+          )
+          loop(marked)
       }
     }
     loop(bracket)
@@ -95,6 +101,8 @@ object BracketGen {
   private def isByeMatch(bracketMatch: BracketMatch): Boolean = {
     val hasA = bracketMatch.playerA.nonEmpty
     val hasB = bracketMatch.playerB.nonEmpty
-    bracketMatch.state != BracketMatchState.Completed && (hasA ^ hasB)
+    bracketMatch.id.startsWith("wb-1-") &&
+    bracketMatch.state != BracketMatchState.Completed &&
+    (hasA ^ hasB)
   }
 }

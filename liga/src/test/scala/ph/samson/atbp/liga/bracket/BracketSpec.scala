@@ -16,6 +16,13 @@ object BracketSpec extends ZIOSpecDefault {
   private def findMatch(bracket: Bracket, id: String): BracketMatch =
     bracket.matches.find(_.id == id).get
 
+  private def wb2Matches(bracket: Bracket): List[BracketMatch] =
+    bracket.matches.filter(_.id.startsWith("wb-2-"))
+
+  private def playerInMatch(matchDef: BracketMatch, name: String): Boolean =
+    matchDef.playerA.contains(Player(name)) ||
+      matchDef.playerB.contains(Player(name))
+
   def spec = suite("Bracket")(
     suite("Seeding")(
       test("orders players by rating descending") {
@@ -81,6 +88,50 @@ object BracketSpec extends ZIOSpecDefault {
           byeMatches.head.id == "wb-1-1",
           byeMatches.head.playerA.contains(Player("P1"))
         )
+      },
+      test("3 players in 4 bracket stops bye cascade at wb-2") {
+        val players = ratings(List("P1", "P2", "P3"))
+        val bracket = BracketGen.generate(players)
+        val bye = findMatch(bracket, "wb-1-1")
+        val wb2 = wb2Matches(bracket)
+        val p1Slots = wb2.count(playerInMatch(_, "P1"))
+        assertTrue(
+          bye.state == BracketMatchState.Completed,
+          bye.isBye,
+          bye.result.contains(MatchResult(scoreA = 1, scoreB = 0)),
+          p1Slots == 1,
+          wb2.forall(_.state == BracketMatchState.Pending),
+          findMatch(bracket, "gf-1").playerA.isEmpty,
+          findMatch(bracket, "gf-1").playerB.isEmpty
+        )
+      },
+      test("12 players in 16 bracket marks R1 byes and stops cascade") {
+        val players = ratings((1 to 12).map(i => s"P$i").toList)
+        val bracket = BracketGen.generate(players)
+        val byeMatches = bracket.matches.filter(m =>
+          m.id.startsWith("wb-1-") && m.state == BracketMatchState.Completed
+        )
+        val byeWinners =
+          byeMatches.flatMap(m => m.playerA.orElse(m.playerB)).map(_.name)
+        val wb2 = wb2Matches(bracket)
+        val winnersInWb2 = List("P1", "P2", "P3", "P4").map { name =>
+          wb2.count(playerInMatch(_, name))
+        }
+        assertTrue(
+          bracket.size == 16,
+          byeMatches.size == 4,
+          byeMatches.forall(_.isBye),
+          byeWinners.sorted == List("P1", "P2", "P3", "P4"),
+          winnersInWb2 == List(1, 1, 1, 1),
+          wb2.forall(_.state == BracketMatchState.Pending),
+          findMatch(bracket, "gf-1").playerA.isEmpty,
+          findMatch(bracket, "gf-1").playerB.isEmpty
+        )
+      },
+      test("8 players in 8 bracket has no bye matches") {
+        val players = ratings((1 to 8).map(i => s"P$i").toList)
+        val bracket = BracketGen.generate(players)
+        assertTrue(bracket.matches.forall(!_.isBye))
       },
       test("supports bracket sizes 4, 8, 16, 32, and 64") {
         val sizes = List(4, 8, 16, 32, 64)

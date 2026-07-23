@@ -165,6 +165,66 @@ object BracketSpec extends ZIOSpecDefault {
           findMatch(afterWb21, "gf-1").playerA.contains(Player("P1"))
         )
       },
+      test(
+        "5 players: ghost lb-1-2 marked bye when both WB R1 feeders are byes"
+      ) {
+        val bracket =
+          BracketGen.generate(ratings((1 to 5).map(i => s"P$i").toList))
+        val lb12 = findMatch(bracket, "lb-1-2")
+        assertTrue(
+          bracket.size == 8,
+          findMatch(bracket, "wb-1-3").isBye,
+          findMatch(bracket, "wb-1-4").isBye,
+          lb12.state == BracketMatchState.Completed,
+          lb12.isBye,
+          lb12.playerA.isEmpty,
+          lb12.playerB.isEmpty
+        )
+      },
+      test(
+        "5 players: after wb-2-2, lone lb-2-2 player advances past ghost lb-1-2"
+      ) {
+        val players = ratings((1 to 5).map(i => s"P$i").toList)
+        val seeded = BracketGen.generate(players)
+        // wb-1-2 is the only real R1 match (P4 vs P5); play it and wb-2 matches
+        val afterR1 =
+          Advancement
+            .advance(seeded, "wb-1-2", Player("P4"))
+            .toOption
+            .get
+            .bracket
+        val afterWb21 =
+          Advancement
+            .advance(afterR1, "wb-2-1", Player("P1"))
+            .toOption
+            .get
+            .bracket
+        val afterWb22 =
+          Advancement
+            .advance(afterWb21, "wb-2-2", Player("P2"))
+            .toOption
+            .get
+            .bracket
+        val lb22 = findMatch(afterWb22, "lb-2-2")
+        assertTrue(
+          findMatch(afterWb22, "lb-1-2").isBye,
+          lb22.state == BracketMatchState.Completed,
+          lb22.isBye,
+          // loser of wb-2-2 (P3) advanced through lb-2-2 past the ghost
+          playerInMatch(findMatch(afterWb22, "lb-3-1"), "P3") ||
+            playerInMatch(findMatch(afterWb22, "lb-4-1"), "P3")
+        )
+      },
+      test("partial fills 3..64: play-out reaches ready grand final") {
+        val stuck = (3 to 64).flatMap { n =>
+          val played =
+            playOutTournament(ratings((1 to n).map(i => s"P$i").toList), 500)
+          val gf = findMatch(played, "gf-1")
+          if (gf.state == BracketMatchState.Ready) None
+          else Some(n)
+        }
+        assertTrue(stuck.isEmpty)
+      },
       test("supports bracket sizes 4, 8, 16, 32, and 64") {
         val sizes = List(4, 8, 16, 32, 64)
         val checks = sizes.map { size =>

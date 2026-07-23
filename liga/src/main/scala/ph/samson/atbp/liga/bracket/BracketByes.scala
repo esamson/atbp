@@ -15,39 +15,45 @@ object BracketByes {
   def propagateStructuralByes(
       bracket: Bracket,
       topology: BracketTopology.Topology
-  ): Bracket = {
-    def loop(current: Bracket): Bracket =
-      findStructuralBye(current, topology) match {
-        case None          => current
-        case Some(matchId) =>
-          val matchDef = current.matches.find(_.id == matchId).get
-          matchDef.playerA.orElse(matchDef.playerB) match {
-            case None =>
-              // Ghost match: both feeders are dead; complete with no players.
-              val marked = current.copy(
-                matches = current.matches.map {
-                  case m if m.id == matchId =>
-                    m.copy(state = BracketMatchState.Completed, isBye = true)
-                  case m => m
-                }
-              )
-              loop(marked)
-            case Some(winner) =>
-              val after =
-                Advancement
-                  .advanceCore(current, matchId, winner, topology, isBye = true)
-                  .toOption
-                  .get
-              loop(after)
-          }
+  ): Bracket =
+    propagateStructuralByesE(bracket, topology).fold(_ => bracket, identity)
+
+  def propagateStructuralByesE(
+      bracket: Bracket,
+      topology: BracketTopology.Topology
+  ): Either[String, Bracket] =
+    loop(bracket, topology)
+
+  private def loop(
+      current: Bracket,
+      topology: BracketTopology.Topology
+  ): Either[String, Bracket] =
+    findStructuralBye(current, topology) match {
+      case None           => Right(current)
+      case Some(matchDef) =>
+        matchDef.playerA.orElse(matchDef.playerB) match {
+          case None =>
+            loop(completeGhostBye(current, matchDef.id), topology)
+          case Some(winner) =>
+            Advancement
+              .advanceCore(current, matchDef.id, winner, topology, isBye = true)
+              .flatMap(placed => loop(placed, topology))
+        }
+    }
+
+  private def completeGhostBye(bracket: Bracket, matchId: String): Bracket =
+    bracket.copy(
+      matches = bracket.matches.map {
+        case m if m.id == matchId =>
+          m.copy(state = BracketMatchState.Completed, isBye = true)
+        case m => m
       }
-    loop(bracket)
-  }
+    )
 
   private def findStructuralBye(
       bracket: Bracket,
       topology: BracketTopology.Topology
-  ): Option[String] = {
+  ): Option[BracketMatch] = {
     val byId = bracket.matches.map(m => m.id -> m).toMap
     bracket.matches
       .find(m =>
@@ -55,7 +61,6 @@ object BracketByes {
           isEmptyGhostBye(m, byId, topology) ||
           isHalfFilledUnfillable(m, byId, topology)
       )
-      .map(_.id)
   }
 
   private def isWinnersRound1Bye(matchDef: BracketMatch): Boolean = {

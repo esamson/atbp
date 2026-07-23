@@ -25,7 +25,7 @@ object Advancement {
   ): Either[String, AdvanceResult] =
     for {
       placed <- advanceCore(bracket, matchId, winner, topology)
-      propagated = BracketByes.propagateStructuralByes(placed, topology)
+      propagated <- BracketByes.propagateStructuralByesE(placed, topology)
     } yield readyNewMatches(propagated, topology, matchId)
 
   /** Complete a match and place winner/loser without structural-bye

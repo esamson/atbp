@@ -32,7 +32,8 @@ object Models {
       raceTo: Option[Int] = None,
       handicapSuggested: Option[Int] = None,
       handicapApplied: Option[Int] = None,
-      result: Option[MatchResult] = None
+      result: Option[MatchResult] = None,
+      isBye: Boolean = false
   )
 
   final case class Bracket(

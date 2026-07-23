@@ -51,6 +51,36 @@ object BracketLayoutSpec extends ZIOSpecDefault {
         groups.head.section == BracketLayout.Section.GrandFinal,
         groups.head.round == 3
       )
+    },
+    test("resultLabel shows bye for completed bye matches") {
+      val byeMatch = BracketMatch(
+        id = "wb-1-1",
+        playerA = Some(Player("P1")),
+        playerB = None,
+        state = BracketMatchState.Completed,
+        result = Some(MatchResult(scoreA = 1, scoreB = 0)),
+        isBye = true
+      )
+      assertTrue(BracketLayout.resultLabel(byeMatch) == Some("bye"))
+    },
+    test("resultLabel shows score for normal completed matches") {
+      val matchDef = BracketMatch(
+        id = "wb-1-2",
+        playerA = Some(Player("P2")),
+        playerB = Some(Player("P3")),
+        state = BracketMatchState.Completed,
+        result = Some(MatchResult(scoreA = 7, scoreB = 4))
+      )
+      assertTrue(BracketLayout.resultLabel(matchDef) == Some("7–4"))
+    },
+    test("resultLabel is empty for pending matches") {
+      val matchDef = BracketMatch(
+        id = "wb-2-1",
+        playerA = Some(Player("P1")),
+        playerB = None,
+        state = BracketMatchState.Pending
+      )
+      assertTrue(BracketLayout.resultLabel(matchDef) == None)
     }
   )
 }

@@ -89,8 +89,9 @@ object BracketLayout {
     RaceToScopes.keyForMatch(matchId).flatMap(raceToByScope.get)
 
   def resultLabel(matchDef: BracketMatch): Option[String] =
-    matchDef.result.map { result =>
-      if (matchDef.isBye) "bye"
-      else s"${result.scoreA}–${result.scoreB}"
+    if (matchDef.isBye) {
+      Some("bye")
+    } else {
+      matchDef.result.map(result => s"${result.scoreA}–${result.scoreB}")
     }
 }

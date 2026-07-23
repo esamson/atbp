@@ -81,6 +81,16 @@ object BracketLayoutSpec extends ZIOSpecDefault {
         state = BracketMatchState.Pending
       )
       assertTrue(BracketLayout.resultLabel(matchDef) == None)
+    },
+    test("resultLabel shows bye for ghost structural byes without a result") {
+      val ghostBye = BracketMatch(
+        id = "lb-1-2",
+        playerA = None,
+        playerB = None,
+        state = BracketMatchState.Completed,
+        isBye = true
+      )
+      assertTrue(BracketLayout.resultLabel(ghostBye) == Some("bye"))
     }
   )
 }

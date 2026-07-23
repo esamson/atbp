@@ -46,14 +46,23 @@ mode prevents interrupting the process.
 ### Do not run interactive sbt commands
 
 Never launch interactive sbt tasks — they block waiting for input and leave the
-agent hung. Examples:
+agent (including subagents) hung. **This applies to every spelling**, including
+project-scoped and configuration-scoped console tasks. Forbidden examples:
 
-- `sbt console` / `sbt --client console`
+- `sbt console` / `sbt --client console` / `sbt --client "console"`
+- `sbt --client "liga/console"` / `sbt --client "liga/Test/console"`
+- any task whose name is `console`, `consoleQuick`, or `Test/console`
+  (e.g. `*/console`, `*/Test/console`)
 - bare `sbt` or `sbt --client` with no task
 - `sbt ~compile` and other watch modes that run until interrupted
 
-Use non-interactive alternatives instead: `compile`, `test`, `testOnly`, `run`
-(when you need to verify startup), or `fixup`.
+Do **not** use the REPL to inspect types, evaluate expressions, or “quickly
+check” behavior. Use non-interactive alternatives instead:
+
+- compile / typecheck: `sbt --client compile` or `sbt --client "liga/compile"`
+- behavior: `sbt --client "liga/test"` / `sbt --client "liga/testOnly …"`
+- startup: `sbt run` (no `--client`)
+- format/lint: `sbt --client fixup`
 
 ### Commit workflow (required — never skip)
 

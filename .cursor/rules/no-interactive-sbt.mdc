@@ -1,0 +1,34 @@
+---
+description: Never run interactive sbt (console, watch, bare shell)
+alwaysApply: true
+---
+
+# No interactive sbt
+
+Interactive sbt **blocks the agent** (parent and subagents). Never run it.
+
+## Forbidden
+
+- Any task named `console`, `consoleQuick`, or `Test/console`
+- Project-scoped forms: `liga/console`, `liga/Test/console`, `*/console`
+- Bare `sbt` / `sbt --client` with no task
+- Watch modes: `~compile`, `~test`, etc.
+
+```bash
+# ❌ hangs
+sbt --client "liga/Test/console"
+sbt --client console
+sbt --client "liga/console"
+```
+
+## Use instead
+
+```bash
+sbt --client "liga/compile"
+sbt --client "liga/test"
+sbt --client "liga/testOnly *BracketSpec*"
+sbt --client fixup
+sbt run   # startup only; no --client
+```
+
+Do not open the REPL to inspect types or try expressions — write/run a test.

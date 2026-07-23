@@ -42,7 +42,8 @@ final case class BracketMatch(
     raceTo: Option[Int] = None,
     handicapSuggested: Option[Int] = None,
     handicapApplied: Option[Int] = None,
-    result: Option[MatchResult] = None
+    result: Option[MatchResult] = None,
+    isBye: Boolean = false
 )
 
 /** Full bracket tree for a tournament. */

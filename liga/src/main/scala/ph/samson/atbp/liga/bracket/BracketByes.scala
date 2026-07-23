@@ -35,16 +35,10 @@ object BracketByes {
             case Some(winner) =>
               val after =
                 Advancement
-                  .advance(current, matchId, winner, topology)
+                  .advanceCore(current, matchId, winner, topology, isBye = true)
                   .toOption
                   .get
-              val marked = after.bracket.copy(
-                matches = after.bracket.matches.map {
-                  case m if m.id == matchId => m.copy(isBye = true)
-                  case m                    => m
-                }
-              )
-              loop(marked)
+              loop(after)
           }
       }
     loop(bracket)

@@ -204,6 +204,11 @@ object MatchPanel {
 
       case BracketMatchState.Completed =>
         matchDef.result match {
+          case Some(_) if matchDef.isBye =>
+            div(
+              p("Bye — auto-advance"),
+              matchDef.handicapApplied.map(h => p(s"Handicap was $h"))
+            )
           case Some(result) =>
             div(
               p(s"Final score: ${result.scoreA}–${result.scoreB}"),

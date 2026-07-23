@@ -62,8 +62,9 @@ object BracketView {
         cls := "match-state",
         BracketLayout.stateLabel(matchDef.state)
       ),
-      matchDef.result.map { result =>
-        span(cls := "match-score", s"${result.scoreA}–${result.scoreB}")
+      BracketLayout.resultLabel(matchDef).map { label =>
+        val labelClass = if (matchDef.isBye) "match-bye" else "match-score"
+        span(cls := labelClass, label)
       }
     )
   }

@@ -150,5 +150,6 @@ object AudienceApp {
       |.match-state { text-transform: uppercase; font-size: 0.8rem; color: #666; }
       |.match-handicap { font-size: 0.9rem; color: #555; }
       |.match-score { font-weight: 600; font-size: 1.2rem; }
+      |.match-bye { font-style: italic; opacity: 0.75; }
       |""".stripMargin
 }

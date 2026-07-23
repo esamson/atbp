@@ -39,8 +39,9 @@ object AudienceBracketView {
       matchDef.handicapApplied.filter(_ > 0).map { handicap =>
         span(cls := "match-handicap", s"spot $handicap")
       },
-      matchDef.result.map { result =>
-        span(cls := "match-score", s"${result.scoreA}–${result.scoreB}")
+      BracketLayout.resultLabel(matchDef).map { label =>
+        val labelClass = if (matchDef.isBye) "match-bye" else "match-score"
+        span(cls := labelClass, label)
       }
     )
   }

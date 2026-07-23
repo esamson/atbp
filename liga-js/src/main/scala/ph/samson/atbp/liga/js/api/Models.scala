@@ -99,7 +99,14 @@ object Models {
   given JsonCodec[Player] = DeriveJsonCodec.gen
   given JsonCodec[PlayerRating] = DeriveJsonCodec.gen
   given JsonCodec[MatchResult] = DeriveJsonCodec.gen
-  given JsonCodec[BracketMatchState] = DeriveJsonCodec.gen
+  given JsonCodec[BracketMatchState] =
+    JsonCodec.string.transformOrFail(
+      name =>
+        BracketMatchState.values
+          .find(_.toString == name)
+          .toRight(s"Invalid BracketMatchState: $name"),
+      _.toString
+    )
   given JsonCodec[BracketMatch] = DeriveJsonCodec.gen
   given JsonCodec[Bracket] = DeriveJsonCodec.gen
   given JsonCodec[TournamentResponse] = DeriveJsonCodec.gen

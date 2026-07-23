@@ -16,7 +16,9 @@ object BracketGen {
         emptyMatch(id, playerA, playerB)
       }
     val bracket = Bracket(size, matches)
-    propagateByes(bracket, topology)
+    reconcileReadyStates(
+      BracketByes.propagateStructuralByes(bracket, topology)
+    )
   }
 
   private def seedSlotsFor(
@@ -73,36 +75,15 @@ object BracketGen {
     BracketMatch(id, playerA, playerB, state)
   }
 
-  private def propagateByes(
-      bracket: Bracket,
-      topology: BracketTopology.Topology
-  ): Bracket = {
-    def loop(current: Bracket): Bracket = {
-      val byeMatch = current.matches.find(isByeMatch).map(_.id)
-      byeMatch match {
-        case None          => current
-        case Some(matchId) =>
-          val matchDef = current.matches.find(_.id == matchId).get
-          val winner = matchDef.playerA.orElse(matchDef.playerB).get
-          val after =
-            Advancement.advance(current, matchId, winner, topology).toOption.get
-          val marked = after.bracket.copy(
-            matches = after.bracket.matches.map {
-              case m if m.id == matchId => m.copy(isBye = true)
-              case m                    => m
-            }
-          )
-          loop(marked)
-      }
-    }
-    loop(bracket)
-  }
-
-  private def isByeMatch(bracketMatch: BracketMatch): Boolean = {
-    val hasA = bracketMatch.playerA.nonEmpty
-    val hasB = bracketMatch.playerB.nonEmpty
-    bracketMatch.id.startsWith("wb-1-") &&
-    bracketMatch.state != BracketMatchState.Completed &&
-    (hasA ^ hasB)
-  }
+  /** Promote half-filled pending slots that already have both players. */
+  private def reconcileReadyStates(bracket: Bracket): Bracket =
+    bracket.copy(matches = bracket.matches.map {
+      case matchDef
+          if matchDef.state == BracketMatchState.Pending &&
+            matchDef.playerA.nonEmpty &&
+            matchDef.playerB.nonEmpty =>
+        matchDef.copy(state = BracketMatchState.Ready)
+      case matchDef =>
+        matchDef
+    })
 }

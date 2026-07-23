@@ -95,12 +95,15 @@ object BracketSpec extends ZIOSpecDefault {
         val bye = findMatch(bracket, "wb-1-1")
         val wb2 = wb2Matches(bracket)
         val p1Slots = wb2.count(playerInMatch(_, "P1"))
+        val ready = bracket.matches.filter(_.state == BracketMatchState.Ready)
         assertTrue(
           bye.state == BracketMatchState.Completed,
           bye.isBye,
           bye.result.contains(MatchResult(scoreA = 1, scoreB = 0)),
           p1Slots == 1,
           wb2.forall(_.state == BracketMatchState.Pending),
+          ready.size == 1,
+          ready.head.id == "wb-1-2",
           findMatch(bracket, "gf-1").playerA.isEmpty,
           findMatch(bracket, "gf-1").playerB.isEmpty
         )
@@ -132,6 +135,35 @@ object BracketSpec extends ZIOSpecDefault {
         val players = ratings((1 to 8).map(i => s"P$i").toList)
         val bracket = BracketGen.generate(players)
         assertTrue(bracket.matches.forall(!_.isBye))
+      },
+      test(
+        "3 players: losers structural bye after wb-1-2 leaves lb-2-1 ready after wb-2-1"
+      ) {
+        val players = ratings(List("P1", "P2", "P3"))
+        val afterWb12 =
+          Advancement
+            .advance(BracketGen.generate(players), "wb-1-2", Player("P2"))
+            .toOption
+            .get
+            .bracket
+        val lb11 = findMatch(afterWb12, "lb-1-1")
+        val lb21AfterWb12 = findMatch(afterWb12, "lb-2-1")
+        val afterWb21 =
+          Advancement
+            .advance(afterWb12, "wb-2-1", Player("P1"))
+            .toOption
+            .get
+            .bracket
+        val lb21 = findMatch(afterWb21, "lb-2-1")
+        assertTrue(
+          lb11.state == BracketMatchState.Completed,
+          lb11.isBye,
+          lb21AfterWb12.playerA.contains(Player("P3")),
+          lb21.state == BracketMatchState.Ready,
+          lb21.playerA.contains(Player("P3")),
+          lb21.playerB.contains(Player("P2")),
+          findMatch(afterWb21, "gf-1").playerA.contains(Player("P1"))
+        )
       },
       test("supports bracket sizes 4, 8, 16, 32, and 64") {
         val sizes = List(4, 8, 16, 32, 64)

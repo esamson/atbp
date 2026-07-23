@@ -148,7 +148,11 @@ object SeedSpec extends ZIOSpecDefault {
       assertTrue(
         result.isRight,
         bracket.size == 4,
-        bracket.matches.size == 6
+        bracket.matches.size == 6,
+        bracket.matches.count(_.state == BracketMatchState.Ready) == 1,
+        bracket.matches
+          .find(_.id == "wb-1-2")
+          .exists(_.state == BracketMatchState.Ready)
       )
     }
   )

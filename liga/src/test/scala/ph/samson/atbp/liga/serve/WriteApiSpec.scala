@@ -313,6 +313,61 @@ object WriteApiSpec extends ZIOSpecDefault {
         seeded.bracket.exists(_.size == 8)
       )
     },
+    test("3-player seed leaves wb-1-2 ready via HTTP API") {
+      val threePlayerRaceTo =
+        """{"raceToByScope":{"wb-1":7,"wb-2":7,"lb-1":7,"lb-2":7,"gf":7}}"""
+      for {
+        root <- ZIO.attemptBlocking(
+          File.newTemporaryDirectory("liga-three-player-api")
+        )
+        dataDir = root / "data"
+        _ <- ZIO.attemptBlocking {
+          dataDir.createDirectoryIfNotExists()
+          File(getClass.getResource("/periods/eight-player-seed.liga"))
+            .copyTo(dataDir / "eight-player-seed.liga")
+        }
+        ctx = ServeContext(dataDir = dataDir, tournamentDir = None)
+        _ <- LigaRoutes
+          .routes(ctx, BindConfig())
+          .runZIO(
+            localhostPost(
+              "/api/tournament/create",
+              """{"name":"Three Player Open"}"""
+            )
+          )
+        _ <- LigaRoutes
+          .routes(ctx, BindConfig())
+          .runZIO(
+            localhostPost(
+              "/api/tournament/players",
+              """{"players":[{"name":"P1"},{"name":"P2"},{"name":"P3"}]}"""
+            )
+          )
+        _ <- LigaRoutes
+          .routes(ctx, BindConfig())
+          .runZIO(localhostPost("/api/tournament/lock", "{}"))
+        _ <- LigaRoutes
+          .routes(ctx, BindConfig())
+          .runZIO(localhostPost("/api/tournament/race-to", threePlayerRaceTo))
+        seed <- LigaRoutes
+          .routes(ctx, BindConfig())
+          .runZIO(localhostPost("/api/tournament/seed", "{}"))
+        seedBody <- seed.body.asString
+        seeded <- ZIO.fromEither(seedBody.fromJson[TournamentResponse])
+        wb12 = seeded.bracket.flatMap(_.matches.find(_.id == "wb-1-2"))
+        readyIds =
+          seeded.bracket.toList.flatMap(
+            _.matches.filter(_.state == BracketMatchState.Ready).map(_.id)
+          )
+        _ <- cleanup(root)
+      } yield assertTrue(
+        seed.status == Status.Ok,
+        seeded.phase == "active",
+        seeded.bracket.exists(_.size == 4),
+        wb12.exists(_.state == BracketMatchState.Ready),
+        readyIds == List("wb-1-2")
+      )
+    },
     test(
       "POST /api/tournament/seed creates bracket with frozen period ratings"
     ) {

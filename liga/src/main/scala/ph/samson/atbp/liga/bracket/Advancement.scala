@@ -29,7 +29,8 @@ object Advancement {
       loser <- loserOf(matchDef, winner)
       updated <- completeMatch(bracket, matchId, winner)
       placed <- placePlayers(updated, topology, matchId, winner, loser)
-    } yield readyNewMatches(placed, topology, matchId)
+      propagated = BracketByes.propagateStructuralByes(placed, topology)
+    } yield readyNewMatches(propagated, topology, matchId)
   }
 
   private def findMatch(

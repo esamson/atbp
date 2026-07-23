@@ -19,6 +19,13 @@ object DirectorApp {
     val statusMessage = Var("")
     val busy = Var(false)
 
+    def selectFirstActionable(tournament: TournamentResponse): Unit =
+      if (selectedMatchId.now().isEmpty) {
+        tournament.bracket
+          .flatMap(_.matches.find(BracketLayout.isActionable))
+          .foreach(matchDef => selectedMatchId.set(Some(matchDef.id)))
+      }
+
     def refresh(): Unit = {
       busy.set(true)
       val loaded = for {
@@ -29,6 +36,7 @@ object DirectorApp {
         case Success((t, lb)) =>
           tournament.set(Some(t))
           leaderboard.set(Some(lb))
+          selectFirstActionable(t)
           busy.set(false)
           statusMessage.set("")
         case Failure(err) =>
@@ -42,6 +50,7 @@ object DirectorApp {
       action.onComplete {
         case Success(value) =>
           tournament.set(Some(value))
+          selectFirstActionable(value)
           busy.set(false)
           statusMessage.set("")
           client.getLeaderboard.onComplete {
@@ -223,7 +232,8 @@ object DirectorApp {
               p(cls := "guidance", DirectorGuidance.matchWorkflowOverview),
               p(
                 cls := "hint",
-                "Green border = match needs director action."
+                "Green border = match needs director action. " +
+                  "After byes, play the remaining winners-round-1 match first."
               )
             )
         }

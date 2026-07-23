@@ -43,6 +43,18 @@ sbt --batch fixup
 To verify that the app starts, use `sbt run` **without** `--client` — the client
 mode prevents interrupting the process.
 
+### Do not run interactive sbt commands
+
+Never launch interactive sbt tasks — they block waiting for input and leave the
+agent hung. Examples:
+
+- `sbt console` / `sbt --client console`
+- bare `sbt` or `sbt --client` with no task
+- `sbt ~compile` and other watch modes that run until interrupted
+
+Use non-interactive alternatives instead: `compile`, `test`, `testOnly`, `run`
+(when you need to verify startup), or `fixup`.
+
 ### Commit workflow (required — never skip)
 
 Before **every** commit that touches Scala (or `build.sbt` / `project/`):

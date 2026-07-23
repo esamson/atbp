@@ -113,16 +113,14 @@ object Tournament {
     } else {
       TournamentValidation
         .validatePlayerCount(state.players.size)
-        .fold(
-          _ => Left(InvalidPlayerCountError(state.players.size)),
-          _ =>
-            Right(
-              TournamentEvent.PlayersLocked(
-                seq = seq,
-                at = at,
-                payload = PlayersLockedPayload()
-              )
-            )
+        .left
+        .map(_ => InvalidPlayerCountError(state.players.size): WizardError)
+        .map(_ =>
+          TournamentEvent.PlayersLocked(
+            seq = seq,
+            at = at,
+            payload = PlayersLockedPayload()
+          )
         )
     }
 

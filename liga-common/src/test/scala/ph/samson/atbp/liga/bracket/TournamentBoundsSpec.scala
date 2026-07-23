@@ -34,6 +34,18 @@ object TournamentBoundsSpec extends ZIOSpecDefault {
         TournamentBounds.bracketSize(33) == 64,
         TournamentBounds.bracketSize(64) == 64
       )
+    },
+    test("bracketSize rejects invalid player count") {
+      val message =
+        try {
+          val _ = TournamentBounds.bracketSize(2)
+          ""
+        } catch {
+          case e: IllegalArgumentException => e.getMessage
+        }
+      assertTrue(
+        message.contains(TournamentBounds.invalidPlayerCountMessage(2))
+      )
     }
   )
 }

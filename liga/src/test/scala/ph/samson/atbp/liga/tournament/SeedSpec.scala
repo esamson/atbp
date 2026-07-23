@@ -113,6 +113,20 @@ object SeedSpec extends ZIOSpecDefault {
           )
       )
     },
+    test("seed rejected with invalid player count") {
+      val players = List(Player("P1"), Player("P2"))
+      val state = lockedState(players)
+      val ratings = players.map(p => rating(p.name, 1700))
+      val result =
+        Seed.buildEvents(
+          state,
+          ratings,
+          fullRaceToByScope,
+          startSeq = 2,
+          at
+        )
+      assertTrue(result == Left(Seed.InvalidPlayerCountError(2)))
+    },
     test("seeds 3-player tournament into size-4 bracket") {
       val players = List(Player("P1"), Player("P2"), Player("P3"))
       val state = lockedState(players).copy(

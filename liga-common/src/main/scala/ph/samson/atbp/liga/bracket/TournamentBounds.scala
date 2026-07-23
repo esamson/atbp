@@ -12,7 +12,14 @@ object TournamentBounds {
   def invalidPlayerCountMessage(count: Int): String =
     s"player count must be $MinPlayers–$MaxPlayers: $count"
 
-  private val BracketSizes: List[Int] = List(4, 8, 16, 32, 64)
+  private val BracketSizes: List[Int] = {
+    val sizes = Iterator.iterate(4)(_ * 2).takeWhile(_ <= MaxPlayers).toList
+    require(
+      sizes.lastOption.contains(MaxPlayers),
+      s"bracket sizes must reach MaxPlayers ($MaxPlayers)"
+    )
+    sizes
+  }
 
   /** Smallest power-of-two bracket that fits `playerCount` players. */
   def bracketSize(playerCount: Int): Int = {

@@ -57,6 +57,7 @@ object Seed {
       at: Instant
   ): Either[Error, List[TournamentEvent]] =
     for {
+      _ <- validatePlayerCount(state.players.size)
       _ <- validateState(state)
       effectiveRaceTo =
         if (raceToByScope.isEmpty) {
@@ -66,7 +67,6 @@ object Seed {
         }
       _ <- validateRaceToByScope(effectiveRaceTo, state.players.size)
       ratings <- resolveRatings(state.players, periodRatings)
-      _ <- validatePlayerCount(ratings.size)
       bracket = BracketGen.generate(ratings)
       raceToAlreadySaved =
         raceToByScope.isEmpty && TournamentPhase.raceToComplete(state)

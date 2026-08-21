@@ -1,14 +1,14 @@
-ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("25"))
+githubWorkflowJavaVersions := Seq(JavaSpec.temurin("25"))
 
-ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
-ThisBuild / githubWorkflowPublishTargetBranches := Seq(
+githubWorkflowTargetTags ++= Seq("v*")
+githubWorkflowPublishTargetBranches := Seq(
   RefPredicate.StartsWith(Ref.Tag("v")),
   RefPredicate.Equals(Ref.Branch("main"))
 )
 
-ThisBuild / githubWorkflowEnv += "SBT_OPTS" -> "-Xmx12G"
+githubWorkflowEnv += "SBT_OPTS" -> "-Xmx12G"
 
-ThisBuild / githubWorkflowGeneratedCI := (ThisBuild / githubWorkflowGeneratedCI).value
+githubWorkflowGeneratedCI := githubWorkflowGeneratedCI.value
   .map {
     case publish if publish.id == "publish" && publish.permissions.isEmpty =>
       publish.copy(
@@ -25,7 +25,7 @@ ThisBuild / githubWorkflowGeneratedCI := (ThisBuild / githubWorkflowGeneratedCI)
     case other => other
   }
 
-ThisBuild / githubWorkflowPublishPreamble := Seq(
+githubWorkflowPublishPreamble := Seq(
   WorkflowStep.Run(
     commands = List(
       """echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin"""
@@ -34,7 +34,7 @@ ThisBuild / githubWorkflowPublishPreamble := Seq(
   )
 )
 
-ThisBuild / githubWorkflowPublish := Seq(
+githubWorkflowPublish := Seq(
   WorkflowStep.Sbt(
     commands = List("ci-release"),
     name = Some("Publish jars"),

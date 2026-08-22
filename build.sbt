@@ -180,5 +180,9 @@ lazy val adfBuilder = atbpModule("adf-builder")
 def atbpModule(moduleName: String): Project =
   Project(moduleName, file(moduleName))
     .settings(name := s"atbp-$moduleName")
-    .settings(Compile / packageDoc / mappings := Nil)
+    .settings(
+      Compile / packageDoc / mappings := Nil,
+      Compile / run / fork := true,
+      Test / run / fork := true
+    )
     .settings(scalacOptions ++= Seq("-no-indent", "-old-syntax"))

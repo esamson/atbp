@@ -258,20 +258,27 @@ object AudienceApp {
       |  min-width: 11rem;
       |  display: flex;
       |  flex-direction: column;
-      |  gap: 1.25rem;
       |}
       |.spatial-column h3 {
-      |  margin: 0;
+      |  margin: 0 0 0.75rem;
       |  font-size: 0.95rem;
       |  font-weight: 600;
       |  color: #333;
       |  white-space: nowrap;
+      |}
+      |.spatial-column-slots {
+      |  display: grid;
+      |  grid-template-rows:
+      |    repeat(var(--spatial-slots, 1), minmax(2.5rem, 1fr));
+      |  row-gap: 0.75rem;
+      |  flex: 1;
       |}
       |.spatial-cell {
       |  position: relative;
       |  display: flex;
       |  flex-direction: row;
       |  align-items: baseline;
+      |  align-self: center;
       |  padding: 0.3rem 0.6rem;
       |  border: 1px solid #ddd;
       |  border-radius: 6px;

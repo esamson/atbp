@@ -114,12 +114,13 @@ Path constants: `AudienceRoute.SpatialBracketPath`; director footer reuses via
 | `audience/AudienceRoute.scala` | Pathname normalize + `isSpatialBracket` |
 | `audience/AudienceBracketView.scala` | List view — `BracketLayout.groupMatches` order; ratings via `AppliedHandicapView` |
 | `audience/AudienceSpatialBracketView.scala` | Spatial bands/columns/cells; Club density (`showRatings = false`); subtle live/done classes |
-| `audience/AudienceSpatialLayout.scala` | Pure column/band geometry — unfinished left, completed right; WB/GF/SE above LB; seed order within column |
+| `audience/AudienceSpatialLayout.scala` | Pure column/band geometry — unfinished left, completed right; WB/GF/SE above LB; shared LCM slot grid aligns later rounds between feeders |
 | `audience/AudienceIdlePolicy.scala` | Idle / Latest Ratings (both routes) |
 
 Spatial layout reuses `BracketLayout.showInList` visibility (hide Pending with
-neither player); **ordering** is spatial-only (not `groupMatches`). Within a
-column, top→bottom = seed/match-id order. Intent:
+neither player); **ordering** is spatial-only (not `groupMatches`). Columns in a
+band share an LCM slot grid so later-round cells center on feeder pairs; hidden
+bye slots in the payload keep seed rows even when the cell is not shown. Intent:
 `docs/intent/spatial-bracket.md`, `docs/ideas/spatial-bracket.md`.
 
 ## Docs index

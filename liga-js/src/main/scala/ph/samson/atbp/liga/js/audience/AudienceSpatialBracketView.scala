@@ -41,14 +41,23 @@ object AudienceSpatialBracketView {
           h2(band.section.label),
           div(
             cls := "spatial-columns",
+            styleAttr := s"--spatial-slots: ${band.slotCount}",
             band.columns.map { column =>
               div(
                 cls := "spatial-column",
                 h3(
                   BracketLayout.groupLabel(band.section, column.round, seRounds)
                 ),
-                column.matches.map(
-                  spatialCell(handicapContext, resultsContext, _)
+                div(
+                  cls := "spatial-column-slots",
+                  column.placed.map { placed =>
+                    spatialCell(
+                      handicapContext,
+                      resultsContext,
+                      placed.matchDef
+                    )
+                      .amend(styleAttr := s"grid-row: ${placed.gridRowCss}")
+                  }
                 )
               )
             }

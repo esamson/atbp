@@ -22,7 +22,7 @@ Billiards club ratings + handicapped double-elim tournaments. Intent:
 sbt --client "liga/compile"
 sbt --client "liga/test"
 sbt --client "liga-js/test"
-sbt --client "ligaCommonJVM/test"
+sbt --client "ligaCommon/test"
 sbt --client "liga/testOnly *Handicap*"
 sbt --client "liga/testOnly *WaitTiming*"
 sbt --client "liga-js/testOnly *BracketLayout*"

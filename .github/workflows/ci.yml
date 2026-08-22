@@ -51,7 +51,7 @@ jobs:
         run: sbt '++ ${{ matrix.scala }}; test'
 
       - name: Compress target directories
-        run: tar cf targets.tar plate/target stmt2csv/target liga-js/target liga/target target liga-common/.jvm/target traceviz/target jira/target hubad/target confluence/target md2c/target retext/target liga-common/.js/target cli/target stmt2csv-it/target http/target adf-builder/target project/target
+        run: tar cf targets.tar target/out/jvm/scala-3.8.4/atbp-plate target/out/jvm/scala-3.8.4/atbp-liga target/out/jvm/scala-3.8.4/atbp-root target/out/jvm/scala-3.8.4/atbp-liga-common target/out/jvm/scala-3.8.4/atbp-traceviz target/out/jvm/scala-3.8.4/atbp-confluence target/out/jvm/scala-3.8.4/atbp-md2c target/out/jvm/scala-3.8.4/atbp-http target/out/jvm/scala-3.8.4/atbp-adf-builder target/out/jvm/scala-3.8.4/atbp-stmt2csv target/out/sjs1/scala-3.8.4/atbp-liga-js target/out/jvm/scala-3.8.4/atbp-jira target/out/jvm/scala-3.8.4/atbp-hubad target/out/jvm/scala-3.8.4/atbp-retext target/out/sjs1/scala-3.8.4/atbp-liga-common target/out/jvm/scala-3.8.4/atbp-cli target/out/jvm/scala-3.8.4/atbp-stmt2csv-it project/target
 
       - name: Upload target directories
         uses: actions/upload-artifact@v7

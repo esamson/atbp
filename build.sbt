@@ -3,12 +3,13 @@ import org.scalajs.linker.interface.ESVersion
 import org.scalajs.linker.interface.ModuleKind
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
-import sbtcrossproject.CrossPlugin.autoImport._
 import sbtdynver.DynVer
 
-ThisBuild / organization := "samson.ph"
-ThisBuild / scalaVersion := "3.8.4"
-ThisBuild / versionScheme := Some("semver-spec")
+lazy val scala3V = "3.8.4"
+
+scalaVersion := scala3V
+versionScheme := Some("semver-spec")
+Test / exportJars := false
 
 lazy val root = Project("atbp", file("."))
   .settings(
@@ -22,8 +23,8 @@ lazy val root = Project("atbp", file("."))
     hubad,
     jira,
     liga,
-    ligaCommon.jvm,
-    ligaCommon.js,
+    ligaCommonJvm,
+    ligaCommonJsRow,
     ligaJs,
     md2c,
     plate,
@@ -111,50 +112,54 @@ lazy val traceviz = atbpModule("traceviz")
 lazy val hubad = atbpModule("hubad")
   .settings(Dependencies.hubad)
 
-lazy val ligaCommon = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("liga-common"))
+lazy val ligaCommon = (projectMatrix in file("liga-common"))
   .settings(
     name := "atbp-liga-common",
     Compile / packageDoc / mappings := Nil,
-    scalacOptions ++= Seq("-no-indent", "-old-syntax")
-  )
-  .settings(Dependencies.ligaCommon)
-  .jvmSettings(
+    scalacOptions ++= Seq("-no-indent", "-old-syntax"),
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
-  .jsSettings(
-    scalaJSUseMainModuleInitializer := false,
-    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework"),
-    Test / scalaJSUseTestModuleInitializer := true
+  .settings(Dependencies.ligaCommon)
+  .jvmPlatform(scalaVersions = Seq(scala3V))
+  .jsPlatform(
+    scalaVersions = Seq(scala3V),
+    settings = Seq(
+      scalaJSUseMainModuleInitializer := false,
+      Test / scalaJSUseTestModuleInitializer := true
+    )
   )
 
+lazy val ligaCommonJvm = ligaCommon.jvm(scala3V)
+lazy val ligaCommonJsRow = ligaCommon.js(scala3V)
+
 lazy val liga = atbpModule("liga")
-  .dependsOn(http, ligaCommon.jvm, ligaJs)
+  .dependsOn(http, ligaCommonJvm, ligaJs)
   .settings(Dependencies.liga)
   .settings(
     // fastLinkJS is already incremental; do not add a mtime-based skip on top
     // of it. Classpath directory mtimes do not change when liga-common
     // recompiles in place, so such a check silently serves a stale bundle.
-    Compile / resourceGenerators += Def.task {
-      val _ = (ligaJs / Compile / fastLinkJS).value
-      val linkerOut =
-        (ligaJs / Compile / fastLinkJS / scalaJSLinkerOutputDirectory).value
-      val jsDest = (Compile / resourceManaged).value / "liga" / "web" / "js"
-      IO.createDirectory(jsDest)
-      val jsFiles = (linkerOut ** "*.js").get
-      jsFiles.foreach { src =>
-        val dest = jsDest / src.getName
-        if (!dest.exists || dest.lastModified < src.lastModified) {
-          IO.copyFile(src, dest)
+    Compile / resourceGenerators += Def.uncached {
+      Def.task {
+        val _ = (ligaJs / Compile / fastLinkJS).value
+        val linkerOut =
+          (ligaJs / Compile / fastLinkJS / scalaJSLinkerOutputDirectory).value
+        val jsDest = (Compile / resourceManaged).value / "liga" / "web" / "js"
+        IO.createDirectory(jsDest)
+        val jsFiles = (linkerOut ** "*.js").get()
+        jsFiles.foreach { src =>
+          val dest = jsDest / src.getName
+          if (!dest.exists || dest.lastModified < src.lastModified) {
+            IO.copyFile(src, dest)
+          }
         }
-      }
-      jsFiles.map(src => jsDest / src.getName)
-    }.taskValue
+        jsFiles.map(src => jsDest / src.getName)
+      }.taskValue
+    }
   )
 
 lazy val ligaJs = atbpModule("liga-js")
-  .dependsOn(ligaCommon.js)
+  .dependsOn(ligaCommonJsRow)
   .enablePlugins(ScalaJSPlugin)
   .settings(
     testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")

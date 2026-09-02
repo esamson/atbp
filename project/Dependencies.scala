@@ -51,7 +51,7 @@ object Dependencies {
 
     val pdfbox = "org.apache.pdfbox" % "pdfbox" % "3.0.8"
 
-    val plantuml = "net.sourceforge.plantuml" % "plantuml" % "1.2026.6"
+    val plantuml = "net.sourceforge.plantuml" % "plantuml" % "1.2026.7"
 
     val pprint = "com.lihaoyi" %% "pprint" % "0.9.6"
 

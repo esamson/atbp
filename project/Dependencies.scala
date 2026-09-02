@@ -45,7 +45,7 @@ object Dependencies {
     val glicko2 =
       Def.setting("com.github.mrdimosthenis" %%% "glicko2" % "1.0.1")
 
-    val jsoup = "org.jsoup" % "jsoup" % "1.23.1"
+    val jsoup = "org.jsoup" % "jsoup" % "1.23.2"
 
     val laminar = Def.setting("com.raquo" %%% "laminar" % "17.2.1")
 

@@ -7,7 +7,7 @@ import sbtcrossproject.CrossPlugin.autoImport._
 import sbtdynver.DynVer
 
 ThisBuild / organization := "samson.ph"
-ThisBuild / scalaVersion := "3.8.4"
+ThisBuild / scalaVersion := "3.9.0"
 ThisBuild / versionScheme := Some("semver-spec")
 
 lazy val root = Project("atbp", file("."))

@@ -125,7 +125,10 @@ object Dependencies {
   )
 
   val http = libraryDependencies ++= Seq(
-    zioHttp
+    zioHttp,
+    TestLibs.zioHttpTestkit,
+    TestLibs.zioTest,
+    TestLibs.zioTestSbt
   )
 
   val hubad = libraryDependencies ++= Seq(

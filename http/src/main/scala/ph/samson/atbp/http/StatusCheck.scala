@@ -1,53 +1,58 @@
 package ph.samson.atbp.http
 
-import io.netty.channel.unix.Errors.NativeIoException
-import io.netty.handler.codec.PrematureChannelClosureException
 import zio.Clock
 import zio.Duration
 import zio.Schedule
 import zio.Scope
 import zio.Trace
+import zio.UIO
 import zio.ZIO
-import zio.durationInt
 import zio.http.*
 import zio.http.Header.RetryAfter
 import zio.http.Status.ServerError
 import zio.http.Status.TooManyRequests
 
-import java.io.IOException
-
 object StatusCheck {
 
-  def successOnly(): ZClientAspect[
-    Nothing,
-    Any,
-    Nothing,
-    Body,
-    Throwable,
-    Any,
-    Nothing,
-    Response
-  ] = statusCheck(accept = _.isSuccess)
+  private type Aspect =
+    ZClientAspect[
+      Nothing,
+      Any,
+      Nothing,
+      Body,
+      Throwable,
+      Any,
+      Nothing,
+      Response
+    ]
 
-  def statusCheck(accept: Status => Boolean): ZClientAspect[
-    Nothing,
-    Any,
-    Nothing,
-    Body,
-    Throwable,
-    Any,
-    Nothing,
-    Response
-  ] = new ZClientAspect[
-    Nothing,
-    Any,
-    Nothing,
-    Body,
-    Throwable,
-    Any,
-    Nothing,
-    Response
-  ] {
+  /** True when re-issuing the request is safe after a successful status was
+    * already observed (for example the response body was cut off mid-stream).
+    * POST/PUT/DELETE may already have been applied; replaying them can create
+    * duplicates or hit optimistic-lock conflicts.
+    */
+  val SafeMethods: Method => Boolean =
+    method =>
+      method == Method.GET || method == Method.HEAD || method == Method.OPTIONS
+
+  /** [[SafeMethods]] plus POST. Use when every POST on the client is a read
+    * (for example Jira JQL search).
+    */
+  val SafePlusPost: Method => Boolean =
+    method => SafeMethods(method) || method == Method.POST
+
+  def successOnly(): Aspect = successOnly(SafeMethods)
+
+  def successOnly(replayAfterSuccess: Method => Boolean): Aspect =
+    statusCheck(_.isSuccess, replayAfterSuccess)
+
+  def statusCheck(accept: Status => Boolean): Aspect =
+    statusCheck(accept, SafeMethods)
+
+  def statusCheck(
+      accept: Status => Boolean,
+      replayAfterSuccess: Method => Boolean
+  ): Aspect = new Aspect {
 
     override def apply[
         ReqEnv,
@@ -69,9 +74,9 @@ object StatusCheck {
             body: Body,
             sslConfig: Option[ClientSSLConfig],
             proxy: Option[Proxy]
-        )(implicit trace: Trace): ZIO[Env & ReqEnv, Err, Response] = {
-          val doRequest = for {
-            response <- oldDriver.request(
+        )(implicit trace: Trace): ZIO[Env & ReqEnv, Err, Response] =
+          oldDriver
+            .request(
               version,
               method,
               url,
@@ -80,76 +85,24 @@ object StatusCheck {
               sslConfig,
               proxy
             )
-            status = response.status
-            _ <- ZIO.when(!accept(status)) {
-              for {
-                body <- response.body.asString
-                headers = response.headers
-                f <- ZIO.fail(BadStatus(method, url, status, headers, body))
-              } yield f
-            }
-          } yield response
-          doRequest.retry {
-            val policy =
-              Schedule.exponential(1.second).jittered && Schedule.recurs(10) &&
-                Schedule.recurWhileZIO {
-                  case BadStatus(_, _, status, headers, _) =>
-                    status match {
-                      case _: ServerError | TooManyRequests =>
-                        // 429 and 5xx should be retried
-                        headers.get(RetryAfter) match {
-                          case Some(retryAfter) =>
-                            // if "Retry-After" is specified, follow that
-                            retryAfter match {
-                              case RetryAfter.ByDate(date) =>
-                                for {
-                                  now <- Clock.currentDateTime
-                                  duration = Duration.fromInterval(
-                                    now,
-                                    date.toOffsetDateTime
-                                  )
-                                  _ <- ZIO.logWarning(
-                                    s"slowing down for $status; waiting until $date"
-                                  )
-                                  _ <- ZIO.sleep(duration)
-                                } yield {
-                                  true
-                                }
-                              case RetryAfter.ByDuration(duration) =>
-                                ZIO.logWarning(
-                                  s"slowing down for $status; delaying for $duration"
-                                ) *> ZIO.succeed(true).delay(duration)
-                            }
-                          case None =>
-                            // no "Retry-After", just use exponential delay
-                            ZIO.succeed(true)
-                        }
-                      case other =>
-                        ZIO.logWarning(
-                          s"not retrying other status: $other"
-                        ) *> ZIO.succeed(
-                          false
-                        )
-                    }
-                  case _: PrematureChannelClosureException => ZIO.succeed(true)
-                  case nie: NativeIoException              =>
-                    ZIO.logWarning(s"retrying NativeIoException: $nie") *>
-                      ZIO.succeed(true)
-                  case ioe: IOException =>
-                    ZIO.logWarning(s"retrying IOException`: $ioe") *>
-                      ZIO.succeed(true)
-                  case other =>
-                    ZIO.logWarning(
-                      s"not retrying other exception: $other"
-                    ) *> ZIO.succeed(
-                      false
-                    )
-                }
-            policy.tapOutput(o =>
-              ZIO.logWarning(s"retrying $method $url after $o")
+            .flatMap(
+              bufferAndCheck(_, accept, replayAfterSuccess, method, url)
             )
-          }
-        }
+            .retry {
+              val policy =
+                ConnectionRetry.budget &&
+                  Schedule.recurWhileZIO {
+                    case BadStatus(_, _, status, headers, _) =>
+                      retryServerError(status, headers)
+                    case other: Throwable =>
+                      ConnectionRetry.isRetryable(other)
+                    case _ => ZIO.succeed(false)
+                  }
+              policy.tapOutput(o =>
+                ZIO.logWarning(s"retrying $method $url after $o")
+              )
+            }
+            .absolve
 
         override def socket[Env1 <: Env](
             version: Version,
@@ -166,6 +119,67 @@ object StatusCheck {
       client.transform(client.bodyEncoder, client.bodyDecoder, newDriver)
     }
   }
+
+  private def bufferAndCheck(
+      response: Response,
+      accept: Status => Boolean,
+      replayAfterSuccess: Method => Boolean,
+      method: Method,
+      url: URL
+  ): ZIO[Any, Throwable, Either[Throwable, Response]] = {
+    val status = response.status
+    response.body.asChunk.foldZIO(
+      err =>
+        if (accept(status) && !replayAfterSuccess(method)) {
+          ZIO.succeed(Left(err))
+        } else {
+          ZIO.fail(err)
+        },
+      bytes => {
+        val buffered = response.copy(body = Body.fromChunk(bytes))
+        if (accept(status)) {
+          ZIO.succeed(Right(buffered))
+        } else {
+          buffered.body.asString.flatMap { body =>
+            ZIO.fail(BadStatus(method, url, status, buffered.headers, body))
+          }
+        }
+      }
+    )
+  }
+
+  private def retryServerError(
+      status: Status,
+      headers: Headers
+  ): UIO[Boolean] =
+    status match {
+      case _: ServerError | TooManyRequests =>
+        headers.get(RetryAfter) match {
+          case Some(retryAfter) =>
+            retryAfter match {
+              case RetryAfter.ByDate(date) =>
+                for {
+                  now <- Clock.currentDateTime
+                  duration = Duration.fromInterval(
+                    now,
+                    date.toOffsetDateTime
+                  )
+                  _ <- ZIO.logWarning(
+                    s"slowing down for $status; waiting until $date"
+                  )
+                  _ <- ZIO.sleep(duration)
+                } yield true
+              case RetryAfter.ByDuration(duration) =>
+                ZIO.logWarning(
+                  s"slowing down for $status; delaying for $duration"
+                ) *> ZIO.succeed(true).delay(duration)
+            }
+          case None => ZIO.succeed(true)
+        }
+      case other =>
+        ZIO.logWarning(s"not retrying other status: $other") *>
+          ZIO.succeed(false)
+    }
 
   case class BadStatus(
       method: Method,

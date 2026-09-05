@@ -322,7 +322,9 @@ object Client {
         _.addHeaders(headers).url(
           url
         ) @@ loggingAspect
-          @@ StatusCheck.successOnly()
+          // JQL search is the only POST on this client; SafePlusPost replays it
+          // after a truncated 2xx. Do not add a mutating POST without revisiting.
+          @@ StatusCheck.successOnly(StatusCheck.SafePlusPost)
           @@ limiter
       )
     } yield {

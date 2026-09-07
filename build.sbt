@@ -45,7 +45,7 @@ lazy val cli = atbpModule("cli")
     packageName := "atbp",
     maintainer := "edward@samson.ph",
     executableScriptName := packageName.value,
-    dockerBaseImage := "eclipse-temurin:21-jre-noble",
+    dockerBaseImage := "eclipse-temurin:25-jre-noble",
     dockerRepository := Some("ghcr.io/esamson"),
     Docker / version := (version.value)
       .replace("+", ".")

@@ -1,0 +1,83 @@
+---
+description: md2c subproject map, stack, commands, and boundaries
+globs: md2c/**/*,cli/src/main/scala/ph/samson/atbp/cli/Markdown2Confluence.scala
+alwaysApply: false
+---
+
+# md2c
+
+Publish a Markdown directory tree to Confluence as ADF pages. CLI: `atbp md2c`.
+
+## Stack
+
+- ZIO + better-files; PlantUML for `plantuml*` fenced blocks; Mermaid
+  (mermaid-java / GraalJS) for `mermaid*` fenced blocks
+- Atlassian ADF via `adf-builder` (adf-builder-java + markdown + jackson2)
+- Confluence Cloud REST via `confluence.Client` (md2c does not HTTP itself)
+- zio-config: HOCON (`.md2c.conf`, user `atbp` conf), YAML (front matter)
+
+Depends on: `adf-builder`, `confluence`. Wired from `cli`.
+
+## Commands
+
+```bash
+sbt --client "md2c/compile"
+sbt --client "md2c/test"
+sbt --client "md2c/testOnly *SourceTreeSpec*"
+sbt --client "md2c/testOnly *ParserSpec*"
+sbt --client "md2c/testOnly *StagedTreeSpec*"
+sbt --client "md2c/testOnly *MermaidSpec*"
+sbt --client fixup
+```
+
+Live publish needs Confluence creds in user `atbp` config. `PublisherSpec` is
+`TestAspect.ignore` — do not un-ignore unless running against a real site.
+
+## Pipeline
+
+`SourceTree` → `StagedTree` → `Publisher`
+
+1. Walk up from the given dir until `.md2c.conf` (HOCON `spaceKey`, `pageId`)
+2. Parse MD → ADF, then PlantUML, then Mermaid, then Extensions; drop Data
+   nodes and empty dirs
+3. Create drafts / update pages; attach media; skip if up to date
+
+`spaceKey`: source conf, else user `md2c.Conf`. `pageId`: source conf only.
+
+## Conventions
+
+- Folder notes: `{dir}/{dir}.md` or `README.md` or `index.md` → `MarkdownBranch`
+- Dotfiles skipped in the walk (`.md2c.conf` is loaded separately, not a page)
+- Title = YAML `title:` else node name; strip a leading H1 that duplicates title
+- Front matter must start at byte 0 with `---\n`
+- Content hash is SHA-1 of the markdown **body** (stored in version.message);
+  a title-only front-matter change does **not** republish
+- Directory-only pages get `Extensions.childPages`; extra Confluence children
+  and attachments not in the source tree are deleted
+- New pages are created as `draft`; existing pages matched by title
+- Images: markdown media → `ExternalMedia` → attach → rewrite to `fileMedia`;
+  attachment `comment` is `file.sha1`
+- `plantuml*` and `mermaid*` fences (`mermaid`, `mermaid.png`,
+  `mermaid.svg`) render in `PlantUml.scala` / `Mermaid.scala`; tests in
+  `MermaidSpec`
+- Mermaid success (`JavaMermaid.renderDetailed` → `isSuccessful`) →
+  `MediaSingle` / `ExternalMedia` (same staging pattern as PlantUML)
+- Mermaid soft failure (`!isSuccessful`) → keep the mermaid `CodeBlock`
+  (original language); body =
+  `%% Mermaid rendering failed. See details below.` + newline + original
+  source; immediate sibling `CodeBlock` language `text`, body =
+  `Mermaid failure details:` + newline + `getErrorMessage()`; staging
+  still succeeds
+- Thrown exceptions still fail the `Task` (no catch-and-fallback)
+- ADF `transformDescendants` mutates in place — do not assume a copy
+- `build.sbt` keeps hidden `.md2c.conf` visible in tests via
+  `Test / fileInputExcludeFilter`
+
+## Boundaries
+
+- Unit tests stay offline. Fixtures: `md2c/src/test/resources/{trees,markdown,publisher}`
+- Do not parse Markdown by hand — `MarkdownParser` from adf-builder-java-markdown
+- Confluence HTTP stays in `confluence`, not md2c; diagram rendering stays in
+  md2c (no HTTP, no Node)
+- `--cleanup` deletes the **current user's drafts in the whole space**
+- Data files are not pages; they attach only when referenced as media

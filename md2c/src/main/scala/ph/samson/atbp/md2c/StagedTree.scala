@@ -98,7 +98,8 @@ object StagedTree {
         Parsed(frontMatter, sourceDoc, contentHash) <- parse(node)
         plantUmlRendered <- PlantUml.transform(sourceDoc)
         mermaidRendered <- Mermaid.transform(plantUmlRendered)
-        extensionsRendered = Extensions.transform(mermaidRendered)
+        d2Rendered <- D2.transform(mermaidRendered)
+        extensionsRendered = Extensions.transform(d2Rendered)
         children <- ZIO.foreachPar(children(node))(convert)
       } yield Page(
         node.name,

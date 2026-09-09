@@ -23,27 +23,27 @@ Sizes: XS (1 file) · S (1-2) · M (3-5)
 
 ## Phase 2 — Core vertical slice
 
-- [ ] **Task 2 — `D2.scala` + pipeline wiring** (M · deps: T1)
-  - [ ] `render(adf, executable = "d2")`, `private[md2c]` executable seam
-  - [ ] `d2 --stdout-format <png|svg> - -`; stdin written then closed
-  - [ ] `redirectOutput` → `fig-${index+1}.d2.$format`, `redirectError` → temp
+- [x] **Task 2 — `D2.scala` + pipeline wiring** (M · deps: T1)
+  - [x] `render(adf, executable = "d2")`, `private[md2c]` executable seam
+  - [x] `d2 --stdout-format <png|svg> - -`; stdin written then closed
+  - [x] `redirectOutput` → `fig-${index+1}.d2.$format`, `redirectError` → temp
         file (no pipes — deadlock hazard above 64KB)
-  - [ ] Success = exit 0 **and** non-empty output file; stderr ignored
-  - [ ] Failure details = trimmed stderr, else `d2 exited with code $n`
-  - [ ] `Process.waitFor(30, SECONDS)` + `destroyForcibly()`; timeout →
+  - [x] Success = exit 0 **and** non-empty output file; stderr ignored
+  - [x] Failure details = trimmed stderr, else `d2 exited with code $n`
+  - [x] `Process.waitFor(30, SECONDS)` + `destroyForcibly()`; timeout →
         soft failure `Could not render diagram: d2 timed out after 30s`
-  - [ ] Catch only `IOException` from process start → `NotOnPathMessage`
-  - [ ] `(source, format)` render key; one temp dir per doc;
+  - [x] Catch only `IOException` from process start → `NotOnPathMessage`
+  - [x] `(source, format)` render key; one temp dir per doc;
         `ZIO.collectAllPar`
-  - [ ] Comments: why exit code not stderr; why no version check
-  - [ ] `StagedTree.convert`: `D2.transform` after Mermaid, before Extensions
-  - [ ] `d2Available: UIO[Boolean]` + `.whenZIO(d2Available)` on Group B suite
-  - [ ] Test: default `d2` fence → `.d2.png` `ExternalMedia`, PNG decodes
+  - [x] Comments: why exit code not stderr; why no version check
+  - [x] `StagedTree.convert`: `D2.transform` after Mermaid, before Extensions
+  - [x] `d2Available: UIO[Boolean]` + `.whenZIO(d2Available)` on Group B suite
+  - [x] Test: default `d2` fence → `.d2.png` `ExternalMedia`, PNG decodes
         `> 8×8` (AC 1)
-  - [ ] Test: nonexistent executable → `NotOnPathMessage` sibling (AC 5)
-  - [ ] `sbt --client "md2c/testOnly *D2Spec*"` — zero ignored
-  - [ ] `sbt --client "md2c/test"` green
-  - [ ] Probe the timeout path once with a sleeping stub script; confirm soft
+  - [x] Test: nonexistent executable → `NotOnPathMessage` sibling (AC 5)
+  - [x] `sbt --client "md2c/testOnly *D2Spec*"` — zero ignored
+  - [x] `sbt --client "md2c/test"` green
+  - [x] Probe the timeout path once with a sleeping stub script; confirm soft
         failure, not a hang; revert the probe
 
 - [ ] **Task 3 — Group A: rest of the failure path + parser** (S · deps: T2)

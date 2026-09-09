@@ -46,18 +46,18 @@ Sizes: XS (1 file) · S (1-2) · M (3-5)
   - [x] Probe the timeout path once with a sleeping stub script; confirm soft
         failure, not a hang; revert the probe
 
-- [ ] **Task 3 — Group A: rest of the failure path + parser** (S · deps: T2)
-  - [ ] Failure keeps `CodeBlock`, original language preserved for `d2`,
+- [x] **Task 3 — Group A: rest of the failure path + parser** (S · deps: T2)
+  - [x] Failure keeps `CodeBlock`, original language preserved for `d2`,
         `d2.png`, `d2.svg`; body = `RenderFailureComment` + source (AC 4)
-  - [ ] Sibling is a `text` `CodeBlock` under `RenderFailureDetailsHeader`
-  - [ ] Nested `Panel` case: sibling lands inside the panel
+  - [x] Sibling is a `text` `CodeBlock` under `RenderFailureDetailsHeader`
+  - [x] Nested `Panel` case: sibling lands inside the panel
         (`panel` code-block count == 2)
-  - [ ] Non-d2 blocks (`scala`, `plantuml`, `mermaid`) unchanged, no
+  - [x] Non-d2 blocks (`scala`, `plantuml`, `mermaid`) unchanged, no
         `ExternalMedia` (AC 6)
-  - [ ] `markdown/d2/Shapes.md` fixture + `ParserSpec` case
+  - [x] `markdown/d2/Shapes.md` fixture + `ParserSpec` case
         (`doc.isSupported`)
-  - [ ] `sbt --client "md2c/testOnly *D2Spec*"` green
-  - [ ] `sbt --client "md2c/testOnly *ParserSpec*"` green
+  - [x] `sbt --client "md2c/testOnly *D2Spec*"` green
+  - [x] `sbt --client "md2c/testOnly *ParserSpec*"` green
 
 - [ ] **Task 4 — Group B: format variants** (XS-S · deps: T2)
   - [ ] `d2.png` → non-empty `.d2.png` (AC 2)

@@ -59,12 +59,12 @@ Sizes: XS (1 file) · S (1-2) · M (3-5)
   - [x] `sbt --client "md2c/testOnly *D2Spec*"` green
   - [x] `sbt --client "md2c/testOnly *ParserSpec*"` green
 
-- [ ] **Task 4 — Group B: format variants** (XS-S · deps: T2)
-  - [ ] `d2.png` → non-empty `.d2.png` (AC 2)
-  - [ ] `d2.svg` → non-empty `.d2.svg` containing `<svg` (AC 2)
-  - [ ] Same source as `d2` + `d2.svg` → two files, distinct formats (AC 3)
-  - [ ] `sbt --client "md2c/testOnly *D2Spec*"` — zero ignored
-  - [ ] Force `d2Available` false: Group B **ignored not failed**, Group A
+- [x] **Task 4 — Group B: format variants** (XS-S · deps: T2)
+  - [x] `d2.png` → non-empty `.d2.png` (AC 2)
+  - [x] `d2.svg` → non-empty `.d2.svg` containing `<svg` (AC 2)
+  - [x] Same source as `d2` + `d2.svg` → two files, distinct formats (AC 3)
+  - [x] `sbt --client "md2c/testOnly *D2Spec*"` — zero ignored
+  - [x] Force `d2Available` false: Group B **ignored not failed**, Group A
         green, exit 0; then revert the forcing
 
 - [ ] **Checkpoint: Core slice** — `md2c/test` green; `D2Spec` zero ignored

@@ -25,6 +25,15 @@ object D2Spec extends ZIOSpecDefault {
        |x -> y
        |```""".stripMargin
 
+  private val d2AndSvgFences =
+    """```d2
+      |x -> y
+      |```
+      |
+      |```d2.svg
+      |x -> y
+      |```""".stripMargin
+
   private val missingBinary = "definitely-not-a-real-d2"
 
   private def externalMediaWithSuffix(
@@ -121,6 +130,45 @@ object D2Spec extends ZIOSpecDefault {
             // Guard against a degenerate/blank raster.
             image.getWidth > 8,
             image.getHeight > 8
+          )
+        }
+      },
+      test("d2.png fence renders to a non-empty .d2.png file") {
+        for {
+          doc <- Parser.parseMarkdown(d2Fence("d2.png"))
+          transformed <- D2.transform(doc)
+        } yield {
+          val pngs = externalMediaWithSuffix(transformed, ".d2.png")
+          assertTrue(pngs.nonEmpty)
+        }
+      },
+      test("d2.svg fence renders to a non-empty .d2.svg file containing <svg") {
+        for {
+          doc <- Parser.parseMarkdown(d2Fence("d2.svg"))
+          transformed <- D2.transform(doc)
+        } yield {
+          val svgs = externalMediaWithSuffix(transformed, ".d2.svg")
+          val contents =
+            svgs.headOption.map(media => File(media.url()).contentAsString)
+          assertTrue(
+            svgs.nonEmpty,
+            contents.exists(_.contains("<svg"))
+          )
+        }
+      },
+      test(
+        "same source in d2 and d2.svg fences yields two distinct files by format"
+      ) {
+        for {
+          doc <- Parser.parseMarkdown(d2AndSvgFences)
+          transformed <- D2.transform(doc)
+        } yield {
+          val pngs = externalMediaWithSuffix(transformed, ".d2.png")
+          val svgs = externalMediaWithSuffix(transformed, ".d2.svg")
+          assertTrue(
+            pngs.size == 1,
+            svgs.size == 1,
+            pngs.head.url() != svgs.head.url()
           )
         }
       }

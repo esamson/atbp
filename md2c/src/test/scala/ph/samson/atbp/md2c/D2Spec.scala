@@ -36,6 +36,11 @@ object D2Spec extends ZIOSpecDefault {
 
   private val missingBinary = "definitely-not-a-real-d2"
 
+  private def leftErrorMessage(
+      renders: Map[D2.RenderKey, D2.RenderOutcome]
+  ): String =
+    renders.values.collectFirst { case Left(message) => message }.get
+
   private def externalMediaWithSuffix(
       doc: Doc,
       suffix: String
@@ -169,6 +174,64 @@ object D2Spec extends ZIOSpecDefault {
             pngs.size == 1,
             svgs.size == 1,
             pngs.head.url() != svgs.head.url()
+          )
+        }
+      },
+      test("staging replaces d2, plantuml and mermaid fences") {
+        for {
+          source <- SourceTreeSpec.from("D2 Diagram")
+          staged <- StagedTree.from(source)
+        } yield {
+          val doc = staged.root.adf
+          val codeBlocks = doc
+            .allNodesOfType(classOf[CodeBlock])
+            .toScala(List)
+          val languages = codeBlocks.map(_.language().orElse(""))
+          val externalMedia = doc
+            .allNodesOfType(classOf[ExternalMedia])
+            .toScala(List)
+          assertTrue(
+            !languages.exists(_.startsWith("d2")),
+            !languages.exists(_.startsWith("plantuml")),
+            !languages.exists(_.startsWith("mermaid")),
+            externalMedia.size == 3
+          )
+        }
+      },
+      test("staging keeps failed d2 as CodeBlock with d2's own stderr") {
+        for {
+          source <- SourceTreeSpec.from("D2 Failure")
+          parsed <- Parser.parse(
+            TestFiles("trees") / "D2 Failure" / "D2 Failure.md"
+          )
+          originalSource = parsed.doc
+            .allNodesOfType(classOf[CodeBlock])
+            .filter(_.language().orElse("").startsWith("d2"))
+            .toScala(List)
+            .head
+            .toPlainText
+          renders <- D2.render(parsed.doc)
+          expectedError = leftErrorMessage(renders)
+          staged <- StagedTree.from(source)
+        } yield {
+          val doc = staged.root.adf
+          val d2CodeBlocks = doc
+            .allNodesOfType(classOf[CodeBlock])
+            .filter(_.language().orElse("").startsWith("d2"))
+            .toScala(List)
+          val externalMedia = doc
+            .allNodesOfType(classOf[ExternalMedia])
+            .toScala(List)
+          val block = d2CodeBlocks.head
+          val sibling = textSiblingAfter(doc, block).get
+          assertTrue(
+            d2CodeBlocks.size == 1,
+            block.language().orElse("") == "d2",
+            block.toPlainText == s"${D2.RenderFailureComment}\n$originalSource",
+            externalMedia.isEmpty,
+            sibling.language().orElse("") == "text",
+            sibling.toPlainText ==
+              s"${D2.RenderFailureDetailsHeader}\n$expectedError"
           )
         }
       }

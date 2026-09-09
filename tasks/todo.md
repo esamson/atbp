@@ -73,16 +73,16 @@ Sizes: XS (1 file) · S (1-2) · M (3-5)
 
 ## Phase 3 — Staging fixtures
 
-- [ ] **Task 5 — End-to-end staging trees** (M · deps: T2)
-  - [ ] `trees/D2 Diagram/{.md2c.conf, D2 Diagram.md}` — d2 + plantuml +
+- [x] **Task 5 — End-to-end staging trees** (M · deps: T2)
+  - [x] `trees/D2 Diagram/{.md2c.conf, D2 Diagram.md}` — d2 + plantuml +
         mermaid on one page (`spaceId = 1234567`)
-  - [ ] Test: no `d2*`/`plantuml*`/`mermaid*` languages left;
+  - [x] Test: no `d2*`/`plantuml*`/`mermaid*` languages left;
         `ExternalMedia` count == fence count (AC 6)
-  - [ ] `trees/D2 Failure/{.md2c.conf, D2 Failure.md}` — invalid d2 source
-  - [ ] Test: stages with no `Task` failure; `d2` `CodeBlock` + `text` sibling
+  - [x] `trees/D2 Failure/{.md2c.conf, D2 Failure.md}` — invalid d2 source
+  - [x] Test: stages with no `Task` failure; `d2` `CodeBlock` + `text` sibling
         carrying d2's own stderr; no `ExternalMedia` (AC 4 details text)
-  - [ ] `sbt --client "md2c/testOnly *StagedTreeSpec*"` still green
-  - [ ] `sbt --client "md2c/test"` green
+  - [x] `sbt --client "md2c/testOnly *StagedTreeSpec*"` still green
+  - [x] `sbt --client "md2c/test"` green
 
 ## Phase 4 — Distribution
 

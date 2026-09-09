@@ -7,7 +7,6 @@ import com.atlassian.adf.model.node.CodeBlock
 import com.atlassian.adf.model.node.Doc
 import com.atlassian.adf.model.node.Media.externalMedia
 import com.atlassian.adf.model.node.MediaSingle.mediaSingle
-import com.atlassian.adf.model.node.Node
 import com.atlassian.adf.model.node.RichMedia
 import com.atlassian.adf.model.node.Text
 import com.atlassian.adf.model.node.`type`.DocContent
@@ -17,7 +16,6 @@ import zio.ZIO
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets.UTF_8
 import javax.imageio.ImageIO
-import scala.jdk.CollectionConverters.*
 import scala.jdk.FunctionConverters.*
 import scala.jdk.StreamConverters.*
 
@@ -72,51 +70,6 @@ object Mermaid {
           )
         case Some(output) =>
           Right(output)
-      }
-    }
-
-  private def insertAfterParentIndex(
-      parent: Node,
-      index: Int,
-      node: CodeBlock
-  ): Unit = {
-    parent.getClass.getMethod("content").invoke(parent) match {
-      case content: java.util.List[?] @unchecked =>
-        val updated = new java.util.ArrayList[AnyRef](content)
-        updated.add(index + 1, node)
-        parent.getClass
-          .getMethod("replaceContent", classOf[java.util.List[?]])
-          .invoke(parent, updated)
-        ()
-      case _ =>
-        ()
-    }
-  }
-
-  private def insertFailureSiblings(
-      adf: Doc,
-      errorByBlock: Map[CodeBlock, String]
-  ): Unit =
-    if (errorByBlock.nonEmpty) {
-      val failedBlocks = errorByBlock.keySet
-      val predicate = (codeBlock: CodeBlock) => failedBlocks.contains(codeBlock)
-      val insertions = adf
-        .findMatchingDescendants(classOf[CodeBlock], predicate.asJavaPredicate)
-        .asScala
-        .toList
-        .flatMap { container =>
-          container.children().asScala.toList.map { childMatch =>
-            (container.parent(), childMatch.index(), childMatch.`match`())
-          }
-        }
-        .sortBy(-_._2)
-
-      insertions.foreach { (parent, index, codeBlock) =>
-        val errorMessage = errorByBlock(codeBlock)
-        val errorBlock = CodeBlock
-          .codeBlock(s"$RenderFailureDetailsHeader\n$errorMessage")
-          .language("text")
-        insertAfterParentIndex(parent, index, errorBlock)
       }
     }
 
@@ -221,7 +174,11 @@ object Mermaid {
       }.toMap
       xfrm = transformer(renders).asJavaFunction
       _ = adf.transformDescendants(classOf[DocContent], xfrm)
-      _ = insertFailureSiblings(adf, errorByBlock)
+      _ = DiagramFailure.insertFailureSiblings(
+        adf,
+        errorByBlock,
+        RenderFailureDetailsHeader
+      )
     } yield {
       adf
     }

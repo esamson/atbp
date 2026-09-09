@@ -7,18 +7,18 @@ Sizes: XS (1 file) · S (1-2) · M (3-5)
 
 ## Phase 1 — Foundation
 
-- [ ] **Task 1 — Extract `DiagramFailure.scala`** (S · deps: none)
-  - [ ] `DiagramFailure.insertFailureSiblings(adf, errorByBlock, header)` +
+- [x] **Task 1 — Extract `DiagramFailure.scala`** (S · deps: none)
+  - [x] `DiagramFailure.insertFailureSiblings(adf, errorByBlock, header)` +
         `insertAfterParentIndex` moved out of `Mermaid.scala`
-  - [ ] `Mermaid` keeps its two public failure-string constants
-  - [ ] Zero edits to `MermaidSpec` assertions (`git diff` empty)
-  - [ ] `sbt --client "md2c/testOnly *MermaidSpec*"` green ← gate
-  - [ ] `sbt --client "md2c/test"` green
+  - [x] `Mermaid` keeps its two public failure-string constants
+  - [x] Zero edits to `MermaidSpec` assertions (`git diff` empty)
+  - [x] `sbt --client "md2c/testOnly *MermaidSpec*"` green ← gate
+  - [x] `sbt --client "md2c/test"` green
   - [ ] Fallback if the reflection path resists: revert, duplicate privately
         in `D2.scala`, note it in the commit
-  - [ ] Commit via the `AGENTS.md` loop (own commit — do not fold into Task 2)
+  - [x] Commit via the `AGENTS.md` loop (own commit — do not fold into Task 2)
 
-- [ ] **Checkpoint: Foundation** — `md2c/test` green, `MermaidSpec` /
+- [x] **Checkpoint: Foundation** — `md2c/test` green, `MermaidSpec` /
       `ParserSpec` untouched, tree clean
 
 ## Phase 2 — Core vertical slice

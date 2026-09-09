@@ -86,33 +86,33 @@ Sizes: XS (1 file) · S (1-2) · M (3-5)
 
 ## Phase 4 — Distribution
 
-- [ ] **Task 6 — Pinned `d2` v0.9.0 in the container image** (S · deps: none)
+- [x] **Task 6 — Pinned `d2` v0.9.0 in the container image** (S · deps: none)
   - Engine is **podman** throughout — no `docker` binary exists on this
     machine. sbt's `Docker / …` task names are the plugin's spelling, keep them
-  - [ ] **Prereq:** `podman machine start` (`podman-machine-default` is down)
-  - [ ] **Prereq:** `dockerExecCommand := Seq("podman")` in `local.sbt`
+  - [x] **Prereq:** `podman machine start` (`podman-machine-default` is down)
+  - [x] **Prereq:** `dockerExecCommand := Seq("podman")` in `local.sbt`
         (gitignored, never committed) — the plugin defaults to a `docker`
         binary that is not here. Fallback: `Docker / stage` then
         `podman build cli/target/docker/stage/`
-  - [ ] **Prereq:** `podman run --rm eclipse-temurin:25-jre-noble sh -c
+  - [x] **Prereq:** `podman run --rm eclipse-temurin:25-jre-noble sh -c
         'command -v curl wget'` — if absent, add `curl ca-certificates` to the
         existing `git graphviz` apt step, not a third layer
-  - [ ] **Prereq:** `tar tzf` the asset to locate the binary inside it
-  - [ ] `Versions.D2 = "v0.9.0"` in `project/Dependencies.scala`
-  - [ ] Second `Cmd("RUN", …)`: fetch `d2-v0.9.0-linux-$(dpkg
+  - [x] **Prereq:** `tar tzf` the asset to locate the binary inside it
+  - [x] `Versions.D2 = "v0.9.0"` in `project/Dependencies.scala`
+  - [x] Second `Cmd("RUN", …)`: fetch `d2-v0.9.0-linux-$(dpkg
         --print-architecture).tar.gz` + `SHA256SUMS`, verify with
         `sha256sum -c`, install, delete the tarball in the same layer
-  - [ ] `grep -rn "0\.9\.0" build.sbt project/` → only `Versions.D2`
-  - [ ] `sbt --batch "cli / Docker / publishLocal"` succeeds (`--batch`: build
+  - [x] `grep -rn "0\.9\.0" build.sbt project/` → only `Versions.D2`
+  - [x] `sbt --batch "cli / Docker / publishLocal"` succeeds (`--batch`: build
         files edited in this task)
-  - [ ] `podman run --rm --entrypoint d2 ghcr.io/esamson/atbp:latest --version`
+  - [x] `podman run --rm --entrypoint d2 ghcr.io/esamson/atbp:latest --version`
         reports `v0.9.0` (AC 7)
-  - [ ] Render a d2 fence inside the container — no host setup needed
-  - [ ] Perturb the expected sum once → build **fails**; restore, rebuild clean
-  - [ ] `sbt --batch githubWorkflowCheck` still passes
-  - [ ] `github.sbt` and `.github/workflows/ci.yml` untouched
+  - [x] Render a d2 fence inside the container — no host setup needed
+  - [x] Perturb the expected sum once → build **fails**; restore, rebuild clean
+  - [x] `sbt --batch githubWorkflowCheck` still passes
+  - [x] `github.sbt` and `.github/workflows/ci.yml` untouched
 
-- [ ] **Checkpoint: Distribution** — image renders d2 with no host setup;
+- [x] **Checkpoint: Distribution** — image renders d2 with no host setup;
       checksum failure demonstrated and reverted; `githubWorkflowCheck` green
 
 ## Phase 5 — Documentation

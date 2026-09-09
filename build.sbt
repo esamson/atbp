@@ -64,10 +64,27 @@ lazy val cli = atbpModule("cli")
       Cmd(
         "RUN",
         "apt-get update",
-        "&& apt-get install -y git graphviz",
+        "&& apt-get install -y git graphviz curl ca-certificates",
         "&& apt-get autoremove",
         "&& apt-get clean",
         "&& rm -rf /var/lib/apt/lists/*"
+      ),
+      // Install a pinned d2 (https://d2lang.com) release, checksum-verified
+      // against its published SHA256SUMS. This is md2c's only compatibility
+      // guarantee for d2 fences: there is no runtime version check, so the
+      // version installed here is the version diagrams render against.
+      Cmd(
+        "RUN",
+        "D2_ARCH=$(dpkg --print-architecture)",
+        s"&& D2_TARBALL=d2-${Dependencies.Versions.D2}-linux-$${D2_ARCH}.tar.gz",
+        s"&& D2_URL=https://github.com/terrastruct/d2/releases/download/${Dependencies.Versions.D2}",
+        "&& curl -fsSLO $D2_URL/$D2_TARBALL",
+        "&& curl -fsSLO $D2_URL/SHA256SUMS",
+        "&& grep \" $D2_TARBALL$\" SHA256SUMS | sha256sum -c -",
+        s"&& tar xzf $$D2_TARBALL d2-${Dependencies.Versions.D2}/bin/d2",
+        s"&& mv d2-${Dependencies.Versions.D2}/bin/d2 /usr/local/bin/d2",
+        "&& chmod +x /usr/local/bin/d2",
+        s"&& rm -rf $$D2_TARBALL SHA256SUMS d2-${Dependencies.Versions.D2}"
       )
     )
   )

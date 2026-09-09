@@ -11,7 +11,8 @@ Publish a Markdown directory tree to Confluence as ADF pages. CLI: `atbp md2c`.
 ## Stack
 
 - ZIO + better-files; PlantUML for `plantuml*` fenced blocks; Mermaid
-  (mermaid-java / GraalJS) for `mermaid*` fenced blocks
+  (mermaid-java / GraalJS) for `mermaid*` fenced blocks; D2 (the `d2` CLI, on
+  `PATH`) for `d2*` fenced blocks
 - Atlassian ADF via `adf-builder` (adf-builder-java + markdown + jackson2)
 - Confluence Cloud REST via `confluence.Client` (md2c does not HTTP itself)
 - zio-config: HOCON (`.md2c.conf`, user `atbp` conf), YAML (front matter)
@@ -27,19 +28,25 @@ sbt --client "md2c/testOnly *SourceTreeSpec*"
 sbt --client "md2c/testOnly *ParserSpec*"
 sbt --client "md2c/testOnly *StagedTreeSpec*"
 sbt --client "md2c/testOnly *MermaidSpec*"
+sbt --client "md2c/testOnly *D2Spec*"
 sbt --client fixup
 ```
 
 Live publish needs Confluence creds in user `atbp` config. `PublisherSpec` is
 `TestAspect.ignore` — do not un-ignore unless running against a real site.
 
+`D2Spec`'s Group B tests need a real `d2` binary and are guarded by
+`.whenZIO(d2Available)`; when `d2` isn't on `PATH` they report as **ignored**,
+not failed and not silently absent — that ignored count is the only signal
+distinguishing "D2 verified" from "D2 not verified" on a given run.
+
 ## Pipeline
 
 `SourceTree` → `StagedTree` → `Publisher`
 
 1. Walk up from the given dir until `.md2c.conf` (HOCON `spaceKey`, `pageId`)
-2. Parse MD → ADF, then PlantUML, then Mermaid, then Extensions; drop Data
-   nodes and empty dirs
+2. Parse MD → ADF, then PlantUML, then Mermaid, then D2, then Extensions; drop
+   Data nodes and empty dirs
 3. Create drafts / update pages; attach media; skip if up to date
 
 `spaceKey`: source conf, else user `md2c.Conf`. `pageId`: source conf only.
@@ -68,6 +75,20 @@ Live publish needs Confluence creds in user `atbp` config. `PublisherSpec` is
   source; immediate sibling `CodeBlock` language `text`, body =
   `Mermaid failure details:` + newline + `getErrorMessage()`; staging
   still succeeds
+- `d2*` fences (`d2`, `d2.png`, `d2.svg`) render in `D2.scala` by shelling out
+  to the `d2` CLI (`d2 --stdout-format <png|svg> - -`); tests in `D2Spec`.
+  Sibling-insertion for the failure path is shared with Mermaid via
+  `DiagramFailure.scala`
+- D2 success → `MediaSingle` / `ExternalMedia` (same staging pattern as
+  Mermaid), decided by exit code alone (d2 prints a `success:` line to
+  stderr on every successful run, so stderr content never decides failure)
+- D2 soft failure (bad source, a timeout, or `d2` missing from `PATH`) →
+  keep the `d2*` `CodeBlock` (original language); body =
+  `# D2 rendering failed. See details below.` + newline + original source;
+  immediate sibling `CodeBlock` language `text`, body =
+  `D2 failure details:` + newline + details — d2's own stderr for bad
+  source, or exactly `Could not render diagram: d2 not on PATH` when the
+  binary is absent; staging still succeeds
 - Thrown exceptions still fail the `Task` (no catch-and-fallback)
 - ADF `transformDescendants` mutates in place — do not assume a copy
 - `build.sbt` keeps hidden `.md2c.conf` visible in tests via
@@ -81,3 +102,9 @@ Live publish needs Confluence creds in user `atbp` config. `PublisherSpec` is
   md2c (no HTTP, no Node)
 - `--cleanup` deletes the **current user's drafts in the whole space**
 - Data files are not pages; they attach only when referenced as media
+- `d2` must be on `PATH` for D2 rendering; md2c does **not** check its
+  version (deliberate — a bad native install surfaces d2's own stderr
+  through the soft-failure path, which is more informative than any version
+  message md2c could synthesize). The published container image pins
+  `Versions.D2` (`project/Dependencies.scala`) and installs that exact
+  build, which is the de facto compatibility guarantee for image users

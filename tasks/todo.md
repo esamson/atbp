@@ -117,16 +117,16 @@ Sizes: XS (1 file) · S (1-2) · M (3-5)
 
 ## Phase 5 — Documentation
 
-- [ ] **Task 7 — `.cursor/rules/md2c.mdc`** (XS · deps: T1-T6)
-  - [ ] Stack: D2 via the `d2` CLI, alongside PlantUML and Mermaid
-  - [ ] Conventions: `d2` / `d2.png` / `d2.svg` fences; success →
+- [x] **Task 7 — `.cursor/rules/md2c.mdc`** (XS · deps: T1-T6)
+  - [x] Stack: D2 via the `d2` CLI, alongside PlantUML and Mermaid
+  - [x] Conventions: `d2` / `d2.png` / `d2.svg` fences; success →
         `MediaSingle`; soft-failure strings verbatim
-  - [ ] `d2` must be on `PATH`; no version check; the image pins the version
-  - [ ] Commands: `sbt --client "md2c/testOnly *D2Spec*"`
-  - [ ] Note that Group B skips without `d2` and reports as ignored
-  - [ ] Cross-check every documented string against a constant in `D2.scala`
+  - [x] `d2` must be on `PATH`; no version check; the image pins the version
+  - [x] Commands: `sbt --client "md2c/testOnly *D2Spec*"`
+  - [x] Note that Group B skips without `d2` and reports as ignored
+  - [x] Cross-check every documented string against a constant in `D2.scala`
 
-- [ ] **Checkpoint: Complete** — spec AC 1-7 met; every box in the spec's
+- [x] **Checkpoint: Complete** — spec AC 1-7 met; every box in the spec's
       *Success Criteria* ticked; `sbt --client fixup && git status` clean in
       one check; ready for review
 

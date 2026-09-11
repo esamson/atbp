@@ -82,13 +82,27 @@ distinguishing "D2 verified" from "D2 not verified" on a given run.
 - D2 success → `MediaSingle` / `ExternalMedia` (same staging pattern as
   Mermaid), decided by exit code alone (d2 prints a `success:` line to
   stderr on every successful run, so stderr content never decides failure)
-- D2 soft failure (bad source, a timeout, or `d2` missing from `PATH`) →
-  keep the `d2*` `CodeBlock` (original language); body =
+- D2 soft failure (bad source, a timeout, `d2` unusable or missing from
+  `PATH`) → keep the `d2*` `CodeBlock` (original language); body =
   `# D2 rendering failed. See details below.` + newline + original source;
   immediate sibling `CodeBlock` language `text`, body =
   `D2 failure details:` + newline + details — d2's own stderr for bad
   source, or exactly `Could not render diagram: d2 not on PATH` when the
-  binary is absent; staging still succeeds
+  binary is absent from `PATH`; staging still succeeds
+- `Could not render diagram: d2 not on PATH` is reserved for a binary that
+  really is absent (`D2.onPath`): `start()` reports a missing binary, a
+  missing exec bit and a refused `fork` all as the same `IOException`, so
+  when the executable *does* resolve the OS error is reported verbatim
+  instead — a broken install must not read as an uninstalled one
+- a `d2` that exits without draining stdin breaks the pipe on sources over
+  the OS pipe buffer (~64KB); that write error is swallowed so d2's own exit
+  code and stderr decide the outcome, because failing the `Task` there would
+  abort the whole run over one diagram
+- concurrent `d2` processes are capped run-wide by a module-level semaphore
+  in `D2.scala` (`availableProcessors`), not `withParallelism`: `StagedTree`
+  converts pages in parallel, so a per-page bound leaves the tree-wide
+  process count unbounded. Each distinct `RenderKey` renders exactly once,
+  so duplicate fences share one file and cannot overwrite each other
 - Thrown exceptions still fail the `Task` (no catch-and-fallback)
 - ADF `transformDescendants` mutates in place — do not assume a copy
 - `build.sbt` keeps hidden `.md2c.conf` visible in tests via

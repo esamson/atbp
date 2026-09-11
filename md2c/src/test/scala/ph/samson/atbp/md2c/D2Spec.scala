@@ -6,6 +6,7 @@ import com.atlassian.adf.model.node.CodeBlock
 import com.atlassian.adf.model.node.Doc
 import com.atlassian.adf.model.node.Media.ExternalMedia
 import com.atlassian.adf.model.node.Panel
+import zio.ZIO
 import zio.test.*
 
 import java.awt.image.BufferedImage
@@ -35,6 +36,24 @@ object D2Spec extends ZIOSpecDefault {
       |```""".stripMargin
 
   private val missingBinary = "definitely-not-a-real-d2"
+
+  /** A file that exists where `d2` is expected, so `onPath` sees it, but that
+    * `ProcessBuilder.start()` still cannot run or that quits without reading
+    * its input.
+    */
+  private def stubBinary(name: String, script: Option[String]) =
+    ZIO.attemptBlocking {
+      val file = File.newTemporaryFile(name, ".sh")
+      script match {
+        case Some(body) =>
+          file.writeText(body)
+          file.toJava.setExecutable(true)
+        case None =>
+          file.writeText("#!/bin/sh\nexit 0\n")
+          file.toJava.setExecutable(false)
+      }
+      file
+    }
 
   private def leftErrorMessage(
       renders: Map[D2.RenderKey, D2.RenderOutcome]
@@ -177,6 +196,30 @@ object D2Spec extends ZIOSpecDefault {
           )
         }
       },
+      test("duplicate identical fences render once and share one file") {
+        val twice = s"$shapes\n\n$shapes"
+        for {
+          doc <- Parser.parseMarkdown(twice)
+          renders <- D2.render(doc)
+          transformed <- D2.transform(doc)
+        } yield {
+          val urls = transformed
+            .allNodesOfType(classOf[ExternalMedia])
+            .toScala(List)
+            .map(_.url())
+          val siblingPngs = File(urls.head).parent.list
+            .filter(_.name.endsWith(".d2.png"))
+            .size
+          assertTrue(
+            // One key, so no render can overwrite another's outcome.
+            renders.size == 1,
+            urls.size == 2,
+            urls.distinct.size == 1,
+            // Proof only one subprocess ran: no fig-2 next to fig-1.
+            siblingPngs == 1
+          )
+        }
+      },
       test("staging replaces d2, plantuml and mermaid fences") {
         for {
           source <- SourceTreeSpec.from("D2 Diagram")
@@ -268,6 +311,34 @@ object D2Spec extends ZIOSpecDefault {
             s"${D2.RenderFailureDetailsHeader}\n${D2.NotOnPathMessage}"
         )
       }
+    },
+    test("d2 present but not runnable is not reported as missing from PATH") {
+      for {
+        stub <- stubBinary("d2-unrunnable", None)
+        doc <- Parser.parseMarkdown(shapes)
+        renders <- D2.render(doc, stub.pathAsString)
+      } yield {
+        val message = leftErrorMessage(renders)
+        assertTrue(
+          message != D2.NotOnPathMessage,
+          message.startsWith("Could not render diagram: "),
+          message.contains(stub.name)
+        )
+      }
+    },
+    test("d2 quitting without reading a large source is a soft failure") {
+      val bigSource =
+        (1 to 20000).map(i => s"n$i -> n${i + 1}").mkString("\n")
+      for {
+        stub <- stubBinary("d2-quitter", Some("#!/bin/sh\nexit 3\n"))
+        doc = Doc.doc(CodeBlock.codeBlock(bigSource).language("d2"))
+        renders <- D2.render(doc, stub.pathAsString)
+      } yield assertTrue(
+        // Larger than the OS pipe buffer, so the stdin write hits EPIPE.
+        bigSource.length > 64 * 1024,
+        // Soft failure carrying the stub's exit code, not a failed Task.
+        leftErrorMessage(renders) == "d2 exited with code 3"
+      )
     },
     test("failure keeps CodeBlock with original language (d2)")(
       failureKeepsCodeBlock("d2")

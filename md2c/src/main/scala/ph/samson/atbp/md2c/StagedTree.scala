@@ -111,13 +111,15 @@ object StagedTree {
         mermaidRendered <- Mermaid.transform(plantUmlRendered)
         d2Rendered <- D2.transform(mermaidRendered)
         extensionsRendered = Extensions.transform(d2Rendered)
+        footerRendered = Footer.append(extensionsRendered)
+        footerHash <- Footer.contentHash(contentHash)
         children <- ZIO.foreachPar(children(node))(convert(_, pages))
       } yield Page(
         node.name,
         node.source,
         frontMatter,
-        extensionsRendered,
-        contentHash,
+        footerRendered,
+        footerHash,
         children
       )
     }

@@ -1,8 +1,12 @@
 package ph.samson.atbp.md2c
 
+import com.atlassian.adf.model.node.Expand
+import com.atlassian.adf.model.node.Extension
 import ph.samson.atbp.md2c.Parser.FrontMatter
 import ph.samson.atbp.md2c.StagedTree.Page
 import zio.test.*
+
+import scala.jdk.CollectionConverters.*
 
 object StagedTreeSpec extends ZIOSpecDefault {
 
@@ -171,6 +175,54 @@ object StagedTreeSpec extends ZIOSpecDefault {
           root.isDirectory &&
           leaf.isRegularFile
       })
+    },
+    test(
+      "stages one footer after Markdown content and changes the stable hash"
+    ) {
+      for {
+        source <- SourceTreeSpec.from("Single Node")
+        parsed <- Parser.parse(source.root.source)
+        first <- StagedTree.from(source)
+        second <- StagedTree.from(source)
+      } yield {
+        val page = first.root
+        val content = page.adf.content().asScala.toList
+        val footer = content.lastOption.collect { case footer: Expand =>
+          footer
+        }
+
+        assertTrue(
+          content.collect { case _: Expand => () }.size == 1,
+          footer.map(_.title().orElse("")) == Some(Footer.Title),
+          footer.toList.flatMap(_.content().asScala.map(_.toPlainText)) ==
+            List(Footer.Body),
+          page.contentHash != parsed.contentHash,
+          page.contentHash == second.root.contentHash
+        )
+      }
+    },
+    test("stages the directory child-page extension before the footer") {
+      for {
+        source <- SourceTreeSpec.from("Single Child")
+        result <- StagedTree.from(source)
+      } yield {
+        val content = result.root.adf.content().asScala.toList
+        val footer = content.lastOption.collect { case footer: Expand =>
+          footer
+        }
+
+        assertTrue(
+          content
+            .dropRight(1)
+            .lastOption
+            .collect { case _: Extension => () }
+            .nonEmpty,
+          footer.map(_.title().orElse("")) == Some(Footer.Title),
+          footer.toList.flatMap(_.content().asScala.map(_.toPlainText)) ==
+            List(Footer.Body),
+          content.collect { case _: Expand => () }.size == 1
+        )
+      }
     }
   )
 }

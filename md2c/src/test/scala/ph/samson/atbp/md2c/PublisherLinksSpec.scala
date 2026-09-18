@@ -3,6 +3,7 @@ package ph.samson.atbp.md2c
 import better.files.File
 import com.atlassian.adf.jackson2.AdfJackson2
 import com.atlassian.adf.model.mark.Link
+import com.atlassian.adf.model.node.Expand
 import com.atlassian.adf.model.node.Text
 import ph.samson.atbp.confluence.Client
 import ph.samson.atbp.confluence.model.*
@@ -14,6 +15,7 @@ import zio.http.URL
 import zio.test.*
 
 import java.time.ZonedDateTime
+import scala.jdk.CollectionConverters.*
 import scala.jdk.StreamConverters.*
 
 object PublisherLinksSpec extends ZIOSpecDefault {
@@ -105,6 +107,44 @@ object PublisherLinksSpec extends ZIOSpecDefault {
         second == first
       )
     },
+    test(
+      "upgrades an unchanged Markdown page with exactly one generated footer"
+    ) {
+      for {
+        source <- sourceTree("README.md" -> "Existing root")
+        parsed <- Parser.parse(source.root.source)
+        client <- FakeClient.make
+        before <- client.pages.get
+        _ <- client.pages.update(pages =>
+          pages.updated(
+            "root",
+            pages("root").copy(version =
+              pages("root").version.copy(message = parsed.contentHash)
+            )
+          )
+        )
+        seeded <- client.pages.get
+        _ <- publish(source, client)
+        first <- client.pages.get
+        _ <- publish(source, client)
+        second <- client.pages.get
+        firstDoc = adf(first("root"))
+        footer = firstDoc.content().asScala.collect { case e: Expand => e }
+      } yield assertTrue(
+        adf(seeded("root"))
+          .content()
+          .asScala
+          .collect { case _: Expand =>
+            ()
+          }
+          .isEmpty,
+        first("root").version.number == before("root").version.number + 1,
+        footer.size == 1,
+        footer.head.title().orElse("") == Footer.Title,
+        footer.head.content().asScala.map(_.toPlainText) == List(Footer.Body),
+        second == first
+      )
+    },
     test("republishes links when a destination page is recreated") {
       for {
         source <- sourceTree(
@@ -151,7 +191,7 @@ object PublisherLinksSpec extends ZIOSpecDefault {
       )
 
   private def links(page: PageSingle): Map[String, String] = {
-    val doc = new AdfJackson2().unmarshall(page.body.atlas_doc_format.get.value)
+    val doc = adf(page)
     doc
       .allNodesOfType(classOf[Text])
       .toScala(List)
@@ -163,6 +203,9 @@ object PublisherLinksSpec extends ZIOSpecDefault {
       }
       .toMap
   }
+
+  private def adf(page: PageSingle) =
+    new AdfJackson2().unmarshall(page.body.atlas_doc_format.get.value)
 
   private def pageUrl(page: PageSingle): String =
     s"https://example.atlassian.net/wiki${page._links.webui}"

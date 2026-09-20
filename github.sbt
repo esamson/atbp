@@ -1,3 +1,6 @@
+// Restored ThisBuild scoping: sbt 2.0.8 / sbt#9674 was insufficient for
+// sbt-github-actions keys; bare settings leaked plugin-default JDK 8
+// into generated CI (or failed load/compile as recorded below).
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("25"))
 
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")

@@ -2,6 +2,8 @@
 // sbt-github-actions keys; bare settings leaked plugin-default JDK 8
 // into generated CI (or failed load/compile as recorded below).
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("25"))
+ThisBuild / scalaVersion := "3.9.0"
+ThisBuild / githubWorkflowScalaVersions := Seq("3.9.0")
 
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(

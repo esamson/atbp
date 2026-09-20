@@ -9,7 +9,6 @@ lazy val scala3V = "3.9.0"
 
 scalaVersion := scala3V
 versionScheme := Some("semver-spec")
-Test / exportJars := false
 
 lazy val root = Project("atbp", file("."))
   .settings(

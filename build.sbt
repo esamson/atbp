@@ -9,6 +9,9 @@ lazy val scala3V = "3.9.0"
 
 scalaVersion := scala3V
 versionScheme := Some("semver-spec")
+// Restored: sbt 2.0.9 still jars the Test classpath; md2c/liga tests
+// need filesystem paths (better.files.File) for trees/markdown/tournaments.
+Test / exportJars := false
 
 lazy val root = Project("atbp", file("."))
   .settings(

@@ -1,5 +1,5 @@
-ThisBuild / semanticdbEnabled := true
-ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+semanticdbEnabled := true
+semanticdbVersion := scalafixSemanticdb.revision
 
 val fixupCommands =
   List(

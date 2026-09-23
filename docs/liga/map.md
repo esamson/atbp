@@ -10,7 +10,7 @@ Load only the section you need for the current task.
 | `liga-common` | `liga-common/` | Cross-compiled types, handicap math, race-to scopes/wizard, bounds, roster paste/order, Glicko tuning |
 | `liga-js` | `liga-js/` | Laminar director + audience SPAs, API client models |
 
-`liga` depends on `liga-common.jvm` and embeds `liga-js` fastLinkJS output under web resources.
+`liga` depends on the JVM `liga-common` matrix row and embeds `liga-js` fastLinkJS output under web resources.
 
 ## Domain (JVM + shared)
 

@@ -1,4 +1,15 @@
+// Restored ThisBuild scoping: sbt 2.0.8 / sbt#9674 was insufficient for
+// sbt-github-actions keys; bare settings leaked plugin-default JDK 8
+// into generated CI.
+// sbt-github-actions reads ThisBuild-scoped keys; sbt 2 bare common
+// settings do not populate that scope, which is why Java, Scala matrix,
+// and workflow keys need explicit ThisBuild / here.
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("25"))
+// Load-bearing: without ThisBuild scalaVersion the publish matrix reverts
+// to the plugin default 3.8.4 even when githubWorkflowScalaVersions is pinned.
+// scala3V is not in scope in this file (sbt 2 compiles .sbt files separately).
+ThisBuild / scalaVersion := "3.9.0"
+ThisBuild / githubWorkflowScalaVersions := Seq("3.9.0")
 
 ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
 ThisBuild / githubWorkflowPublishTargetBranches := Seq(

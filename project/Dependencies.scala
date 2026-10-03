@@ -1,6 +1,5 @@
 import sbt.*
 import sbt.Keys.*
-import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport.*
 
 object Dependencies {
 
@@ -43,12 +42,11 @@ object Dependencies {
 
     val fastparse = "com.lihaoyi" %% "fastparse" % "3.1.1"
 
-    val glicko2 =
-      Def.setting("com.github.mrdimosthenis" %%% "glicko2" % "1.0.1")
+    val glicko2 = "com.github.mrdimosthenis" %% "glicko2" % "1.0.1"
 
     val jsoup = "org.jsoup" % "jsoup" % "1.23.2"
 
-    val laminar = Def.setting("com.raquo" %%% "laminar" % "17.2.1")
+    val laminar = "com.raquo" %% "laminar" % "17.2.1"
 
     val mermaidJava = "ph.samson" % "mermaid-java" % "0.3.0-beta.2"
 
@@ -71,10 +69,10 @@ object Dependencies {
 
     val zioHttp = "dev.zio" %% "zio-http" % ZioHttp
 
-    val zioJson = Def.setting("dev.zio" %%% "zio-json" % "0.10.0")
+    val zioJson = "dev.zio" %% "zio-json" % "0.10.0"
 
-    val zioTestJs = Def.setting("dev.zio" %%% "zio-test" % Zio % Test)
-    val zioTestSbtJs = Def.setting("dev.zio" %%% "zio-test-sbt" % Zio % Test)
+    val zioTestJs = "dev.zio" %% "zio-test" % Zio % Test
+    val zioTestSbtJs = "dev.zio" %% "zio-test-sbt" % Zio % Test
 
     val zioLogging = "dev.zio" %% "zio-logging" % ZioLogging
     val zioLoggingSlf4j2 = "dev.zio" %% "zio-logging-slf4j2" % ZioLogging
@@ -115,7 +113,7 @@ object Dependencies {
     betterFiles,
     zio,
     zioHttp,
-    zioJson.value,
+    zioJson,
     zioSchemaJson,
     TestLibs.pprint,
     TestLibs.slf4jSimple,
@@ -150,7 +148,7 @@ object Dependencies {
   val jira = libraryDependencies ++= Seq(
     zio,
     zioHttp,
-    zioJson.value,
+    zioJson,
     zioSchemaJson,
     TestLibs.pprint,
     TestLibs.zioConfigTypesafe,
@@ -235,13 +233,13 @@ object Dependencies {
 
   val liga = libraryDependencies ++= Seq(
     betterFiles,
-    glicko2.value,
+    glicko2,
     zio,
     zioConfig,
     zioConfigMagnolia,
     zioConfigTypesafe,
     zioHttp,
-    zioJson.value,
+    zioJson,
     zioSchemaJson,
     TestLibs.slf4jSimple,
     TestLibs.zioHttpTestkit,
@@ -253,17 +251,17 @@ object Dependencies {
   )
 
   val ligaCommon = libraryDependencies ++= Seq(
-    glicko2.value,
-    zioJson.value,
-    zioTestJs.value,
-    zioTestSbtJs.value
+    glicko2,
+    zioJson,
+    zioTestJs,
+    zioTestSbtJs
   )
 
   val ligaJs = libraryDependencies ++= Seq(
-    glicko2.value,
-    laminar.value,
-    zioJson.value,
-    zioTestJs.value,
-    zioTestSbtJs.value
+    glicko2,
+    laminar,
+    zioJson,
+    zioTestJs,
+    zioTestSbtJs
   )
 }

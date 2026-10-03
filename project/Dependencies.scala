@@ -71,7 +71,7 @@ object Dependencies {
 
     val zioHttp = "dev.zio" %% "zio-http" % ZioHttp
 
-    val zioJson = Def.setting("dev.zio" %%% "zio-json" % "0.10.0")
+    val zioJson = Def.setting("dev.zio" %%% "zio-json" % "1.1.0")
 
     val zioTestJs = Def.setting("dev.zio" %%% "zio-test" % Zio % Test)
     val zioTestSbtJs = Def.setting("dev.zio" %%% "zio-test-sbt" % Zio % Test)

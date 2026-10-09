@@ -119,3 +119,15 @@ jobs:
 
       - name: Publish container
         run: sbt dockerPublish
+
+      - name: Package universal zip
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: sbt cli/Universal/packageBin
+
+      - name: Upload universal zip
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: atbp
+          path: cli/target/universal/*.zip
+          if-no-files-found: error

@@ -58,3 +58,21 @@ ThisBuild / githubWorkflowPublish := Seq(
     name = Some("Publish container")
   )
 )
+
+ThisBuild / githubWorkflowPublishPostamble := Seq(
+  WorkflowStep.Sbt(
+    commands = List("cli/Universal/packageBin"),
+    name = Some("Package universal zip"),
+    cond = Some("startsWith(github.ref, 'refs/tags/v')")
+  ),
+  WorkflowStep.Use(
+    UseRef.Public("actions", "upload-artifact", "v7"),
+    name = Some("Upload universal zip"),
+    cond = Some("startsWith(github.ref, 'refs/tags/v')"),
+    params = Map(
+      "name" -> "atbp",
+      "path" -> "cli/target/universal/*.zip",
+      "if-no-files-found" -> "error"
+    )
+  )
+)

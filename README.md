@@ -2,6 +2,18 @@
 
 Assorted tooling bits and pieces.
 
+## GitHub release
+
+Download `atbp-<version>.zip` from [GitHub Releases](https://github.com/esamson/atbp/releases) for the tag you want.
+
+Unpack the zip. The distribution requires Java 25 on the machine where you run it.
+
+From the unpacked directory:
+
+```bash
+bin/atbp --help
+```
+
 ## Local installation
 
 Requires Java 25 and sbt. From the repository root, run:

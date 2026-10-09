@@ -152,6 +152,8 @@ jobs:
           path: dist
 
       - name: Create or update GitHub Release
+        env:
+          GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           shopt -s nullglob

@@ -117,7 +117,10 @@ ThisBuild / githubWorkflowAddedJobs := Seq(
       ),
       WorkflowStep.Run(
         commands = List(releaseGhScript),
-        name = Some("Create or update GitHub Release")
+        name = Some("Create or update GitHub Release"),
+        env = Map(
+          "GH_REPO" -> "${{ github.repository }}"
+        )
       )
     ),
     cond = Some("startsWith(github.ref, 'refs/tags/v')"),

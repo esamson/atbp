@@ -76,3 +76,61 @@ ThisBuild / githubWorkflowPublishPostamble := Seq(
     )
   )
 )
+
+val releaseGhScript =
+  """set -euo pipefail
+shopt -s nullglob
+zips=(dist/*.zip)
+if (( ${#zips[@]} != 1 )); then
+  echo "expected exactly one dist/*.zip, found ${#zips[@]}" >&2
+  exit 1
+fi
+TAG="${GITHUB_REF_NAME}"
+ZIP=$(echo dist/*.zip)
+if [[ "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+  PRE=()
+else
+  PRE=(--prerelease)
+fi
+
+if gh release view "$TAG" >/dev/null 2>&1; then
+  gh release upload "$TAG" "$ZIP" --clobber
+else
+  gh release create "$TAG" "$ZIP" \
+    --title "$TAG" \
+    --generate-notes \
+    "${PRE[@]}"
+fi"""
+
+ThisBuild / githubWorkflowAddedJobs := Seq(
+  WorkflowJob(
+    id = "release",
+    name = "Create GitHub Release",
+    steps = List(
+      WorkflowStep.Use(
+        UseRef.Public("actions", "download-artifact", "v8"),
+        name = Some("Download universal zip"),
+        params = Map(
+          "name" -> "atbp",
+          "path" -> "dist"
+        )
+      ),
+      WorkflowStep.Run(
+        commands = List(releaseGhScript),
+        name = Some("Create or update GitHub Release")
+      )
+    ),
+    cond = Some("startsWith(github.ref, 'refs/tags/v')"),
+    permissions = Some(
+      Permissions.Specify(
+        Map(
+          PermissionScope.Contents -> PermissionValue.Write
+        )
+      )
+    ),
+    oses = List("ubuntu-latest"),
+    scalas = List(scalaVersion.value),
+    javas = List(JavaSpec.temurin("25")),
+    needs = List("publish")
+  )
+)

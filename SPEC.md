@@ -90,7 +90,7 @@ README prose matches the current install section: short, imperative, with the ex
 This behavior is a generated workflow plus a shell decision. There is no new Scala test suite.
 
 - `sbt githubWorkflowCheck` is the CI gate. The committed `.github/workflows/ci.yml` must match generation from `github.sbt`.
-- The generated publish job, on a `v*` tag, runs `cli/Universal/packageBin` and uploads exactly that zip as an artifact named `atbp-universal`, failing the job when the zip is missing.
+- The generated publish job, on a `v*` tag, runs `cli/Universal/packageBin` and uploads exactly that zip as an artifact named `atbp`, failing the job when the zip is missing.
 - The generated `release` job needs `publish`, is limited to `refs/tags/v*`, sets `contents: write`, downloads that artifact, and runs the `gh` script above.
 - Classifier examples, checked against the script's regular expression:
 

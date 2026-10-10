@@ -108,7 +108,13 @@ object Dependencies {
     zioConfig,
     zioConfigMagnolia,
     zioConfigTypesafe,
-    zioLogging
+    zioLogging,
+    TestLibs.slf4jSimple,
+    TestLibs.zioLogging,
+    TestLibs.zioLoggingSlf4j2,
+    TestLibs.zioTest,
+    TestLibs.zioTestMagnolia,
+    TestLibs.zioTestSbt
   )
 
   val confluence = libraryDependencies ++= Seq(

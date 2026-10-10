@@ -157,7 +157,7 @@ rm -rf "$$D2_TARBALL" SHA256SUMS "d2-$${D2_VERSION}" """
 
 val nativeSmokeScript =
   """set -euo pipefail
-ver=$(sbt --client "print version" | sed 's/\x1b\[[0-9;]*[A-Za-z]//g' | awk '
+ver=$(sbt --client "print version" | perl -pe 's/\e\[[0-9;]*[A-Za-z]//g' | awk '
   /^version$/ { grab = 1; next }
   grab {
     gsub(/^[[:space:]]+|[[:space:]]+$/, "")

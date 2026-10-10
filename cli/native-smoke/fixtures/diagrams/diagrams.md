@@ -7,6 +7,6 @@ sequenceDiagram
     Alice->>Bob: Hello
 ```
 
-```d2
+```d2.png
 x -> y
 ```

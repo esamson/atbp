@@ -37,11 +37,18 @@ lazy val cli = atbpModule("cli")
   .dependsOn(hubad, liga, md2c, plate, retext, stmt2csv, traceviz)
   .enablePlugins(
     DockerPlugin,
-    JavaAppPackaging
+    JavaAppPackaging,
+    GraalVMNativeImagePlugin
   )
   .settings(Dependencies.cli)
   .settings(
     // sbt-native-packager
+    GraalVMNativeImage / name := "atbp",
+    graalVMNativeImageOptions ++= Seq(
+      "--no-fallback",
+      "-J-Xmx6g",
+      s"-Dph.samson.atbp.version=${version.value}"
+    ),
     packageName := "atbp",
     maintainer := "edward@samson.ph",
     executableScriptName := packageName.value,

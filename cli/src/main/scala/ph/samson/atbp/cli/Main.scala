@@ -36,6 +36,18 @@ object Main extends ZIOCliDefault {
     Option(Main.getClass.getPackage.getImplementationVersion)
   )
 
+  /** Native images do not set java.home. AWT throws if it is missing, and
+    * PlantUML needs it before measuring text. /usr is enough for the system
+    * fontconfig on Linux; the image does not ship a JDK.
+    */
+  def ensureJavaHome(): Unit =
+    if (sys.props.get("java.home").forall(_.isEmpty)) {
+      val _ = System.setProperty(
+        "java.home",
+        sys.env.get("JAVA_HOME").filter(_.nonEmpty).getOrElse("/usr")
+      )
+    }
+
   val verbose = Options.boolean("verbose").alias("v") ?? "Print out debug logs."
   val quiet = Options.boolean("quiet").alias("q") ??
     "Only print warning logs. Takes precedence over verbose flag."
@@ -76,7 +88,8 @@ object Main extends ZIOCliDefault {
       )
     )
 
-  override def run =
+  override def run = {
+    ensureJavaHome()
     for {
       args <- ZIOAppArgs.getArgs
       result <-
@@ -88,6 +101,7 @@ object Main extends ZIOCliDefault {
           }
         }
     } yield result
+  }
 
   override def cliApp = CliApp.make(
     name = Name,

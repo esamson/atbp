@@ -37,11 +37,32 @@ lazy val cli = atbpModule("cli")
   .dependsOn(hubad, liga, md2c, plate, retext, stmt2csv, traceviz)
   .enablePlugins(
     DockerPlugin,
-    JavaAppPackaging
+    JavaAppPackaging,
+    GraalVMNativeImagePlugin
   )
   .settings(Dependencies.cli)
   .settings(
     // sbt-native-packager
+    GraalVMNativeImage / name := "atbp",
+    graalVMNativeImageOptions ++= Seq(
+      "--no-fallback",
+      "-J-Xmx12g",
+      // batik pulls xml-apis, which duplicates classes already in java.xml.
+      "-H:+AllowDeprecatedBuilderClassesOnImageClasspath",
+      // Netty's build-time property lookup stores the SLF4J simple binding in the heap.
+      // A package prefix is ignored here; each class has to be named.
+      "--initialize-at-build-time=org.slf4j.simple.OutputChoice,org.slf4j.simple.OutputChoice$OutputChoiceType,org.slf4j.simple.SimpleLogger,org.slf4j.simple.SimpleLoggerConfiguration,org.slf4j.simple.SimpleLoggerFactory,org.slf4j.simple.SimpleServiceProvider",
+      s"-Dph.samson.atbp.version=${version.value}"
+    ),
+    // liga depends on liga-js so the linker can run. Those Scala.js jars are
+    // not runtime code for the native image, and several of them embed JDK
+    // classes that native-image rejects on the classpath.
+    GraalVMNativeImage / scriptClasspathOrdering := {
+      scriptClasspathOrdering.value.filterNot { case (jar, _) =>
+        val name = jar.getName
+        name.contains("_sjs1_") || name.contains("scalajs")
+      }
+    },
     packageName := "atbp",
     maintainer := "edward@samson.ph",
     executableScriptName := packageName.value,

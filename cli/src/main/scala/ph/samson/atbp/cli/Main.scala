@@ -1,11 +1,14 @@
 package ph.samson.atbp.cli
 
 import zio.Cause
+import zio.Console
 import zio.ExitCode
 import zio.Runtime
 import zio.ZIO
+import zio.ZIOAppArgs
 import zio.ZLayer
 import zio.cli.CliApp
+import zio.cli.CliError
 import zio.cli.Command
 import zio.cli.HelpDoc.*
 import zio.cli.HelpDoc.Span.*
@@ -18,16 +21,32 @@ object Main extends ZIOCliDefault {
 
   val Name = "atbp"
 
-  val Version = {
-    // read version info from JAR manifest
-    val pak = Main.getClass.getPackage
-    Option(pak.getImplementationVersion) match {
-      case Some(version) => s"v$version"
-      case None          =>
-        // we're running unpackaged
-        "(dev)"
+  def versionString(
+      nativeVersion: Option[String],
+      implementationVersion: Option[String]
+  ): String =
+    nativeVersion
+      .filter(_.nonEmpty)
+      .orElse(implementationVersion.filter(_.nonEmpty))
+      .map(v => s"v$v")
+      .getOrElse("(dev)")
+
+  val Version = versionString(
+    sys.props.get("ph.samson.atbp.version"),
+    Option(Main.getClass.getPackage.getImplementationVersion)
+  )
+
+  /** Native images do not set java.home. AWT throws if it is missing, and
+    * PlantUML needs it before measuring text. /usr is enough for the system
+    * fontconfig on Linux; the image does not ship a JDK.
+    */
+  def ensureJavaHome(): Unit =
+    if (sys.props.get("java.home").forall(_.isEmpty)) {
+      val _ = System.setProperty(
+        "java.home",
+        sys.env.get("JAVA_HOME").filter(_.nonEmpty).getOrElse("/usr")
+      )
     }
-  }
 
   val verbose = Options.boolean("verbose").alias("v") ?? "Print out debug logs."
   val quiet = Options.boolean("quiet").alias("q") ??
@@ -68,6 +87,21 @@ object Main extends ZIOCliDefault {
         )
       )
     )
+
+  override def run = {
+    ensureJavaHome()
+    for {
+      args <- ZIOAppArgs.getArgs
+      result <-
+        if (args == zio.Chunk.single("--version")) {
+          Console.printLine(Version).as(ExitCode.success)
+        } else {
+          cliApp.run(args.toList).catchSome { case CliError.Parsing(_) =>
+            exit(ExitCode.failure)
+          }
+        }
+    } yield result
+  }
 
   override def cliApp = CliApp.make(
     name = Name,

@@ -132,9 +132,140 @@ jobs:
           path: cli/target/universal/*.zip
           if-no-files-found: error
 
+  native:
+    name: Native image
+    needs: [build]
+    if: github.event_name != 'pull_request' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/main')
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+          - ubuntu-24.04
+          - ubuntu-24.04-arm
+          - macos-latest
+        scala: [3.9.0]
+        java: [graal_graalvm-community@25]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+
+    env:
+      SBT_OPTS: '-Xmx2G'
+    steps:
+      - name: Checkout current branch (full)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup GraalVM (graal_graalvm-community@25)
+        if: matrix.java == 'graal_graalvm-community@25'
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: 25
+          distribution: graalvm-community
+          components: native-image
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: sbt
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Download build targets
+        uses: actions/download-artifact@v8
+        with:
+          name: target-ubuntu-latest-3.9.0-temurin@25
+
+      - name: Inflate build targets
+        run: |
+          tar xf targets.tar
+          rm targets.tar
+
+      - name: Build native image
+        run: sbt cli/GraalVMNativeImage/packageBin
+
+      - name: Install Graphviz and d2
+        run: |
+          set -euo pipefail
+          if [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            brew install graphviz
+          else
+            sudo apt-get update
+            sudo apt-get install -y graphviz
+          fi
+          D2_VERSION=v0.9.0
+          case "${{ matrix.os }}" in
+            ubuntu-24.04) D2_TARBALL="d2-${D2_VERSION}-linux-amd64.tar.gz" ;;
+            ubuntu-24.04-arm) D2_TARBALL="d2-${D2_VERSION}-linux-arm64.tar.gz" ;;
+            macos-latest) D2_TARBALL="d2-${D2_VERSION}-macos-arm64.tar.gz" ;;
+            *) echo "no d2 archive for ${{ matrix.os }}" >&2; exit 1 ;;
+          esac
+          D2_URL="https://github.com/terrastruct/d2/releases/download/${D2_VERSION}"
+          curl -fsSLO "$D2_URL/$D2_TARBALL"
+          curl -fsSLO "$D2_URL/SHA256SUMS"
+          if command -v sha256sum >/dev/null 2>&1; then
+            grep " $D2_TARBALL$" SHA256SUMS | sha256sum -c -
+          else
+            grep " $D2_TARBALL$" SHA256SUMS | shasum -a 256 -c -
+          fi
+          mkdir -p "$HOME/.local/bin"
+          tar xzf "$D2_TARBALL" "d2-${D2_VERSION}/bin/d2"
+          mv "d2-${D2_VERSION}/bin/d2" "$HOME/.local/bin/d2"
+          chmod +x "$HOME/.local/bin/d2"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.local/bin:$PATH"
+          command -v d2
+          command -v dot
+          d2 --version
+          dot -V
+          rm -rf "$D2_TARBALL" SHA256SUMS "d2-${D2_VERSION}" 
+
+      - name: Smoke test native image
+        run: |
+          set -euo pipefail
+          ver=$(sbt --client "print version" | perl -pe 's/\e\[[0-9;]*[A-Za-z]//g' | awk '
+            /^version$/ { grab = 1; next }
+            grab {
+              gsub(/^[[:space:]]+|[[:space:]]+$/, "")
+              if ($0 != "") { print; exit }
+            }
+          ')
+          if [[ -z "$ver" || ! "$ver" =~ ^[0-9A-Za-z][0-9A-Za-z.+-]*$ ]]; then
+            echo "refusing unexpected version token: '$ver'" >&2
+            exit 1
+          fi
+          bash cli/native-smoke/smoke.sh cli/target/graalvm-native-image/atbp "v${ver}" 
+
+      - name: Name the release asset
+        id: asset
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          case "${{ matrix.os }}" in
+            ubuntu-24.04) name=atbp-linux-amd64 ;;
+            ubuntu-24.04-arm) name=atbp-linux-arm64 ;;
+            macos-latest) name=atbp-darwin-arm64 ;;
+            *) echo "unexpected runner ${{ matrix.os }}" >&2; exit 1 ;;
+          esac
+          src=cli/target/graalvm-native-image/atbp
+          if [[ ! -f "$src" ]]; then
+            echo "missing native image $src" >&2
+            exit 1
+          fi
+          chmod +x "$src"
+          cp "$src" "$name"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "file=$name" >> "$GITHUB_OUTPUT" 
+
+      - name: Upload native image
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.asset.outputs.name }}
+          path: ${{ steps.asset.outputs.file }}
+          if-no-files-found: error
+
   release:
     name: Create GitHub Release
-    needs: [publish]
+    needs: [publish, native]
     if: startsWith(github.ref, 'refs/tags/v')
     strategy:
       matrix:
@@ -151,6 +282,24 @@ jobs:
           name: atbp
           path: dist
 
+      - name: Download atbp-linux-amd64
+        uses: actions/download-artifact@v8
+        with:
+          name: atbp-linux-amd64
+          path: native
+
+      - name: Download atbp-linux-arm64
+        uses: actions/download-artifact@v8
+        with:
+          name: atbp-linux-arm64
+          path: native
+
+      - name: Download atbp-darwin-arm64
+        uses: actions/download-artifact@v8
+        with:
+          name: atbp-darwin-arm64
+          path: native
+
       - name: Create or update GitHub Release
         env:
           GH_REPO: ${{ github.repository }}
@@ -162,8 +311,21 @@ jobs:
             echo "expected exactly one dist/*.zip, found ${#zips[@]}" >&2
             exit 1
           fi
+          required=(atbp-linux-amd64 atbp-linux-arm64 atbp-darwin-arm64)
+          native_files=(native/*)
+          if (( ${#native_files[@]} != 3 )); then
+            echo "expected exactly 3 files in native/, found ${#native_files[@]}" >&2
+            exit 1
+          fi
+          for name in "${required[@]}"; do
+            if [[ ! -f "native/$name" ]]; then
+              echo "missing native/$name" >&2
+              exit 1
+            fi
+          done
           TAG="${GITHUB_REF_NAME}"
           ZIP=$(echo dist/*.zip)
+          assets=("$ZIP" "native/atbp-linux-amd64" "native/atbp-linux-arm64" "native/atbp-darwin-arm64")
           if [[ "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
             PRE=()
           else
@@ -171,9 +333,9 @@ jobs:
           fi
 
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "$ZIP" --clobber
+            gh release upload "$TAG" "${assets[@]}" --clobber
           else
-            gh release create "$TAG" "$ZIP" \
+            gh release create "$TAG" "${assets[@]}" \
               --title "$TAG" \
               --generate-notes \
               "${PRE[@]}"

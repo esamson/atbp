@@ -1,0 +1,3735 @@
+{
+  "reflection": [
+    {
+      "type": "better.files.package$",
+      "fields": [
+        {
+          "name": "0bitmap$1"
+        }
+      ]
+    },
+    {
+      "type": "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "izumi.reflect.internal.fundamentals.platform.console.TrivialLogger$Config$",
+      "fields": [
+        {
+          "name": "console$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "izumi.reflect.macrortti.LightTypeTag",
+      "fields": [
+        {
+          "name": "basesdb$lzy1"
+        },
+        {
+          "name": "hashcode$lzy1"
+        },
+        {
+          "name": "idb$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "izumi.reflect.macrortti.LightTypeTag$ParsedLightTypeTag230Plus",
+      "fields": [
+        {
+          "name": "ref$lzy2"
+        }
+      ]
+    },
+    {
+      "type": "izumi.reflect.macrortti.LightTypeTagInheritance",
+      "fields": [
+        {
+          "name": "FakeParam$lzy1"
+        },
+        {
+          "name": "basesdb$lzy1"
+        },
+        {
+          "name": "idb$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "izumi.reflect.macrortti.LightTypeTagRef$NameReference",
+      "fields": [
+        {
+          "name": "hashCode$lzy4"
+        }
+      ]
+    },
+    {
+      "type": "java.awt.AlphaComposite",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "extraAlpha"
+        },
+        {
+          "name": "rule"
+        }
+      ]
+    },
+    {
+      "type": "java.awt.Color",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "getRGB",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "java.awt.Component",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "appContext"
+        },
+        {
+          "name": "background"
+        },
+        {
+          "name": "foreground"
+        },
+        {
+          "name": "graphicsConfig"
+        },
+        {
+          "name": "height"
+        },
+        {
+          "name": "isPacked"
+        },
+        {
+          "name": "name"
+        },
+        {
+          "name": "peer"
+        },
+        {
+          "name": "width"
+        },
+        {
+          "name": "x"
+        },
+        {
+          "name": "y"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getLocationOnScreen_NoTreeLock",
+          "parameterTypes": []
+        },
+        {
+          "name": "getParent_NoClientCode",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "java.awt.GraphicsEnvironment",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "getLocalGraphicsEnvironment",
+          "parameterTypes": []
+        },
+        {
+          "name": "isHeadless",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "java.awt.Rectangle",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "int",
+            "int",
+            "int",
+            "int"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.awt.event.KeyEvent",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "isProxyActive"
+        }
+      ]
+    },
+    {
+      "type": "java.awt.geom.AffineTransform",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "m00"
+        },
+        {
+          "name": "m01"
+        },
+        {
+          "name": "m02"
+        },
+        {
+          "name": "m10"
+        },
+        {
+          "name": "m11"
+        },
+        {
+          "name": "m12"
+        }
+      ]
+    },
+    {
+      "type": "java.awt.geom.GeneralPath",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "int",
+            "byte[]",
+            "int",
+            "float[]",
+            "int"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.awt.geom.Path2D",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "numTypes"
+        },
+        {
+          "name": "pointTypes"
+        },
+        {
+          "name": "windingRule"
+        }
+      ]
+    },
+    {
+      "type": "java.awt.geom.Path2D$Float",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "floatCoords"
+        }
+      ]
+    },
+    {
+      "type": "java.awt.geom.Point2D$Float",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "x"
+        },
+        {
+          "name": "y"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "float",
+            "float"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.awt.geom.Rectangle2D$Float",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "height"
+        },
+        {
+          "name": "width"
+        },
+        {
+          "name": "x"
+        },
+        {
+          "name": "y"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        },
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "float",
+            "float",
+            "float",
+            "float"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.awt.image.BufferedImage",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "colorModel"
+        },
+        {
+          "name": "imageType"
+        },
+        {
+          "name": "raster"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getRGB",
+          "parameterTypes": [
+            "int",
+            "int",
+            "int",
+            "int",
+            "int[]",
+            "int",
+            "int"
+          ]
+        },
+        {
+          "name": "setRGB",
+          "parameterTypes": [
+            "int",
+            "int",
+            "int",
+            "int",
+            "int[]",
+            "int",
+            "int"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.awt.image.ColorModel",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "colorSpace"
+        },
+        {
+          "name": "colorSpaceType"
+        },
+        {
+          "name": "isAlphaPremultiplied"
+        },
+        {
+          "name": "is_sRGB"
+        },
+        {
+          "name": "nBits"
+        },
+        {
+          "name": "numComponents"
+        },
+        {
+          "name": "supportsAlpha"
+        },
+        {
+          "name": "transparency"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getRGBdefault",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "java.awt.image.IndexColorModel",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "allgrayopaque"
+        },
+        {
+          "name": "colorData"
+        },
+        {
+          "name": "map_size"
+        },
+        {
+          "name": "rgb"
+        },
+        {
+          "name": "transparent_index"
+        }
+      ]
+    },
+    {
+      "type": "java.awt.image.Raster",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "dataBuffer"
+        },
+        {
+          "name": "height"
+        },
+        {
+          "name": "minX"
+        },
+        {
+          "name": "minY"
+        },
+        {
+          "name": "numBands"
+        },
+        {
+          "name": "numDataElements"
+        },
+        {
+          "name": "sampleModel"
+        },
+        {
+          "name": "sampleModelTranslateX"
+        },
+        {
+          "name": "sampleModelTranslateY"
+        },
+        {
+          "name": "width"
+        }
+      ]
+    },
+    {
+      "type": "java.awt.image.SampleModel",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "height"
+        },
+        {
+          "name": "width"
+        }
+      ],
+      "methods": [
+        {
+          "name": "getPixels",
+          "parameterTypes": [
+            "int",
+            "int",
+            "int",
+            "int",
+            "int[]",
+            "java.awt.image.DataBuffer"
+          ]
+        },
+        {
+          "name": "setPixels",
+          "parameterTypes": [
+            "int",
+            "int",
+            "int",
+            "int",
+            "int[]",
+            "java.awt.image.DataBuffer"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.awt.image.SinglePixelPackedSampleModel",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "bitMasks"
+        },
+        {
+          "name": "bitOffsets"
+        },
+        {
+          "name": "bitSizes"
+        },
+        {
+          "name": "maxBitSize"
+        }
+      ]
+    },
+    {
+      "type": "java.lang.Boolean",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "getBoolean",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.lang.ClassLoader",
+      "fields": [
+        {
+          "name": "classLoaderValueMap"
+        }
+      ]
+    },
+    {
+      "type": "java.lang.ClassValue"
+    },
+    {
+      "type": "java.lang.Enum",
+      "methods": [
+        {
+          "name": "name",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "java.lang.Object[][]"
+    },
+    {
+      "type": "java.lang.Object[][][]"
+    },
+    {
+      "type": "java.lang.String[]"
+    },
+    {
+      "type": "java.lang.System",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "load",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.lang.Thread",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "yield",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "java.nio.file.CopyOption[]"
+    },
+    {
+      "type": "java.nio.file.FileVisitOption[]"
+    },
+    {
+      "type": "java.nio.file.LinkOption[]"
+    },
+    {
+      "type": "java.nio.file.OpenOption[]"
+    },
+    {
+      "type": "java.nio.file.attribute.FileAttribute[]"
+    },
+    {
+      "type": "java.util.Locale",
+      "methods": [
+        {
+          "name": "getDefault",
+          "parameterTypes": [
+            "java.util.Locale$Category"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "java.util.Locale$Category"
+    },
+    {
+      "type": "java.util.concurrent.ConcurrentLinkedQueue[]"
+    },
+    {
+      "type": "java.util.function.Supplier",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "get",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "javax.imageio.spi.ImageReaderSpi"
+    },
+    {
+      "type": "javax.imageio.spi.ImageReaderWriterSpi",
+      "methods": [
+        {
+          "name": "getFormatNames",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "javax.imageio.spi.ImageWriterSpi"
+    },
+    {
+      "type": "jdk.internal.misc.Unsafe"
+    },
+    {
+      "type": "org.apache.batik.bridge.RhinoInterpreterFactory",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.apache.batik.css.parser.Parser",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.apache.commons.logging.LogFactory"
+    },
+    {
+      "type": "org.apache.commons.logging.impl.Log4jApiLogFactory"
+    },
+    {
+      "type": "org.apache.commons.logging.impl.Slf4jLogFactory",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.apache.commons.logging.impl.WeakHashtable",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.apache.logging.slf4j.SLF4JProvider"
+    },
+    {
+      "type": "org.graalvm.home.impl.DefaultHomeFinder"
+    },
+    {
+      "type": "org.graalvm.polyglot.io.IOHelper",
+      "fields": [
+        {
+          "name": "ACCESS"
+        }
+      ]
+    },
+    {
+      "type": "org.graalvm.polyglot.management.Management",
+      "fields": [
+        {
+          "name": "ACCESS"
+        }
+      ]
+    },
+    {
+      "type": "org.graalvm.shadowed.com.ibm.icu.impl.ICUCurrencyDisplayInfoProvider",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.graalvm.shadowed.com.ibm.icu.impl.ICULangDataTables",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.graalvm.shadowed.com.ibm.icu.impl.ICURegionDataTables",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.graalvm.shadowed.com.ibm.icu.impl.LocaleDisplayNamesImpl",
+      "methods": [
+        {
+          "name": "getInstance",
+          "parameterTypes": [
+            "org.graalvm.shadowed.com.ibm.icu.util.ULocale",
+            "org.graalvm.shadowed.com.ibm.icu.text.LocaleDisplayNames$DialectHandling"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "org.graalvm.shadowed.com.ibm.icu.impl.TimeZoneNamesFactoryImpl",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "org.slf4j.simple.SimpleServiceProvider"
+    },
+    {
+      "type": "ph.samson.atbp.cli.Main$",
+      "fields": [
+        {
+          "name": "quietLogger$lzy1"
+        },
+        {
+          "name": "regularLogger$lzy1"
+        },
+        {
+          "name": "verboseLogger$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "scala.Tuple$",
+      "fields": [
+        {
+          "name": "canEqualEmptyTuple$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "scala.collection.immutable.ArraySeq$",
+      "fields": [
+        {
+          "name": "emptyImpl$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "scala.collection.immutable.NumericRange",
+      "fields": [
+        {
+          "name": "hashCode$lzy1"
+        },
+        {
+          "name": "isEmpty$lzy1"
+        },
+        {
+          "name": "length$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "scala.math.BigDecimal$",
+      "fields": [
+        {
+          "name": "cache$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "scala.util.Properties$",
+      "fields": [
+        {
+          "name": "consoleIsTerminal$lzy1"
+        },
+        {
+          "name": "isAvian$lzy1"
+        },
+        {
+          "name": "isLinux$lzy1"
+        },
+        {
+          "name": "isMac$lzy1"
+        },
+        {
+          "name": "isWin$lzy1"
+        },
+        {
+          "name": "scalaProps$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "scala.util.matching.Regex$Match",
+      "fields": [
+        {
+          "name": "ends$lzy1"
+        },
+        {
+          "name": "scala$util$matching$Regex$MatchData$$nameToIndex$lzy1"
+        },
+        {
+          "name": "starts$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.SunHints",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "INTVAL_STROKE_PURE"
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.SunToolkit",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "awtLock",
+          "parameterTypes": []
+        },
+        {
+          "name": "awtLockNotify",
+          "parameterTypes": []
+        },
+        {
+          "name": "awtLockNotifyAll",
+          "parameterTypes": []
+        },
+        {
+          "name": "awtLockWait",
+          "parameterTypes": [
+            "long"
+          ]
+        },
+        {
+          "name": "awtUnlock",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.X11.XErrorHandlerUtil",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "init",
+          "parameterTypes": [
+            "long"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.X11.XToolkit",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "modLockIsShiftLock"
+        },
+        {
+          "name": "numLockMask"
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.X11GraphicsConfig",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "aData"
+        },
+        {
+          "name": "bitsPerPixel"
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.X11GraphicsDevice",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "addDoubleBufferVisual",
+          "parameterTypes": [
+            "int"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.image.BufImgSurfaceData$ICMColorData",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "pData"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.image.ByteComponentRaster",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "data"
+        },
+        {
+          "name": "dataOffsets"
+        },
+        {
+          "name": "pixelStride"
+        },
+        {
+          "name": "scanlineStride"
+        },
+        {
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.image.GifImageDecoder",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "outCode"
+        },
+        {
+          "name": "prefix"
+        },
+        {
+          "name": "suffix"
+        }
+      ],
+      "methods": [
+        {
+          "name": "readBytes",
+          "parameterTypes": [
+            "byte[]",
+            "int",
+            "int"
+          ]
+        },
+        {
+          "name": "sendPixels",
+          "parameterTypes": [
+            "int",
+            "int",
+            "int",
+            "int",
+            "byte[]",
+            "java.awt.image.ColorModel"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.image.ImageRepresentation",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "numSrcLUT"
+        },
+        {
+          "name": "srcLUTtransIndex"
+        }
+      ]
+    },
+    {
+      "type": "sun.awt.image.IntegerComponentRaster",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "data"
+        },
+        {
+          "name": "dataOffsets"
+        },
+        {
+          "name": "pixelStride"
+        },
+        {
+          "name": "scanlineStride"
+        },
+        {
+          "name": "type"
+        }
+      ]
+    },
+    {
+      "type": "sun.font.CharToGlyphMapper",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "charToGlyph",
+          "parameterTypes": [
+            "int"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.font.Font2D",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "canDisplay",
+          "parameterTypes": [
+            "char"
+          ]
+        },
+        {
+          "name": "charToGlyphRaw",
+          "parameterTypes": [
+            "int"
+          ]
+        },
+        {
+          "name": "charToVariationGlyphRaw",
+          "parameterTypes": [
+            "int",
+            "int"
+          ]
+        },
+        {
+          "name": "getMapper",
+          "parameterTypes": []
+        },
+        {
+          "name": "getTableBytes",
+          "parameterTypes": [
+            "int"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.font.FontConfigManager$FcCompFont",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "allFonts"
+        },
+        {
+          "name": "fcName"
+        },
+        {
+          "name": "firstFont"
+        }
+      ]
+    },
+    {
+      "type": "sun.font.FontConfigManager$FontConfigFont",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "familyName"
+        },
+        {
+          "name": "fontFile"
+        },
+        {
+          "name": "fullName"
+        },
+        {
+          "name": "styleStr"
+        }
+      ],
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "sun.font.FontConfigManager$FontConfigFont[]"
+    },
+    {
+      "type": "sun.font.FontConfigManager$FontConfigInfo",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "cacheDirs"
+        },
+        {
+          "name": "fcVersion"
+        }
+      ]
+    },
+    {
+      "type": "sun.font.FontStrike",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "getGlyphMetrics",
+          "parameterTypes": [
+            "int"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.font.FontUtilities",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "debugFonts",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "sun.font.FreetypeFontScaler",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "invalidateScaler",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "sun.font.GlyphList",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "gposx"
+        },
+        {
+          "name": "gposy"
+        },
+        {
+          "name": "images"
+        },
+        {
+          "name": "lcdRGBOrder"
+        },
+        {
+          "name": "lcdSubPixPos"
+        },
+        {
+          "name": "len"
+        },
+        {
+          "name": "positions"
+        },
+        {
+          "name": "usePositions"
+        }
+      ]
+    },
+    {
+      "type": "sun.font.HBShaper",
+      "methods": [
+        {
+          "name": "getFontTableData",
+          "parameterTypes": [
+            "sun.font.Font2D",
+            "int",
+            "java.lang.foreign.MemorySegment"
+          ]
+        },
+        {
+          "name": "get_glyph_contour_point",
+          "parameterTypes": [
+            "java.lang.foreign.MemorySegment",
+            "java.lang.foreign.MemorySegment",
+            "int",
+            "int",
+            "java.lang.foreign.MemorySegment",
+            "java.lang.foreign.MemorySegment",
+            "java.lang.foreign.MemorySegment"
+          ]
+        },
+        {
+          "name": "get_glyph_h_advance",
+          "parameterTypes": [
+            "java.lang.foreign.MemorySegment",
+            "java.lang.foreign.MemorySegment",
+            "int",
+            "java.lang.foreign.MemorySegment"
+          ]
+        },
+        {
+          "name": "get_glyph_v_advance",
+          "parameterTypes": [
+            "java.lang.foreign.MemorySegment",
+            "java.lang.foreign.MemorySegment",
+            "int",
+            "java.lang.foreign.MemorySegment"
+          ]
+        },
+        {
+          "name": "get_nominal_glyph",
+          "parameterTypes": [
+            "java.lang.foreign.MemorySegment",
+            "java.lang.foreign.MemorySegment",
+            "int",
+            "java.lang.foreign.MemorySegment",
+            "java.lang.foreign.MemorySegment"
+          ]
+        },
+        {
+          "name": "get_variation_glyph",
+          "parameterTypes": [
+            "java.lang.foreign.MemorySegment",
+            "java.lang.foreign.MemorySegment",
+            "int",
+            "int",
+            "java.lang.foreign.MemorySegment",
+            "java.lang.foreign.MemorySegment"
+          ]
+        },
+        {
+          "name": "store_layout_results",
+          "parameterTypes": [
+            "int",
+            "int",
+            "int",
+            "float",
+            "float",
+            "float",
+            "int",
+            "int",
+            "java.lang.foreign.MemorySegment",
+            "java.lang.foreign.MemorySegment"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.font.PhysicalStrike",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "pScalerContext"
+        }
+      ],
+      "methods": [
+        {
+          "name": "adjustPoint",
+          "parameterTypes": [
+            "java.awt.geom.Point2D$Float"
+          ]
+        },
+        {
+          "name": "getGlyphPoint",
+          "parameterTypes": [
+            "int",
+            "int"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.font.StrikeMetrics",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "float",
+            "float",
+            "float",
+            "float",
+            "float",
+            "float",
+            "float",
+            "float",
+            "float",
+            "float"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.font.TrueTypeFont",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "readBlock",
+          "parameterTypes": [
+            "java.nio.ByteBuffer",
+            "int",
+            "int"
+          ]
+        },
+        {
+          "name": "readBytes",
+          "parameterTypes": [
+            "int",
+            "int"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.font.Type1Font",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "readFile",
+          "parameterTypes": [
+            "java.nio.ByteBuffer"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.Disposer",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "addRecord",
+          "parameterTypes": [
+            "java.lang.Object",
+            "long",
+            "long"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.InvalidPipeException",
+      "jniAccessible": true
+    },
+    {
+      "type": "sun.java2d.NullSurfaceData",
+      "jniAccessible": true
+    },
+    {
+      "type": "sun.java2d.SunGraphics2D",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "clipRegion"
+        },
+        {
+          "name": "composite"
+        },
+        {
+          "name": "eargb"
+        },
+        {
+          "name": "lcdTextContrast"
+        },
+        {
+          "name": "pixel"
+        },
+        {
+          "name": "strokeHint"
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.SunGraphicsEnvironment",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "isDisplayLocal",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.SurfaceData",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "pData"
+        },
+        {
+          "name": "valid"
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.Blit",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.BlitBg",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.CompositeType",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "AnyAlpha"
+        },
+        {
+          "name": "Src"
+        },
+        {
+          "name": "SrcNoEa"
+        },
+        {
+          "name": "SrcOver"
+        },
+        {
+          "name": "SrcOverNoEa"
+        },
+        {
+          "name": "Xor"
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.DrawGlyphList",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.DrawGlyphListAA",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.DrawGlyphListLCD",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.DrawLine",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.DrawParallelogram",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.DrawPath",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.DrawPolygons",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.DrawRect",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.FillParallelogram",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.FillPath",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.FillRect",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.FillSpans",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.GraphicsPrimitive",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "pNativePrim"
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.GraphicsPrimitiveMgr",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "register",
+          "parameterTypes": [
+            "sun.java2d.loops.GraphicsPrimitive[]"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.GraphicsPrimitive[]"
+    },
+    {
+      "type": "sun.java2d.loops.MaskBlit",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.MaskFill",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.ScaledBlit",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.SurfaceType",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "Any3Byte"
+        },
+        {
+          "name": "Any4Byte"
+        },
+        {
+          "name": "AnyByte"
+        },
+        {
+          "name": "AnyColor"
+        },
+        {
+          "name": "AnyInt"
+        },
+        {
+          "name": "AnyShort"
+        },
+        {
+          "name": "ByteBinary1Bit"
+        },
+        {
+          "name": "ByteBinary2Bit"
+        },
+        {
+          "name": "ByteBinary4Bit"
+        },
+        {
+          "name": "ByteGray"
+        },
+        {
+          "name": "ByteIndexed"
+        },
+        {
+          "name": "ByteIndexedBm"
+        },
+        {
+          "name": "FourByteAbgr"
+        },
+        {
+          "name": "FourByteAbgrPre"
+        },
+        {
+          "name": "Index12Gray"
+        },
+        {
+          "name": "Index8Gray"
+        },
+        {
+          "name": "IntArgb"
+        },
+        {
+          "name": "IntArgbBm"
+        },
+        {
+          "name": "IntArgbPre"
+        },
+        {
+          "name": "IntBgr"
+        },
+        {
+          "name": "IntRgb"
+        },
+        {
+          "name": "IntRgbx"
+        },
+        {
+          "name": "OpaqueColor"
+        },
+        {
+          "name": "ThreeByteBgr"
+        },
+        {
+          "name": "Ushort4444Argb"
+        },
+        {
+          "name": "Ushort555Rgb"
+        },
+        {
+          "name": "Ushort555Rgbx"
+        },
+        {
+          "name": "Ushort565Rgb"
+        },
+        {
+          "name": "UshortGray"
+        },
+        {
+          "name": "UshortIndexed"
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.TransformHelper",
+      "jniAccessible": true,
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "long",
+            "sun.java2d.loops.SurfaceType",
+            "sun.java2d.loops.CompositeType",
+            "sun.java2d.loops.SurfaceType"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.loops.XORComposite",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "alphaMask"
+        },
+        {
+          "name": "xorColor"
+        },
+        {
+          "name": "xorPixel"
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.marlin.DMarlinRenderingEngine",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.pipe.Region",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "bands"
+        },
+        {
+          "name": "endIndex"
+        },
+        {
+          "name": "hix"
+        },
+        {
+          "name": "hiy"
+        },
+        {
+          "name": "lox"
+        },
+        {
+          "name": "loy"
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.pipe.RegionIterator",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "curIndex"
+        },
+        {
+          "name": "numXbands"
+        },
+        {
+          "name": "region"
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.pipe.ShapeSpanIterator",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "pData"
+        }
+      ]
+    },
+    {
+      "type": "sun.java2d.xr.XRSurfaceData",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "picture"
+        },
+        {
+          "name": "xid"
+        }
+      ]
+    },
+    {
+      "type": "sun.management.VMManagementImpl",
+      "jniAccessible": true,
+      "fields": [
+        {
+          "name": "compTimeMonitoringSupport"
+        },
+        {
+          "name": "currentThreadCpuTimeSupport"
+        },
+        {
+          "name": "objectMonitorUsageSupport"
+        },
+        {
+          "name": "otherThreadCpuTimeSupport"
+        },
+        {
+          "name": "remoteDiagnosticCommandsSupport"
+        },
+        {
+          "name": "synchronizerUsageSupport"
+        },
+        {
+          "name": "threadAllocatedMemorySupport"
+        },
+        {
+          "name": "threadContentionMonitoringSupport"
+        }
+      ]
+    },
+    {
+      "type": "sun.misc.Signal",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.lang.String"
+          ]
+        },
+        {
+          "name": "handle",
+          "parameterTypes": [
+            "sun.misc.Signal",
+            "sun.misc.SignalHandler"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.misc.SignalHandler"
+    },
+    {
+      "type": "sun.misc.Unsafe",
+      "fields": [
+        {
+          "name": "theUnsafe"
+        }
+      ],
+      "methods": [
+        {
+          "name": "invokeCleaner",
+          "parameterTypes": [
+            "java.nio.ByteBuffer"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.provider.NativePRNG",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "java.security.SecureRandomParameters"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "sun.security.provider.SHA",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData"
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData_en"
+    },
+    {
+      "type": "sun.text.resources.cldr.FormatData_en_US"
+    },
+    {
+      "type": "sun.util.resources.cldr.CalendarData"
+    },
+    {
+      "type": "sun.util.resources.cldr.TimeZoneNames"
+    },
+    {
+      "type": "sun.util.resources.cldr.TimeZoneNames_en"
+    },
+    {
+      "type": "sun.util.resources.cldr.TimeZoneNames_en_US"
+    },
+    {
+      "type": "zio.Chunk$",
+      "fields": [
+        {
+          "name": "Tags$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.Chunk[]"
+    },
+    {
+      "type": "zio.ConfigProvider$",
+      "fields": [
+        {
+          "name": "console$lzy1"
+        },
+        {
+          "name": "consoleProvider$lzy1"
+        },
+        {
+          "name": "defaultProvider$lzy1"
+        },
+        {
+          "name": "env$lzy1"
+        },
+        {
+          "name": "envProvider$lzy1"
+        },
+        {
+          "name": "props$lzy1"
+        },
+        {
+          "name": "propsProvider$lzy1"
+        },
+        {
+          "name": "strIndexRegex$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.ConfigProvider$$anon$10",
+      "fields": [
+        {
+          "name": "keyPaths$lzy2"
+        }
+      ]
+    },
+    {
+      "type": "zio.Executor",
+      "fields": [
+        {
+          "name": "asExecutionContextExecutorService$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.Runtime$",
+      "fields": [
+        {
+          "name": "zio$RuntimePlatformSpecific$$sharedLoomExecutor$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.Semaphore$unsafe$$anon$1",
+      "fields": [
+        {
+          "name": "Reservation$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.System$",
+      "fields": [
+        {
+          "name": "os$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.ZEnvironment",
+      "fields": [
+        {
+          "name": "hashCode$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Args$Both",
+      "fields": [
+        {
+          "name": "helpDoc$lzy3"
+        },
+        {
+          "name": "maxSize$lzy3"
+        },
+        {
+          "name": "minSize$lzy3"
+        },
+        {
+          "name": "synopsis$lzy3"
+        },
+        {
+          "name": "tag$lzy3"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Args$Empty$",
+      "fields": [
+        {
+          "name": "helpDoc$lzy2"
+        },
+        {
+          "name": "maxSize$lzy2"
+        },
+        {
+          "name": "minSize$lzy2"
+        },
+        {
+          "name": "synopsis$lzy2"
+        },
+        {
+          "name": "tag$lzy2"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Args$Map",
+      "fields": [
+        {
+          "name": "helpDoc$lzy5"
+        },
+        {
+          "name": "maxSize$lzy5"
+        },
+        {
+          "name": "minSize$lzy5"
+        },
+        {
+          "name": "shortDesc$lzy3"
+        },
+        {
+          "name": "synopsis$lzy5"
+        },
+        {
+          "name": "tag$lzy5"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Args$Single",
+      "fields": [
+        {
+          "name": "helpDoc$lzy1"
+        },
+        {
+          "name": "maxSize$lzy1"
+        },
+        {
+          "name": "minSize$lzy1"
+        },
+        {
+          "name": "shortDesc$lzy1"
+        },
+        {
+          "name": "synopsis$lzy1"
+        },
+        {
+          "name": "tag$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Args$Variadic",
+      "fields": [
+        {
+          "name": "helpDoc$lzy4"
+        },
+        {
+          "name": "maxSize$lzy4"
+        },
+        {
+          "name": "minSize$lzy4"
+        },
+        {
+          "name": "shortDesc$lzy2"
+        },
+        {
+          "name": "synopsis$lzy4"
+        },
+        {
+          "name": "tag$lzy4"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Command$Map",
+      "fields": [
+        {
+          "name": "helpDoc$lzy2"
+        },
+        {
+          "name": "names$lzy2"
+        },
+        {
+          "name": "shortDesc$lzy2"
+        },
+        {
+          "name": "synopsis$lzy2"
+        },
+        {
+          "name": "tag$lzy2"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Command$OrElse",
+      "fields": [
+        {
+          "name": "helpDoc$lzy3"
+        },
+        {
+          "name": "names$lzy3"
+        },
+        {
+          "name": "synopsis$lzy3"
+        },
+        {
+          "name": "tag$lzy3"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Command$Single",
+      "fields": [
+        {
+          "name": "helpDoc$lzy1"
+        },
+        {
+          "name": "names$lzy1"
+        },
+        {
+          "name": "shortDesc$lzy1"
+        },
+        {
+          "name": "synopsis$lzy1"
+        },
+        {
+          "name": "tag$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Command$Subcommands",
+      "fields": [
+        {
+          "name": "helpDoc$lzy4"
+        },
+        {
+          "name": "names$lzy4"
+        },
+        {
+          "name": "shortDesc$lzy3"
+        },
+        {
+          "name": "synopsis$lzy4"
+        },
+        {
+          "name": "tag$lzy4"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Options$Both",
+      "fields": [
+        {
+          "name": "helpDoc$lzy5"
+        },
+        {
+          "name": "synopsis$lzy5"
+        },
+        {
+          "name": "tag$lzy5"
+        },
+        {
+          "name": "uid$lzy5"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Options$Empty$",
+      "fields": [
+        {
+          "name": "helpDoc$lzy1"
+        },
+        {
+          "name": "synopsis$lzy1"
+        },
+        {
+          "name": "tag$lzy1"
+        },
+        {
+          "name": "uid$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Options$Map",
+      "fields": [
+        {
+          "name": "helpDoc$lzy6"
+        },
+        {
+          "name": "shortDesc$lzy3"
+        },
+        {
+          "name": "synopsis$lzy6"
+        },
+        {
+          "name": "tag$lzy6"
+        },
+        {
+          "name": "uid$lzy6"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Options$OrElse",
+      "fields": [
+        {
+          "name": "helpDoc$lzy4"
+        },
+        {
+          "name": "synopsis$lzy4"
+        },
+        {
+          "name": "tag$lzy4"
+        },
+        {
+          "name": "uid$lzy4"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Options$Single",
+      "fields": [
+        {
+          "name": "fullName$lzy1"
+        },
+        {
+          "name": "helpDoc$lzy3"
+        },
+        {
+          "name": "names$lzy1"
+        },
+        {
+          "name": "shortDesc$lzy2"
+        },
+        {
+          "name": "synopsis$lzy3"
+        },
+        {
+          "name": "tag$lzy3"
+        },
+        {
+          "name": "uid$lzy3"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.Options$WithDefault",
+      "fields": [
+        {
+          "name": "helpDoc$lzy2"
+        },
+        {
+          "name": "shortDesc$lzy1"
+        },
+        {
+          "name": "synopsis$lzy2"
+        },
+        {
+          "name": "tag$lzy2"
+        },
+        {
+          "name": "uid$lzy2"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Bool",
+      "fields": [
+        {
+          "name": "choices$lzy6"
+        },
+        {
+          "name": "helpDoc$lzy6"
+        },
+        {
+          "name": "isBool$lzy6"
+        },
+        {
+          "name": "typeName$lzy6"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Bool$",
+      "fields": [
+        {
+          "name": "FalseValues$lzy1"
+        },
+        {
+          "name": "TrueValues$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Decimal$",
+      "fields": [
+        {
+          "name": "choices$lzy4"
+        },
+        {
+          "name": "helpDoc$lzy4"
+        },
+        {
+          "name": "isBool$lzy4"
+        },
+        {
+          "name": "typeName$lzy4"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Duration$",
+      "fields": [
+        {
+          "name": "choices$lzy7"
+        },
+        {
+          "name": "helpDoc$lzy7"
+        },
+        {
+          "name": "isBool$lzy7"
+        },
+        {
+          "name": "typeName$lzy7"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Enumeration",
+      "fields": [
+        {
+          "name": "choices$lzy2"
+        },
+        {
+          "name": "helpDoc$lzy2"
+        },
+        {
+          "name": "isBool$lzy2"
+        },
+        {
+          "name": "typeName$lzy2"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Instant$",
+      "fields": [
+        {
+          "name": "choices$lzy8"
+        },
+        {
+          "name": "helpDoc$lzy8"
+        },
+        {
+          "name": "isBool$lzy8"
+        },
+        {
+          "name": "typeName$lzy8"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Integer$",
+      "fields": [
+        {
+          "name": "choices$lzy5"
+        },
+        {
+          "name": "helpDoc$lzy5"
+        },
+        {
+          "name": "isBool$lzy5"
+        },
+        {
+          "name": "typeName$lzy5"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$LocalDateTime$",
+      "fields": [
+        {
+          "name": "choices$lzy10"
+        },
+        {
+          "name": "helpDoc$lzy10"
+        },
+        {
+          "name": "isBool$lzy10"
+        },
+        {
+          "name": "typeName$lzy10"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$LocalTime$",
+      "fields": [
+        {
+          "name": "choices$lzy11"
+        },
+        {
+          "name": "helpDoc$lzy11"
+        },
+        {
+          "name": "isBool$lzy11"
+        },
+        {
+          "name": "typeName$lzy11"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$MonthDay$",
+      "fields": [
+        {
+          "name": "choices$lzy12"
+        },
+        {
+          "name": "helpDoc$lzy12"
+        },
+        {
+          "name": "isBool$lzy12"
+        },
+        {
+          "name": "typeName$lzy12"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$OffsetDateTime$",
+      "fields": [
+        {
+          "name": "choices$lzy13"
+        },
+        {
+          "name": "helpDoc$lzy13"
+        },
+        {
+          "name": "isBool$lzy13"
+        },
+        {
+          "name": "typeName$lzy13"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$OffsetTime$",
+      "fields": [
+        {
+          "name": "choices$lzy14"
+        },
+        {
+          "name": "helpDoc$lzy14"
+        },
+        {
+          "name": "isBool$lzy14"
+        },
+        {
+          "name": "typeName$lzy14"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Path",
+      "fields": [
+        {
+          "name": "choices$lzy1"
+        },
+        {
+          "name": "helpDoc$lzy1"
+        },
+        {
+          "name": "isBool$lzy1"
+        },
+        {
+          "name": "typeName$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Period$",
+      "fields": [
+        {
+          "name": "choices$lzy15"
+        },
+        {
+          "name": "helpDoc$lzy15"
+        },
+        {
+          "name": "isBool$lzy15"
+        },
+        {
+          "name": "typeName$lzy15"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Text$",
+      "fields": [
+        {
+          "name": "choices$lzy3"
+        },
+        {
+          "name": "helpDoc$lzy3"
+        },
+        {
+          "name": "isBool$lzy3"
+        },
+        {
+          "name": "typeName$lzy3"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$Year$",
+      "fields": [
+        {
+          "name": "choices$lzy16"
+        },
+        {
+          "name": "helpDoc$lzy16"
+        },
+        {
+          "name": "isBool$lzy16"
+        },
+        {
+          "name": "typeName$lzy16"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$YearMonth$",
+      "fields": [
+        {
+          "name": "choices$lzy17"
+        },
+        {
+          "name": "helpDoc$lzy17"
+        },
+        {
+          "name": "isBool$lzy17"
+        },
+        {
+          "name": "typeName$lzy17"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$ZoneId$",
+      "fields": [
+        {
+          "name": "choices$lzy19"
+        },
+        {
+          "name": "helpDoc$lzy19"
+        },
+        {
+          "name": "isBool$lzy19"
+        },
+        {
+          "name": "typeName$lzy19"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$ZoneOffset$",
+      "fields": [
+        {
+          "name": "choices$lzy20"
+        },
+        {
+          "name": "helpDoc$lzy20"
+        },
+        {
+          "name": "isBool$lzy20"
+        },
+        {
+          "name": "typeName$lzy20"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.PrimType$ZonedDateTime$",
+      "fields": [
+        {
+          "name": "choices$lzy18"
+        },
+        {
+          "name": "helpDoc$lzy18"
+        },
+        {
+          "name": "isBool$lzy18"
+        },
+        {
+          "name": "typeName$lzy18"
+        }
+      ]
+    },
+    {
+      "type": "zio.cli.figlet.FigFont$",
+      "fields": [
+        {
+          "name": "Default$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.config.IndexedFlat$ConfigPath$",
+      "fields": [
+        {
+          "name": "strIndexRegex$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.config.magnolia.DeriveConfig$",
+      "fields": [
+        {
+          "name": "given_DeriveConfig_BigDecimal$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_BigInt$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_Boolean$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_Byte$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_Double$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_Duration$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_Float$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_Int$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_LocalDate$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_LocalDateTime$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_LocalTime$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_LogLevel$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_Long$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_OffsetDateTime$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_Secret$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_Short$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_String$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_URI$lzy1"
+        },
+        {
+          "name": "given_DeriveConfig_UUID$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.config.package$",
+      "fields": [
+        {
+          "name": "ConfigDocs$lzy1"
+        },
+        {
+          "name": "Table$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.internal.FiberRuntime",
+      "fields": [
+        {
+          "name": "scope$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.internal.HeadPadding"
+    },
+    {
+      "type": "zio.internal.RingBuffer[]"
+    },
+    {
+      "type": "zio.internal.TailPadding"
+    },
+    {
+      "type": "zio.internal.UpdateOrderLinkedMap",
+      "fields": [
+        {
+          "name": "iteratorLz$lzy1"
+        },
+        {
+          "name": "reverseIteratorLz$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.internal.UpdateOrderLinkedMap$LzList$Cons",
+      "fields": [
+        {
+          "name": "head$lzy1"
+        },
+        {
+          "name": "tail$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.logging.LogFormat$Pattern$",
+      "fields": [
+        {
+          "name": "colorSyntax$lzy1"
+        },
+        {
+          "name": "fixedSyntax$lzy1"
+        },
+        {
+          "name": "highlightSyntax$lzy1"
+        },
+        {
+          "name": "labelSyntax$lzy1"
+        },
+        {
+          "name": "syntax$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.package$",
+      "fields": [
+        {
+          "name": "zio$VersionSpecific$$BoxedBool$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$",
+      "fields": [
+        {
+          "name": "alphaNumeric$lzy1"
+        },
+        {
+          "name": "digit$lzy1"
+        },
+        {
+          "name": "end$lzy1"
+        },
+        {
+          "name": "ignoreRest$lzy1"
+        },
+        {
+          "name": "index$lzy1"
+        },
+        {
+          "name": "letter$lzy1"
+        },
+        {
+          "name": "unit$lzy1"
+        },
+        {
+          "name": "whitespace$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$Backtrack",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy23"
+        },
+        {
+          "name": "defaultImplementation$lzy23"
+        },
+        {
+          "name": "optimized$lzy23"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$CaptureString",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy13"
+        },
+        {
+          "name": "defaultImplementation$lzy13"
+        },
+        {
+          "name": "needsBacktrack$lzy6"
+        },
+        {
+          "name": "optimized$lzy13"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$Ignore",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy12"
+        },
+        {
+          "name": "defaultImplementation$lzy12"
+        },
+        {
+          "name": "needsBacktrack$lzy5"
+        },
+        {
+          "name": "optimized$lzy12"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$Lazy",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy1"
+        },
+        {
+          "name": "defaultImplementation$lzy1"
+        },
+        {
+          "name": "memoized$lzy1"
+        },
+        {
+          "name": "needsBacktrack$lzy1"
+        },
+        {
+          "name": "optimized$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$OrElse",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy19"
+        },
+        {
+          "name": "defaultImplementation$lzy19"
+        },
+        {
+          "name": "needsBacktrack$lzy8"
+        },
+        {
+          "name": "optimized$lzy19"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$ParseRegex",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy8"
+        },
+        {
+          "name": "compiledRegex$lzy2"
+        },
+        {
+          "name": "defaultImplementation$lzy8"
+        },
+        {
+          "name": "optimized$lzy8"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$ParseRegexLastChar",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy9"
+        },
+        {
+          "name": "compiledRegex$lzy3"
+        },
+        {
+          "name": "defaultImplementation$lzy9"
+        },
+        {
+          "name": "optimized$lzy9"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$Repeat",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy21"
+        },
+        {
+          "name": "defaultImplementation$lzy21"
+        },
+        {
+          "name": "optimized$lzy21"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$SkipRegex",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy7"
+        },
+        {
+          "name": "compiledRegex$lzy1"
+        },
+        {
+          "name": "defaultImplementation$lzy7"
+        },
+        {
+          "name": "optimized$lzy7"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$Transform",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy11"
+        },
+        {
+          "name": "defaultImplementation$lzy11"
+        },
+        {
+          "name": "needsBacktrack$lzy4"
+        },
+        {
+          "name": "optimized$lzy11"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$TransformEither",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy10"
+        },
+        {
+          "name": "defaultImplementation$lzy10"
+        },
+        {
+          "name": "needsBacktrack$lzy3"
+        },
+        {
+          "name": "optimized$lzy10"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$Zip",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy14"
+        },
+        {
+          "name": "defaultImplementation$lzy14"
+        },
+        {
+          "name": "optimized$lzy14"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$ZipLeft",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy15"
+        },
+        {
+          "name": "defaultImplementation$lzy15"
+        },
+        {
+          "name": "optimized$lzy15"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Parser$ZipRight",
+      "fields": [
+        {
+          "name": "compiledOpStack$lzy16"
+        },
+        {
+          "name": "defaultImplementation$lzy16"
+        },
+        {
+          "name": "optimized$lzy16"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Printer$Lazy",
+      "fields": [
+        {
+          "name": "memoized$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Printer$ParseRegex",
+      "fields": [
+        {
+          "name": "compiledRegex$lzy2"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Printer$ParseRegexLastChar",
+      "fields": [
+        {
+          "name": "compiledRegex$lzy3"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Printer$SkipRegex",
+      "fields": [
+        {
+          "name": "compiledRegex$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Regex$",
+      "fields": [
+        {
+          "name": "AllCharsBitSet$lzy1"
+        },
+        {
+          "name": "alphaNumerics$lzy1"
+        },
+        {
+          "name": "anyAlphaNumeric$lzy1"
+        },
+        {
+          "name": "anyChar$lzy1"
+        },
+        {
+          "name": "anyDigit$lzy1"
+        },
+        {
+          "name": "anyLetter$lzy1"
+        },
+        {
+          "name": "anyWhitespace$lzy1"
+        },
+        {
+          "name": "digits$lzy1"
+        },
+        {
+          "name": "letters$lzy1"
+        },
+        {
+          "name": "whitespace$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.parser.Regex$Tabular$Step[]"
+    },
+    {
+      "type": "zio.parser.Syntax$",
+      "fields": [
+        {
+          "name": "alphaNumeric$lzy1"
+        },
+        {
+          "name": "anyString$lzy1"
+        },
+        {
+          "name": "digit$lzy1"
+        },
+        {
+          "name": "end$lzy1"
+        },
+        {
+          "name": "index$lzy1"
+        },
+        {
+          "name": "letter$lzy1"
+        },
+        {
+          "name": "unit$lzy1"
+        },
+        {
+          "name": "whitespace$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.prelude.Equal$",
+      "fields": [
+        {
+          "name": "DefaultEqual$lzy1"
+        },
+        {
+          "name": "FiberIdHashOrd$lzy1"
+        },
+        {
+          "name": "ThrowableHash$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.prelude.Hash$",
+      "fields": [
+        {
+          "name": "DefaultHash$lzy1"
+        }
+      ]
+    },
+    {
+      "type": "zio.prelude.Invariant$",
+      "fields": [
+        {
+          "name": "DeriveBuildFrom$lzy1"
+        },
+        {
+          "name": "Function0Covariant$lzy1"
+        }
+      ]
+    },
+    {
+      "type": {
+        "proxy": [
+          "sun.misc.SignalHandler"
+        ]
+      }
+    }
+  ],
+  "resources": [
+    {
+      "glob": "META-INF/graalvm/jdk.graal.compiler/version"
+    },
+    {
+      "glob": "META-INF/graalvm/org.graalvm.polyglot/version"
+    },
+    {
+      "glob": "META-INF/graalvm/org.graalvm.truffle/version"
+    },
+    {
+      "glob": "META-INF/resources/engine/libtruffleattach/linux/amd64/sha256"
+    },
+    {
+      "glob": "META-INF/services/com.oracle.truffle.api.TruffleRuntimeAccess"
+    },
+    {
+      "glob": "META-INF/services/com.oracle.truffle.api.instrumentation.provider.TruffleInstrumentProvider"
+    },
+    {
+      "glob": "META-INF/services/com.oracle.truffle.api.library.provider.DefaultExportProvider"
+    },
+    {
+      "glob": "META-INF/services/com.oracle.truffle.api.provider.InternalResourceProvider"
+    },
+    {
+      "glob": "META-INF/services/com.oracle.truffle.api.provider.TruffleLanguageProvider"
+    },
+    {
+      "glob": "META-INF/services/com.oracle.truffle.api.strings.provider.JCodingsProvider"
+    },
+    {
+      "glob": "META-INF/services/com.oracle.truffle.js.runtime.Evaluator"
+    },
+    {
+      "glob": "META-INF/services/java.net.spi.InetAddressResolverProvider"
+    },
+    {
+      "glob": "META-INF/services/java.nio.charset.spi.CharsetProvider"
+    },
+    {
+      "glob": "META-INF/services/java.time.zone.ZoneRulesProvider"
+    },
+    {
+      "glob": "META-INF/services/javax.imageio.spi.ImageInputStreamSpi"
+    },
+    {
+      "glob": "META-INF/services/javax.imageio.spi.ImageOutputStreamSpi"
+    },
+    {
+      "glob": "META-INF/services/javax.imageio.spi.ImageReaderSpi"
+    },
+    {
+      "glob": "META-INF/services/javax.imageio.spi.ImageTranscoderSpi"
+    },
+    {
+      "glob": "META-INF/services/javax.imageio.spi.ImageWriterSpi"
+    },
+    {
+      "glob": "META-INF/services/javax.xml.parsers.DocumentBuilderFactory"
+    },
+    {
+      "glob": "META-INF/services/javax.xml.parsers.SAXParserFactory"
+    },
+    {
+      "glob": "META-INF/services/javax.xml.transform.TransformerFactory"
+    },
+    {
+      "glob": "META-INF/services/org.apache.batik.bridge.BridgeExtension"
+    },
+    {
+      "glob": "META-INF/services/org.apache.batik.dom.DomExtension"
+    },
+    {
+      "glob": "META-INF/services/org.apache.batik.script.InterpreterFactory"
+    },
+    {
+      "glob": "META-INF/services/org.apache.batik.util.ParsedURLProtocolHandler"
+    },
+    {
+      "glob": "META-INF/services/org.apache.commons.logging.LogFactory"
+    },
+    {
+      "glob": "META-INF/services/org.graalvm.home.HomeFinder"
+    },
+    {
+      "glob": "META-INF/services/org.graalvm.polyglot.impl.AbstractPolyglotImpl"
+    },
+    {
+      "glob": "META-INF/services/org.slf4j.spi.SLF4JServiceProvider"
+    },
+    {
+      "glob": "application.conf"
+    },
+    {
+      "glob": "application.json"
+    },
+    {
+      "glob": "application.properties"
+    },
+    {
+      "glob": "commons-logging.properties"
+    },
+    {
+      "glob": "library.properties"
+    },
+    {
+      "glob": "mermaid/browser-shim.js"
+    },
+    {
+      "glob": "mermaid/mermaid.min.js"
+    },
+    {
+      "glob": "org/apache/batik/anim/dom/resources/UserAgentStyleSheet.css"
+    },
+    {
+      "glob": "org/apache/batik/bridge/resources/help.gif"
+    },
+    {
+      "glob": "org/apache/batik/util/resources/XMLResourceDescriptor.properties"
+    },
+    {
+      "glob": "org/apache/pdfbox/resources/afm/Helvetica.afm"
+    },
+    {
+      "glob": "org/apache/pdfbox/resources/glyphlist/additional.txt"
+    },
+    {
+      "glob": "org/apache/pdfbox/resources/glyphlist/glyphlist.txt"
+    },
+    {
+      "glob": "org/apache/pdfbox/resources/glyphlist/zapfdingbats.txt"
+    },
+    {
+      "glob": "org/apache/pdfbox/resources/text/BidiMirroring.txt"
+    },
+    {
+      "glob": "org/apache/pdfbox/resources/ttf/LiberationSans-Regular.ttf"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/ICUConfig.properties"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/curr/en.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/curr/en_Latn.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/curr/en_US.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/curr/pool.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/curr/root.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/en.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/en_US.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/keyTypeData.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/lang/en.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/lang/en_Latn.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/lang/en_US.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/lang/pool.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/lang/root.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/metaZones.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/numberingSystems.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/pool.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/region/en.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/region/en_Latn.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/region/en_US.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/region/pool.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/region/root.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/root.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/supplementalData.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/timezoneTypes.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/ucase.icu"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/uprops.icu"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/zone/en.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/zone/en_Latn.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/zone/en_US.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/zone/pool.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/zone/root.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/zone/tzdbNames.res"
+    },
+    {
+      "glob": "org/graalvm/shadowed/com/ibm/icu/impl/data/icudata/zoneinfo64.res"
+    },
+    {
+      "glob": "reference.conf"
+    },
+    {
+      "glob": "simplelogger.properties"
+    },
+    {
+      "glob": "skin/plantuml.skin"
+    },
+    {
+      "module": "java.base",
+      "glob": "jdk/internal/icu/impl/data/icudt76b/ubidi.icu"
+    },
+    {
+      "module": "java.desktop",
+      "glob": "sun/awt/resources/awt_en.properties"
+    },
+    {
+      "module": "java.desktop",
+      "glob": "sun/awt/resources/awt_en_US.properties"
+    },
+    {
+      "module": "java.logging",
+      "glob": "sun/util/logging/resources/logging_en.properties"
+    },
+    {
+      "module": "java.logging",
+      "glob": "sun/util/logging/resources/logging_en_US.properties"
+    },
+    {
+      "module": "java.xml",
+      "glob": "com/sun/org/apache/xml/internal/serializer/Encodings.properties"
+    },
+    {
+      "module": "java.xml",
+      "glob": "com/sun/org/apache/xml/internal/serializer/XMLEntities.properties"
+    },
+    {
+      "module": "java.xml",
+      "glob": "com/sun/org/apache/xml/internal/serializer/XMLEntities_en.properties"
+    },
+    {
+      "module": "java.xml",
+      "glob": "com/sun/org/apache/xml/internal/serializer/XMLEntities_en_US.properties"
+    },
+    {
+      "bundle": "com.sun.org.apache.xml.internal.serializer.XMLEntities"
+    },
+    {
+      "bundle": "sun.awt.resources.awt"
+    },
+    {
+      "bundle": "sun.util.logging.resources.logging"
+    }
+  ],
+  "foreign": {
+    "upcalls": [
+      {
+        "returnType": "jint",
+        "parameterTypes": [
+          "jint",
+          "void*"
+        ]
+      }
+    ],
+    "directUpcalls": [
+      {
+        "class": "sun.font.HBShaper",
+        "method": "get_glyph_contour_point",
+        "returnType": "jint",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "jint",
+          "jint",
+          "void*",
+          "void*",
+          "void*"
+        ]
+      },
+      {
+        "class": "sun.font.HBShaper",
+        "method": "store_layout_results",
+        "returnType": "void",
+        "parameterTypes": [
+          "jint",
+          "jint",
+          "jint",
+          "jfloat",
+          "jfloat",
+          "jfloat",
+          "jint",
+          "jint",
+          "void*",
+          "void*"
+        ]
+      },
+      {
+        "class": "sun.font.HBShaper",
+        "method": "get_glyph_h_advance",
+        "returnType": "jint",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "jint",
+          "void*"
+        ]
+      },
+      {
+        "class": "sun.font.HBShaper",
+        "method": "get_variation_glyph",
+        "returnType": "jint",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "jint",
+          "jint",
+          "void*",
+          "void*"
+        ]
+      },
+      {
+        "class": "sun.font.HBShaper",
+        "method": "get_glyph_v_advance",
+        "returnType": "jint",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "jint",
+          "void*"
+        ]
+      },
+      {
+        "class": "sun.font.HBShaper",
+        "method": "get_nominal_glyph",
+        "returnType": "jint",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "jint",
+          "void*",
+          "void*"
+        ]
+      }
+    ],
+    "downcalls": [
+      {
+        "returnType": "void",
+        "parameterTypes": [
+          "jfloat",
+          "void*",
+          "void*",
+          "void*",
+          "jint",
+          "jint",
+          "jint",
+          "jint",
+          "jint",
+          "jfloat",
+          "jfloat",
+          "jint",
+          "jint",
+          "void*",
+          "void*"
+        ]
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": [
+          "jlong"
+        ]
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "void*",
+          "void*",
+          "void*"
+        ]
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": [
+          "void*"
+        ]
+      },
+      {
+        "returnType": "void",
+        "parameterTypes": [
+          "void*"
+        ]
+      }
+    ]
+  }
+}

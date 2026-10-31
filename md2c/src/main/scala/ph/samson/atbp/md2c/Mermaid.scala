@@ -44,7 +44,7 @@ object Mermaid {
     codeBlock.language().orElse("").startsWith("mermaid")
 
   private def renderKey(codeBlock: CodeBlock): RenderKey = {
-    val source = codeBlock.toPlainText
+    val source = codeBlock.plainText
     val format =
       codeBlock.language().map(formatFromLanguage(_)).orElse(DefaultFormat)
     (source, format)

@@ -30,7 +30,7 @@ object PlantUml {
       .toScala(List)
       .zipWithIndex
       .map { (codeBlock, index) =>
-        val source = codeBlock.toPlainText
+        val source = codeBlock.plainText
         val plantuml =
           if (source.trim.startsWith("@start")) source
           else s"""@startuml
@@ -67,7 +67,7 @@ object PlantUml {
     def transformer(renders: Map[String, File]): DocContent => DocContent = {
       case codeBlock: CodeBlock =>
         if (codeBlock.language().orElse("").startsWith("plantuml")) {
-          val source = codeBlock.toPlainText
+          val source = codeBlock.plainText
           val path = renders(source).pathAsString
           mediaSingle(RichMedia.Layout.FULL_WIDTH, externalMedia(path))
         } else {

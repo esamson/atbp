@@ -185,7 +185,7 @@ object MermaidSpec extends ZIOSpecDefault {
           .filter(_.language().orElse("").startsWith("mermaid"))
           .toScala(List)
           .head
-          .toPlainText
+          .plainText
         renders <- Mermaid.render(parsed.doc)
         expectedError = leftErrorMessage(renders)
         staged <- StagedTree.from(source)
@@ -203,10 +203,10 @@ object MermaidSpec extends ZIOSpecDefault {
         assertTrue(
           mermaidCodeBlocks.size == 1,
           block.language().orElse("") == "mermaid",
-          block.toPlainText == s"${Mermaid.RenderFailureComment}\n$originalSource",
+          block.plainText == s"${Mermaid.RenderFailureComment}\n$originalSource",
           externalMedia.isEmpty,
           sibling.language().orElse("") == "text",
-          sibling.toPlainText ==
+          sibling.plainText ==
             s"${Mermaid.RenderFailureDetailsHeader}\n$expectedError"
         )
       }
@@ -219,7 +219,7 @@ object MermaidSpec extends ZIOSpecDefault {
           .filter(_.language().orElse("").startsWith("mermaid"))
           .toScala(List)
           .head
-          .toPlainText
+          .plainText
         renders <- Mermaid.render(doc)
         expectedError = leftErrorMessage(renders)
         transformed <- Mermaid.transform(doc)
@@ -236,10 +236,10 @@ object MermaidSpec extends ZIOSpecDefault {
         assertTrue(
           mermaidCodeBlocks.size == 1,
           block.language().orElse("") == "mermaid",
-          block.toPlainText == s"${Mermaid.RenderFailureComment}\n$originalSource",
+          block.plainText == s"${Mermaid.RenderFailureComment}\n$originalSource",
           externalMedia.isEmpty,
           sibling.language().orElse("") == "text",
-          sibling.toPlainText ==
+          sibling.plainText ==
             s"${Mermaid.RenderFailureDetailsHeader}\n$expectedError"
         )
       }
@@ -254,7 +254,7 @@ object MermaidSpec extends ZIOSpecDefault {
           .filter(_.language().orElse("").startsWith("mermaid"))
           .toScala(List)
           .head
-          .toPlainText
+          .plainText
         renders <- Mermaid.render(doc)
         expectedError = leftErrorMessage(renders)
         transformed <- Mermaid.transform(doc)
@@ -271,10 +271,10 @@ object MermaidSpec extends ZIOSpecDefault {
         assertTrue(
           mermaidCodeBlocks.size == 1,
           block.language().orElse("") == "mermaid.svg",
-          block.toPlainText == s"${Mermaid.RenderFailureComment}\n$originalSource",
+          block.plainText == s"${Mermaid.RenderFailureComment}\n$originalSource",
           externalMedia.isEmpty,
           sibling.language().orElse("") == "text",
-          sibling.toPlainText ==
+          sibling.plainText ==
             s"${Mermaid.RenderFailureDetailsHeader}\n$expectedError"
         )
       }
@@ -307,11 +307,11 @@ object MermaidSpec extends ZIOSpecDefault {
         assertTrue(
           mermaidCodeBlocks.size == 1,
           block.language().orElse("") == "mermaid",
-          block.toPlainText ==
+          block.plainText ==
             s"${Mermaid.RenderFailureComment}\n$invalidMermaidSource",
           externalMedia.isEmpty,
           sibling.language().orElse("") == "text",
-          sibling.toPlainText ==
+          sibling.plainText ==
             s"${Mermaid.RenderFailureDetailsHeader}\n$expectedError",
           panel.allNodesOfType(classOf[CodeBlock]).count() == 2
         )

@@ -5,7 +5,7 @@ import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport.*
 object Dependencies {
 
   object Versions {
-    val AdfBuilderJava = "2.6.0"
+    val AdfBuilderJava = "2.9.2"
     val CommonMark = "0.31.0"
     val D2 = "v0.9.0"
     val Zio = "2.1.27"

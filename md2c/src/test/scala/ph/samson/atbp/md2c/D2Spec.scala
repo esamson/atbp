@@ -116,7 +116,7 @@ object D2Spec extends ZIOSpecDefault {
         .filter(_.language().orElse("").startsWith("d2"))
         .toScala(List)
         .head
-        .toPlainText
+        .plainText
       transformed <- D2.transform(doc, missingBinary)
     } yield {
       val d2CodeBlocks = transformed
@@ -130,7 +130,7 @@ object D2Spec extends ZIOSpecDefault {
       assertTrue(
         d2CodeBlocks.size == 1,
         block.language().orElse("") == language,
-        block.toPlainText == s"${D2.RenderFailureComment}\n$originalSource",
+        block.plainText == s"${D2.RenderFailureComment}\n$originalSource",
         externalMedia.isEmpty
       )
     }
@@ -252,7 +252,7 @@ object D2Spec extends ZIOSpecDefault {
             .filter(_.language().orElse("").startsWith("d2"))
             .toScala(List)
             .head
-            .toPlainText
+            .plainText
           renders <- D2.render(parsed.doc)
           expectedError = leftErrorMessage(renders)
           staged <- StagedTree.from(source)
@@ -270,10 +270,10 @@ object D2Spec extends ZIOSpecDefault {
           assertTrue(
             d2CodeBlocks.size == 1,
             block.language().orElse("") == "d2",
-            block.toPlainText == s"${D2.RenderFailureComment}\n$originalSource",
+            block.plainText == s"${D2.RenderFailureComment}\n$originalSource",
             externalMedia.isEmpty,
             sibling.language().orElse("") == "text",
-            sibling.toPlainText ==
+            sibling.plainText ==
               s"${D2.RenderFailureDetailsHeader}\n$expectedError"
           )
         }
@@ -287,7 +287,7 @@ object D2Spec extends ZIOSpecDefault {
           .filter(_.language().orElse("").startsWith("d2"))
           .toScala(List)
           .head
-          .toPlainText
+          .plainText
         renders <- D2.render(doc, executable = missingBinary)
         transformed <- D2.transform(doc, missingBinary)
       } yield {
@@ -304,10 +304,10 @@ object D2Spec extends ZIOSpecDefault {
           renders.values.forall(_ == Left(D2.NotOnPathMessage)),
           d2CodeBlocks.size == 1,
           block.language().orElse("") == "d2",
-          block.toPlainText == s"${D2.RenderFailureComment}\n$originalSource",
+          block.plainText == s"${D2.RenderFailureComment}\n$originalSource",
           externalMedia.isEmpty,
           sibling.language().orElse("") == "text",
-          sibling.toPlainText ==
+          sibling.plainText ==
             s"${D2.RenderFailureDetailsHeader}\n${D2.NotOnPathMessage}"
         )
       }
@@ -362,7 +362,7 @@ object D2Spec extends ZIOSpecDefault {
         val sibling = textSiblingAfter(transformed, block).get
         assertTrue(
           sibling.language().orElse("") == "text",
-          sibling.toPlainText.startsWith(D2.RenderFailureDetailsHeader)
+          sibling.plainText.startsWith(D2.RenderFailureDetailsHeader)
         )
       }
     },

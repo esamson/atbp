@@ -2,6 +2,7 @@ package ph.samson.atbp.http
 
 import io.netty.handler.timeout.ReadTimeoutException
 import io.netty.handler.timeout.WriteTimeoutException
+import zio.Fiber
 import zio.Promise
 import zio.Ref
 import zio.Scope
@@ -14,6 +15,13 @@ import zio.test.*
 import java.io.IOException
 
 object StatusCheckSpec extends ZIOSpecDefault {
+
+  // A driver or streamed body can suspend outside TestClock. Keep advancing
+  // until the request finishes so a retry registered after an advance still runs.
+  private def awaitWithClock[E, A](fiber: Fiber[E, A]): ZIO[Any, E, A] =
+    TestClock
+      .adjust(1.hour)
+      .repeatUntilZIO(_ => fiber.poll.map(_.isDefined)) *> fiber.join
 
   private def truncated =
     Body.fromStreamChunked(ZStream.fail(new IOException("connection closed")))
@@ -99,8 +107,7 @@ object StatusCheckSpec extends ZIOSpecDefault {
           .batched(Request.get(URL.root / "item"))
           .flatMap(_.body.asString)
           .fork
-        _ <- TestClock.adjust(1.hour)
-        body <- fiber.join
+        body <- awaitWithClock(fiber)
         n <- hits.get
       } yield assertTrue(body == "recovered", n == 2)
     },
@@ -164,8 +171,7 @@ object StatusCheckSpec extends ZIOSpecDefault {
         fiber <- checked(client, StatusCheck.SafeMethods)
           .batched(Request.put(URL.root / "item", Body.fromString("{}")))
           .fork
-        _ <- TestClock.adjust(1.hour)
-        res <- fiber.join
+        res <- awaitWithClock(fiber)
         n <- hits.get
       } yield assertTrue(res.status.isSuccess, n == 2)
     },
@@ -182,13 +188,14 @@ object StatusCheckSpec extends ZIOSpecDefault {
         failing = failFirstRequest(
           client,
           first,
-          ZIO.fail(new IOException("connection reset"))
+          // Let the first clock advance finish before registering the retry.
+          Live.live(ZIO.sleep(100.millis)) *>
+            ZIO.fail(new IOException("connection reset"))
         )
         fiber <- checked(failing, StatusCheck.SafeMethods)
           .batched(Request.put(URL.root / "item", Body.fromString("{}")))
           .fork
-        _ <- TestClock.adjust(1.hour)
-        res <- fiber.join
+        res <- awaitWithClock(fiber)
         n <- hits.get
       } yield assertTrue(res.status.isSuccess, n == 1)
     },
@@ -208,8 +215,7 @@ object StatusCheckSpec extends ZIOSpecDefault {
           .batched(Request.get(URL.root / "item"))
           .either
           .fork
-        _ <- TestClock.adjust(1.hour)
-        result <- fiber.join
+        result <- awaitWithClock(fiber)
       } yield assertTrue(result.exists(_.status.isSuccess))
     },
     test("retries a Netty write timeout before receiving a status") {
@@ -228,8 +234,7 @@ object StatusCheckSpec extends ZIOSpecDefault {
           .batched(Request.get(URL.root / "item"))
           .exit
           .fork
-        _ <- TestClock.adjust(1.hour)
-        result <- fiber.join
+        result <- awaitWithClock(fiber)
       } yield assertTrue(result.exists(_.status.isSuccess))
     },
     test("retries GET when the response body reports a read timeout") {
@@ -254,8 +259,7 @@ object StatusCheckSpec extends ZIOSpecDefault {
           .flatMap(_.body.asString)
           .exit
           .fork
-        _ <- TestClock.adjust(1.hour)
-        result <- fiber.join
+        result <- awaitWithClock(fiber)
         n <- hits.get
       } yield assertTrue(result.exists(_ == "recovered"), n == 2)
     },
@@ -270,8 +274,7 @@ object StatusCheckSpec extends ZIOSpecDefault {
           .batched(Request.get(URL.root / "item"))
           .either
           .fork
-        _ <- TestClock.adjust(1.hour)
-        result <- fiber.join
+        result <- awaitWithClock(fiber)
       } yield assertTrue(result == Left(err))
     },
     test("preserves an interruption reported by the HTTP driver") {
@@ -284,8 +287,7 @@ object StatusCheckSpec extends ZIOSpecDefault {
           .batched(Request.get(URL.root / "item"))
           .exit
           .fork
-        _ <- TestClock.adjust(1.hour)
-        result <- fiber.join
+        result <- awaitWithClock(fiber)
       } yield assertTrue(result.isInterrupted)
     },
     test("does not replay PUT after its successful body is interrupted") {
@@ -351,8 +353,7 @@ object StatusCheckSpec extends ZIOSpecDefault {
           .batched(Request.post(URL.root / "search", Body.fromString("{}")))
           .flatMap(_.body.asString)
           .fork
-        _ <- TestClock.adjust(1.hour)
-        body <- fiber.join
+        body <- awaitWithClock(fiber)
         n <- hits.get
       } yield assertTrue(body == "hits", n == 2)
     },
@@ -377,8 +378,7 @@ object StatusCheckSpec extends ZIOSpecDefault {
           .batched(Request.get(URL.root / "item"))
           .exit
           .fork
-        _ <- TestClock.adjust(1.hour)
-        result <- fiber.join
+        result <- awaitWithClock(fiber)
         n <- hits.get
       } yield assertTrue(n == 11, result.isFailure)
     },
@@ -396,10 +396,9 @@ object StatusCheckSpec extends ZIOSpecDefault {
           .flatMap(_.body.asString)
           .either
           .fork
-        _ <- TestClock.adjust(1.hour)
-        result <- fiber.join
+        result <- awaitWithClock(fiber)
         n <- hits.get
       } yield assertTrue(n == 11, result.isLeft)
     }
-  ).provideSomeLayer(TestClient.layer)
+  ).provideSomeLayer(TestClient.layer) @@ TestAspect.timeout(20.seconds)
 }

@@ -27,56 +27,50 @@ object PlateParallelismSpec extends ZIOSpecDefault {
     }
 
   override def spec = suite("Plate parallelism")(
-    test("default check is serial") {
+    test("default check uses parallelism 10") {
       withSource { path =>
         parse(List("check", "--status", "cooking", path)).map { plate =>
-          assertTrue(!plate.parallel)
+          assertTrue(plate.parallel == Plate.DefaultParallelism)
         }
       }
     },
-    test("opt-in check is parallel") {
+    test("custom parallelism before check subcommand") {
       withSource { path =>
         parse(
-          List("--parallel", "check", "--status", "stale", path)
+          List("--parallel", "100", "check", "--status", "stale", path)
         ).map { plate =>
-          assertTrue(plate.parallel)
+          assertTrue(plate.parallel == 100)
         }
       }
     },
-    test("flag after the check subcommand does not parse") {
+    test("option after the check subcommand does not parse") {
       withSource { path =>
-        parse(List("check", "--parallel", "--status", "done", path)).exit
+        parse(List("check", "--parallel", "5", "--status", "done", path)).exit
           .map { exit =>
             assertTrue(exit.isFailure)
           }
       }
     },
-    test("default label is serial") {
+    test("default label uses parallelism 10") {
       withSource { path =>
         parse(List("label", "--value", "x", path)).map { plate =>
-          assertTrue(!plate.parallel)
+          assertTrue(plate.parallel == Plate.DefaultParallelism)
         }
       }
     },
-    test("opt-in radar is parallel") {
+    test("custom parallelism before radar") {
       withSource { path =>
-        parse(List("--parallel", "radar", path)).map { plate =>
-          assertTrue(plate.parallel)
+        parse(List("--parallel", "3", "radar", path)).map { plate =>
+          assertTrue(plate.parallel == 3)
         }
       }
     },
-    test("opt-in sort is parallel") {
+    test("custom parallelism before sort") {
       withSource { path =>
-        parse(List("--parallel", "sort", path)).map { plate =>
-          assertTrue(plate.parallel)
+        parse(List("--parallel", "1", "sort", path)).map { plate =>
+          assertTrue(plate.parallel == 1)
         }
       }
-    },
-    test("jiraParallelism maps the flag to 1 or 100") {
-      assertTrue(
-        Plate.jiraParallelism(false) == 1,
-        Plate.jiraParallelism(true) == 100
-      )
     }
   )
 }

@@ -24,7 +24,7 @@ object Dependencies {
     val adfBuilderJavaMarkdown =
       "com.atlassian.adf" % s"adf-builder-java-markdown" % AdfBuilderJava
 
-    val automaton = "dk.brics" % "automaton" % "1.12-4"
+    val automaton = "dk.brics" % "automaton" % "1.13-1"
 
     val basedir = "ph.samson.xdg" %% "basedir" % "1.0"
 

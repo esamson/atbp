@@ -19,9 +19,9 @@ import zio.cli.HelpDoc.p
 import zio.cli.Options
 import zio.http.ZClient
 
-case class Plate(action: Action) extends ToolCommand {
+case class Plate(action: Action, parallel: Boolean) extends ToolCommand {
   override def run(conf: Conf): ZIO[Any, Throwable, Unit] =
-    action.run(conf).withParallelism(100)
+    action.run(conf).withParallelism(Plate.jiraParallelism(parallel))
 }
 
 object Plate {
@@ -207,14 +207,31 @@ object Plate {
       .withHelp("Sort Jira tickets according to their order in the Plate")
   }
 
+  val SerialParallelism: Int = 1
+  val FullParallelism: Int = 100
+
+  def jiraParallelism(parallel: Boolean): Int =
+    if (parallel) FullParallelism else SerialParallelism
+
+  private val parallel = Options
+    .boolean("parallel")
+    .withDefault(false) ??
+    "Run Jira calls at full parallelism (up to 100). Default is one at a time."
+
   val command: Command[Plate] =
-    Command("plate")
+    Command("plate", parallel)
       .withHelp(
         blocks(
           h2("Plate Tools"),
-          p("Tools for managing The Plate.")
+          p("Tools for managing The Plate."),
+          p(
+            "Jira calls run one at a time. Pass --parallel before the " +
+              "subcommand to allow up to 100 at once."
+          )
         )
       )
       .subcommands(Label.command, Check.command, Radar.command, Sort.command)
-      .map(Plate.apply)
+      .map { case (parallel, action) =>
+        Plate(action, parallel)
+      }
 }

@@ -65,6 +65,15 @@ trait Client {
 
   def getDraftPages(spaceKey: String): Task[List[Content]]
 
+  /** Pages in `spaceKey` whose title is exactly `title`. `status` is `current`
+    * or `draft`.
+    */
+  def findPagesByTitle(
+      spaceKey: String,
+      title: String,
+      status: String
+  ): Task[List[Content]]
+
   def createOrUpdateAttachment(
       page: PageSingle,
       file: File
@@ -193,14 +202,29 @@ object Client {
       })
 
     override def getDraftPages(spaceKey: String): Task[List[Content]] =
-      ZIO.scoped(ZIO.logSpan("getDraftPages") {
+      findPages(spaceKey, status = "draft", title = None)
+
+    override def findPagesByTitle(
+        spaceKey: String,
+        title: String,
+        status: String
+    ): Task[List[Content]] =
+      findPages(spaceKey, status, Some(title))
+
+    private def findPages(
+        spaceKey: String,
+        status: String,
+        title: Option[String]
+    ): Task[List[Content]] =
+      ZIO.scoped(ZIO.logSpan("findPages") {
         for {
-          _ <- ZIO.logDebug(s"getDraftPages $spaceKey")
-          res <- client
+          _ <- ZIO.logDebug(s"findPages $spaceKey status=$status title=$title")
+          titled = title.fold(client)(client.addQueryParam("title", _))
+          res <- titled
             .addPath(V1Base)
             .addQueryParam("type", "page")
             .addQueryParam("spaceKey", spaceKey)
-            .addQueryParam("status", "draft")
+            .addQueryParam("status", status)
             .get("content")
           result <- res.body.to[MultiEntityResult[Content]]
           _ <- ZIO.logDebug(s"result: $result")

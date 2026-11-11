@@ -15,6 +15,7 @@ import ph.samson.atbp.confluence.model.Space
 import ph.samson.atbp.confluence.model.UpdatePageRequest
 import ph.samson.atbp.md2c.SourceTree.Node
 import ph.samson.atbp.md2c.StagedTree.Page
+import zio.Ref
 import zio.Task
 import zio.ZIO
 import zio.ZLayer
@@ -48,17 +49,41 @@ object Publisher {
             finalConf <- conf.finalConf(source.conf)
             given Space <- client.getSpace(finalConf.spaceKey)
             rootPage <- client.getPage(finalConf.pageId).map(withoutBody)
+            baseDir =
+              if (source.root.source.isDirectory) source.root.source
+              else source.root.source.parent
+            sourcePages <- collectSourcePages(source.root, baseDir)
+            assignedTitles = PageTitles.assign(sourcePages)
+            _ <- logSuffixedTitles(sourcePages, assignedTitles)
             // Reserve every ID before resolving links, including forward references.
-            prepared <- preparePage(source.root, rootPage)
+            // A title that already exists elsewhere in the space is reused so a
+            // later sibling does not keep the title while a new draft is published.
+            reserved <- Ref.make(Set(rootPage.id))
+            prepared <- preparePage(
+              source.root,
+              rootPage,
+              assignedTitles,
+              reserved
+            )
             pageUrls = prepared.allPages.map { page =>
               page.node.source -> client
                 .resolveUrl(page.current._links.webui)
                 .encode
             }.toMap
-            baseDir =
-              if (source.root.source.isDirectory) source.root.source
-              else source.root.source.parent
-            published <- publishTree(prepared, pageUrls, baseDir)
+            latest <- Ref.make(
+              prepared.allPages
+                .map(page => page.current.id -> page.current)
+                .toMap
+            )
+            reservedIds <- reserved.get
+            published <- publishTree(
+              prepared,
+              None,
+              pageUrls,
+              baseDir,
+              latest,
+              reservedIds
+            )
           } yield published
         }
         .withParallelism(1)
@@ -68,52 +93,171 @@ object Publisher {
     private def withoutBody(page: PageSingle): PageSingle =
       page.copy(body = PageSingle.BodySingle(None, None, None))
 
-    private def preparePage(node: Node, current: PageSingle)(using
-        Space
-    ): Task[PreparedPage] =
+    private def preparePage(
+        node: Node,
+        current: PageSingle,
+        assignedTitles: Map[File, String],
+        reserved: Ref[Set[String]]
+    )(using Space): Task[PreparedPage] =
       for {
         currentChildren <- client.getChildPages(current.id)
         children <- ZIO.foreach(Page.children(node)) { child =>
+          for {
+            confluenceTitle <- assignedConfluenceTitle(child, assignedTitles)
+            page <- currentChildren.find(_.title == confluenceTitle) match {
+              case Some(existing) =>
+                reserved.update(_ + existing.id) *>
+                  client.getPage(existing.id).map(withoutBody)
+              case None =>
+                adoptOrCreate(confluenceTitle, current.id, reserved)
+            }
+            prepared <- preparePage(child, page, assignedTitles, reserved)
+          } yield prepared
+        }
+      } yield PreparedPage(node, current, currentChildren, children)
+
+    /** Direct-child match missed. Reuse a page in the space with this exact
+      * title, or create a draft under `parentId`.
+      */
+    private def adoptOrCreate(
+        title: String,
+        parentId: String,
+        reserved: Ref[Set[String]]
+    )(using space: Space): Task[PageSingle] =
+      for {
+        taken <- reserved.get
+        existing <- findReusable(title, taken)
+        page <- existing match {
+          case Some(page) =>
+            ZIO.logInfo(
+              s"""reusing Confluence page ${page.id} "$title""""
+            ) *> reserved.update(_ + page.id).as(page)
+          case None =>
+            createDraft(title, parentId)
+              .map(withoutBody)
+              .tap(page => reserved.update(_ + page.id))
+        }
+      } yield page
+
+    private def findReusable(title: String, taken: Set[String])(using
+        space: Space
+    ): Task[Option[PageSingle]] =
+      for {
+        current <- client.findPagesByTitle(space.key, title, "current")
+        found <- current.find(page =>
+          page.title == title && !taken.contains(page.id)
+        ) match {
+          case Some(page) => ZIO.succeed(Some(page))
+          case None       =>
+            client
+              .findPagesByTitle(space.key, title, "draft")
+              .map(
+                _.find(page => page.title == title && !taken.contains(page.id))
+              )
+        }
+        page <- ZIO.foreach(found)(page =>
+          client.getPage(page.id).map(withoutBody)
+        )
+      } yield page
+
+    private def relativeSourcePath(baseDir: File, source: File): String =
+      if (baseDir == source) baseDir.name
+      else
+        baseDir.path.relativize(source.path).toString.replace('\\', '/')
+
+    private def collectSourcePages(
+        node: Node,
+        baseDir: File
+    ): Task[List[PageTitles.SourcePage]] =
+      ZIO
+        .foreach(Page.children(node)) { child =>
           for {
             frontMatter <- child match {
               case _: Node.Directory => ZIO.succeed(Parser.FrontMatter.Empty)
               case _                 => Parser.readFrontMatter(child.source)
             }
-            title = frontMatter.title.getOrElse(child.name)
-            page <- currentChildren.find(_.title == title) match {
-              case Some(existing) =>
-                client.getPage(existing.id).map(withoutBody)
-              case None => createDraft(title, current.id).map(withoutBody)
-            }
-            prepared <- preparePage(child, page)
-          } yield prepared
+            logicalTitle = frontMatter.title.getOrElse(child.name)
+            page = PageTitles.SourcePage(
+              child.source,
+              relativeSourcePath(baseDir, child.source),
+              logicalTitle
+            )
+            rest <- collectSourcePages(child, baseDir)
+          } yield page :: rest
         }
-      } yield PreparedPage(node, current, currentChildren, children)
+        .map(_.flatten)
+
+    private def logSuffixedTitles(
+        sourcePages: List[PageTitles.SourcePage],
+        assignedTitles: Map[File, String]
+    ): Task[Unit] =
+      ZIO.foreachDiscard(sourcePages) { page =>
+        val confluenceTitle = assignedTitles(page.source)
+        val suffixCount = confluenceTitle.length - page.logicalTitle.length
+        if (suffixCount > 0)
+          ZIO.logInfo(
+            s"""duplicate Confluence title: ${page.relativePath} "${page.logicalTitle}" + $suffixCount"""
+          )
+        else ZIO.unit
+      }
+
+    private def assignedConfluenceTitle(
+        child: Node,
+        assignedTitles: Map[File, String]
+    ): Task[String] =
+      ZIO
+        .fromOption(assignedTitles.get(child.source))
+        .orElseFail(
+          new IllegalStateException(
+            s"No assigned Confluence title for ${child.source.pathAsString}"
+          )
+        )
 
     private def publishTree(
         prepared: PreparedPage,
+        parentId: Option[String],
         pageUrls: Map[File, String],
-        baseDir: File
+        baseDir: File,
+        latest: Ref[Map[String, PageSingle]],
+        reservedIds: Set[String]
     ): Task[PageSingle] = for {
       // Finish children before rendering their parent, and discard responses
       // immediately. Neither wide nor deep trees retain completed page bodies.
       _ <- ZIO.foreachDiscard(prepared.children)(
-        publishTree(_, pageUrls, baseDir)
+        publishTree(
+          _,
+          Some(prepared.current.id),
+          pageUrls,
+          baseDir,
+          latest,
+          reservedIds
+        )
       )
       page <- Page.convertPage(prepared.node, pageUrls)
-      published <- publishPage(page, prepared, baseDir)
+      published <- publishPage(
+        page,
+        prepared,
+        baseDir,
+        parentId,
+        latest,
+        reservedIds
+      )
     } yield published
 
     private def publishPage(
         page: Page,
         prepared: PreparedPage,
-        baseDir: File
+        baseDir: File,
+        parentId: Option[String],
+        latest: Ref[Map[String, PageSingle]],
+        reservedIds: Set[String]
     ): Task[PageSingle] = {
-      val current = prepared.current
       val sourceName =
         if (baseDir == page.source) baseDir.name
         else baseDir.relativize(page.source)
       val publish = for {
+        _ <- ensureParentCurrent(prepared.current.id, parentId, latest)
+        current <- latest.get.map(_(prepared.current.id))
         currentAttachments <- client.getPageAttachments(current.id)
         attachmentsAreUpToDate = {
           val hashes = currentAttachments.map(_.comment)
@@ -122,11 +266,19 @@ object Publisher {
           }
         }
 
+        parentChanged = parentId.exists(current.parentId != Some(_))
         needsUpdate =
           current.version.message != page.contentHash || !attachmentsAreUpToDate
         published <- {
-          if (current.isDraft || needsUpdate)
-            updatePage(current, page.trimmedTitle, currentAttachments)
+          if (current.isDraft || needsUpdate || parentChanged)
+            updatePage(
+              current,
+              page.trimmedTitle,
+              currentAttachments,
+              parentId
+            ).tap(updated =>
+              latest.update(_.updated(updated.id, withoutBody(updated)))
+            )
           else
             ZIO.logInfo(
               s"up to date: $sourceName -> ${client.resolveUrl(current._links.tinyui)}"
@@ -148,10 +300,8 @@ object Publisher {
             ZIO.unit
           }
 
-        extraChildren = {
-          val publishedIds = published.id :: prepared.children.map(_.current.id)
-          prepared.currentChildren.map(_.id).filterNot(publishedIds.contains)
-        }
+        extraChildren =
+          prepared.currentChildren.map(_.id).filterNot(reservedIds.contains)
         _ <- deletePages(extraChildren)
       } yield published
 
@@ -199,10 +349,41 @@ object Publisher {
       externalFiles.toMap
     }
 
+    /** A current page cannot be moved under a draft. Publish the new parent
+      * first, and keep its version so the later body update does not go stale.
+      */
+    private def ensureParentCurrent(
+        pageId: String,
+        parentId: Option[String],
+        latest: Ref[Map[String, PageSingle]]
+    ): Task[Unit] =
+      for {
+        current <- latest.get.map(_(pageId))
+        moving = parentId.exists(current.parentId != Some(_))
+        _ <- ZIO.foreachDiscard(parentId.filter(_ => moving)) { pid =>
+          for {
+            parent <- latest.get.map(_(pid))
+            _ <- ZIO.when(parent.isDraft) {
+              client
+                .updatePage(
+                  UpdatePageRequest
+                    .from(parent, parent.version.message)
+                    .copy(body = PageBodyWrite(Doc.doc()))
+                )
+                .map(withoutBody)
+                .tap(published =>
+                  latest.update(_.updated(published.id, published))
+                )
+            }
+          } yield ()
+        }
+      } yield ()
+
     def updatePage(
         current: PageSingle,
         update: Page,
-        currentAttachments: List[Attachment]
+        currentAttachments: List[Attachment],
+        parentId: Option[String]
     ): Task[PageSingle] = for {
       // map from external url -> (file ID, attachment ID)
       externalFileId: Map[String, (String, String)] <- {
@@ -247,7 +428,10 @@ object Publisher {
       update <- client.updatePage(
         UpdatePageRequest
           .from(current, update.contentHash)
-          .copy(body = PageBodyWrite(attached))
+          .copy(
+            body = PageBodyWrite(attached),
+            parentId = parentId.orElse(current.parentId)
+          )
       )
 
       extraAttachments = {

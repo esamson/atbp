@@ -62,8 +62,9 @@ object PublisherLinksSpec extends ZIOSpecDefault {
         leftTopic = pages.values
           .find(p => p.title == "Topic" && p.parentId.contains(left.id))
           .get
+        zws = PageTitles.ZeroWidthSpace
         rightTopic = pages.values
-          .find(p => p.title == "Topic" && p.parentId.contains(right.id))
+          .find(p => p.title == s"Topic$zws" && p.parentId.contains(right.id))
           .get
       } yield assertTrue(
         links(pages("root")) == Map(
@@ -74,6 +75,114 @@ object PublisherLinksSpec extends ZIOSpecDefault {
           "local" -> pageUrl(leftTopic),
           "other" -> pageUrl(rightTopic)
         )
+      )
+    },
+    test("republishes duplicate titles without changing page ids") {
+      val zws = PageTitles.ZeroWidthSpace
+      for {
+        source <- sourceTree(
+          "Left/index.md" -> "Left folder",
+          "Left/Topic.md" -> "Left topic",
+          "Right/Right.md" -> "Right folder note",
+          "Right/Topic.md" -> "Right topic"
+        )
+        client <- FakeClient.make()
+        _ <- publish(source, client)
+        first <- client.pages.get
+        _ <- publish(source, client)
+        second <- client.pages.get
+        left = first.values.find(_.title == "Left").get
+        right = first.values.find(_.title == "Right").get
+        leftTopic = first.values
+          .find(p => p.title == "Topic" && p.parentId.contains(left.id))
+          .get
+        rightTopic = first.values
+          .find(p => p.title == s"Topic$zws" && p.parentId.contains(right.id))
+          .get
+      } yield assertTrue(
+        first("root").title == "Existing root",
+        second == first,
+        second(rightTopic.id).title == s"Topic$zws",
+        second(leftTopic.id).title == "Topic"
+      )
+    },
+    test("reuses a title that already exists under a later sibling") {
+      val zws = PageTitles.ZeroWidthSpace
+      for {
+        source <- sourceTree(
+          "Core Accounting and Transactions/Onboarding/Ledger Onboarding.md" ->
+            "Ledger body",
+          "Fincore Back-Office Tools/Onboarding/Account Assets Onboarding.md" ->
+            "Assets body"
+        )
+        client <- FakeClient.make()
+        empty <- Parser.parseMarkdown("")
+        _ <- client.pages.update { pages =>
+          val fincore = page(
+            "fincore",
+            "Fincore Back-Office Tools",
+            Some("root"),
+            "current",
+            PageBodyWrite(empty)
+          )
+          val onboarding = page(
+            "onboarding",
+            "Onboarding",
+            Some("fincore"),
+            "current",
+            PageBodyWrite(empty)
+          )
+          val ledger = page(
+            "ledger",
+            "Ledger Onboarding",
+            Some("onboarding"),
+            "current",
+            PageBodyWrite(empty)
+          )
+          pages ++ Map(
+            fincore.id -> fincore,
+            onboarding.id -> onboarding,
+            ledger.id -> ledger
+          )
+        }
+        _ <- publish(source, client)
+        pages <- client.pages.get
+        core = pages.values
+          .find(_.title == "Core Accounting and Transactions")
+          .get
+        onboarding = pages("onboarding")
+        ledger = pages("ledger")
+        suffixed = pages.values.find(_.title == s"Onboarding$zws").get
+      } yield assertTrue(
+        pages.values.map(_.title).count(_ == "Ledger Onboarding") == 1,
+        pages.values.map(_.title).count(_ == "Onboarding") == 1,
+        onboarding.parentId.contains(core.id),
+        ledger.parentId.contains(onboarding.id),
+        suffixed.parentId.contains("fincore")
+      )
+    },
+    test("suffixes folder notes after lexicographically earlier siblings") {
+      val zws = PageTitles.ZeroWidthSpace
+      for {
+        source <- sourceTree(
+          "README.md" -> "Root body",
+          "Topic.md" -> "Bare topic",
+          "nested/README.md" ->
+            """---
+              |title: Topic
+              |---
+              |Nested folder note
+              |""".stripMargin
+        )
+        client <- FakeClient.make()
+        _ <- publish(source, client)
+        pages <- client.pages.get
+        bare = pages.values.find(_.title == "Topic").get
+        suffixed = pages.values.find(_.title == s"Topic$zws").get
+      } yield assertTrue(
+        bare.parentId.contains(pages("root").id),
+        suffixed.parentId.contains(pages("root").id),
+        bare.id != suffixed.id
       )
     },
     test(
@@ -325,24 +434,59 @@ object PublisherLinksSpec extends ZIOSpecDefault {
     } yield created
 
     override def updatePage(request: UpdatePageRequest): Task[PageSingle] =
-      onUpdate(request) *> pages.modify { pages =>
-        val current = pages(request.id)
-        val updated = current.copy(
-          status = request.status,
-          version = current.version.copy(
-            number = request.version.number,
-            message = request.version.message.getOrElse("")
-          ),
-          body = PageSingle.BodySingle(
-            None,
-            Some(
-              PageSingle
-                .BodyType(request.body.representation, request.body.value)
-            ),
-            None
+      pages.get.flatMap { existing =>
+        val current = existing(request.id)
+        val expectedVersion =
+          if (current.status == "draft") 1 else current.version.number + 1
+        val moving = request.parentId.exists(current.parentId != Some(_))
+        val targetIsDraft = request.parentId
+          .flatMap(existing.get)
+          .exists(_.status == "draft")
+        val titleTaken = request.status == "current" && existing.values.exists {
+          page =>
+            page.id != request.id && page.status == "current" &&
+            page.title == request.title
+        }
+        if (request.version.number != expectedVersion)
+          ZIO.fail(
+            new IllegalStateException(
+              s"version ${request.version.number} for ${request.id}, expected $expectedVersion"
+            )
           )
-        )
-        updated -> pages.updated(updated.id, stored(updated))
+        else if (moving && targetIsDraft)
+          ZIO.fail(
+            new IllegalStateException(
+              s"cannot move ${request.id} under draft ${request.parentId}"
+            )
+          )
+        else if (titleTaken)
+          ZIO.fail(
+            new IllegalStateException(
+              s"A page with this title already exists: ${request.title}"
+            )
+          )
+        else
+          onUpdate(request) *> pages.modify { pages =>
+            val current = pages(request.id)
+            val updated = current.copy(
+              status = request.status,
+              title = request.title,
+              parentId = request.parentId.orElse(current.parentId),
+              version = current.version.copy(
+                number = request.version.number,
+                message = request.version.message.getOrElse("")
+              ),
+              body = PageSingle.BodySingle(
+                None,
+                Some(
+                  PageSingle
+                    .BodyType(request.body.representation, request.body.value)
+                ),
+                None
+              )
+            )
+            updated -> pages.updated(updated.id, stored(updated))
+          }
       }
 
     override def deletePage(id: String): Task[Boolean] =
@@ -355,6 +499,18 @@ object PublisherLinksSpec extends ZIOSpecDefault {
       ZIO.dieMessage("Unexpected deleteDraftPage")
     override def getDraftPages(spaceKey: String): Task[List[Content]] =
       ZIO.dieMessage("Unexpected getDraftPages")
+
+    override def findPagesByTitle(
+        spaceKey: String,
+        title: String,
+        status: String
+    ): Task[List[Content]] =
+      pages.get.map { existing =>
+        existing.values.toList.collect {
+          case page if page.title == title && page.status == status =>
+            Content(page.id, "page", page.status, page.title)
+        }
+      }
     override def createOrUpdateAttachment(
         page: PageSingle,
         file: File

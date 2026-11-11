@@ -29,6 +29,23 @@ Resolved destinations are included in the content hash, so existing pages receiv
 converted links on the next publish, and links update if a destination page is
 recreated. Identical subsequent publishes are still skipped.
 
+## Duplicate page titles
+
+Confluence requires unique page titles in a space. When two or more pages in the
+published tree share the same logical title (YAML `title` or node name), md2c
+assigns a distinct Confluence title for the **whole tree** before it creates or
+matches any draft. A title that appears only once stays as written. In each
+duplicate set, source paths are sorted; the first keeps the bare logical title
+and each later path gets one more invisible U+200B (ZERO WIDTH SPACE) appended.
+Child lookup uses that assigned string. If no child has it, an existing page
+in the space with that exact title is reused and moved under the source parent;
+otherwise a draft is created. A reused page keeps its id. Link resolution, link
+text, content hashes, and leading-H1 trimming stay on the logical title—do not
+put U+200B into Markdown sources. If duplicate-set membership or path order
+changes so a page’s suffix count changes, exact title match misses the old
+page: md2c creates a new page with the new title and deletes the previous
+unmatched child, the same outcome as a logical title change today.
+
 ## Memory use on CI runners
 
 Publishing reserves page IDs using titles and empty drafts, then converts and

@@ -87,7 +87,8 @@ distinguishing "D2 verified" from "D2 not verified" on a given run.
   and attachments not in the source tree are deleted
 - New pages are created as `draft`; existing pages matched by title
 - Images: markdown media → `ExternalMedia` → attach → rewrite to `fileMedia`;
-  attachment `comment` is `file.sha1`
+  attachment `comment` is `file.sha1`. Percent-encoded relative image URLs are
+  decoded before the file is resolved; a literal `%20` path is not the filename
 - `plantuml*` and `mermaid*` fences (`mermaid`, `mermaid.png`,
   `mermaid.svg`) render in `PlantUml.scala` / `Mermaid.scala`; tests in
   `MermaidSpec`

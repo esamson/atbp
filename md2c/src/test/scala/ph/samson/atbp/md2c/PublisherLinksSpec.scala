@@ -287,6 +287,23 @@ object PublisherLinksSpec extends ZIOSpecDefault {
     },
     test("publishes a large document set") {
       largeDocumentSet(8).map(result => assertTrue(result))
+    },
+    test("attaches images referenced with percent-encoded paths") {
+      for {
+        source <- sourceTree(
+          "Note.md" -> "![encoded](Pitaka%20Ledger.png)\n"
+        )
+        dir = source.root.source
+        _ <- ZIO.attempt {
+          (dir / "Pitaka Ledger.png").writeText("encoded")
+        }
+        attached <- Ref.make(List.empty[File])
+        client <- FakeClient.make(attached)
+        _ <- publish(source, client)
+        files <- attached.get
+      } yield assertTrue(
+        files.map(_.name) == List("Pitaka Ledger.png")
+      )
     }
   )
 
@@ -381,7 +398,8 @@ object PublisherLinksSpec extends ZIOSpecDefault {
       nextId: Ref[Int],
       val draftBodySizes: Ref[List[Int]],
       onUpdate: UpdatePageRequest => Task[Unit],
-      retainBodies: Boolean
+      retainBodies: Boolean,
+      attached: Ref[List[File]]
   ) extends Client {
     private def stored(page: PageSingle): PageSingle =
       if (retainBodies) page
@@ -515,7 +533,7 @@ object PublisherLinksSpec extends ZIOSpecDefault {
         page: PageSingle,
         file: File
     ): Task[CreateAttachmentResponse] =
-      ZIO.dieMessage("Unexpected createOrUpdateAttachment")
+      attached.update(file :: _).as(attachmentResponse(file))
     override def deleteAttachment(id: String): Task[Boolean] =
       ZIO.dieMessage("Unexpected deleteAttachment")
   }
@@ -523,9 +541,19 @@ object PublisherLinksSpec extends ZIOSpecDefault {
   private object FakeClient {
     def make(): Task[FakeClient] = make(_ => ZIO.unit, retainBodies = true)
 
+    def make(attached: Ref[List[File]]): Task[FakeClient] =
+      make(_ => ZIO.unit, retainBodies = true, attached)
+
     def make(
         onUpdate: UpdatePageRequest => Task[Unit],
         retainBodies: Boolean
+    ): Task[FakeClient] =
+      Ref.make(List.empty[File]).flatMap(make(onUpdate, retainBodies, _))
+
+    def make(
+        onUpdate: UpdatePageRequest => Task[Unit],
+        retainBodies: Boolean,
+        attached: Ref[List[File]]
     ) = for {
       doc <- Parser.parseMarkdown("Existing root")
       pages <- Ref.make(
@@ -546,7 +574,62 @@ object PublisherLinksSpec extends ZIOSpecDefault {
       nextId,
       draftBodySizes,
       onUpdate,
-      retainBodies
+      retainBodies,
+      attached
+    )
+  }
+
+  private def attachmentResponse(file: File): CreateAttachmentResponse = {
+    val user = CreateAttachmentResponse.User(
+      `type` = "known",
+      accountId = "author",
+      accountType = "atlassian",
+      email = "author@example.com",
+      publicName = "Author",
+      timeZone = "UTC",
+      displayName = "Author",
+      isExternalCollaborator = false,
+      isGuest = false
+    )
+    CreateAttachmentResponse(
+      results = List(
+        CreateAttachmentResponse.Content(
+          id = s"att-${file.name}",
+          `type` = "attachment",
+          status = "current",
+          title = file.name,
+          version = CreateAttachmentResponse.Version(
+            by = user,
+            when = createdAt,
+            friendlyWhen = "just now",
+            message = "",
+            number = 1,
+            minorEdit = false,
+            contentTypeModified = false
+          ),
+          container = CreateAttachmentResponse.Container(
+            id = "page",
+            `type` = "page",
+            status = "current",
+            title = "Page"
+          ),
+          metadata = CreateAttachmentResponse.Metadata(
+            comment = "",
+            mediaType = "image/png"
+          ),
+          extensions = CreateAttachmentResponse.Extensions(
+            mediaType = "image/png",
+            fileSize = 1,
+            comment = "",
+            mediaTypeDescription = None,
+            fileId = s"file-${file.name}",
+            collectionName = "contentId-page"
+          )
+        )
+      ),
+      start = None,
+      limit = None,
+      size = 1
     )
   }
 }

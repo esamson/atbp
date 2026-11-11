@@ -20,9 +20,12 @@ import zio.Task
 import zio.ZIO
 import zio.ZLayer
 
+import java.net.URI
+import java.nio.file.Path
 import java.nio.file.Paths
 import scala.jdk.FunctionConverters.*
 import scala.jdk.StreamConverters.*
+import scala.util.Try
 
 trait Publisher {
   def publish(source: SourceTree): Task[PageSingle]
@@ -338,7 +341,7 @@ object Publisher {
       val externalFiles = for {
         url <- externalUrls
       } yield {
-        val path = Paths.get(url)
+        val path = resolveMediaPath(url)
         if (path.isAbsolute) {
           url -> File(path)
         } else {
@@ -458,6 +461,24 @@ object Publisher {
       dels <- ZIO.foreachPar(ids)(client.deleteAttachment)
     } yield dels.forall(_ == true)
   }
+
+  /** Markdown image destinations keep percent-encoding. Decode relative paths
+    * before resolving them against the page source.
+    */
+  private[md2c] def resolveMediaPath(url: String): Path =
+    Try(new URI(url)).toOption match {
+      case Some(uri) =>
+        Option(uri.getScheme) match {
+          case Some("file") => Paths.get(uri)
+          case None         =>
+            Option(uri.getPath).filter(_.nonEmpty) match {
+              case Some(decoded) => Paths.get(decoded)
+              case None          => Paths.get(url)
+            }
+          case Some(_) => Paths.get(url)
+        }
+      case None => Paths.get(url)
+    }
 
   def layer(conf: Conf) = ZLayer {
     for {

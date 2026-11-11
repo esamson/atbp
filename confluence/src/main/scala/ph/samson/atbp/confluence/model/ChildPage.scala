@@ -10,7 +10,7 @@ case class ChildPage(
     status: String,
     title: String,
     spaceId: String,
-    childPosition: Int
+    childPosition: Option[Int] = None
 )
 
 object ChildPage {

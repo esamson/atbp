@@ -431,7 +431,7 @@ object PublisherLinksSpec extends ZIOSpecDefault {
     override def getChildPages(id: String): Task[List[ChildPage]] =
       pages.get.map(
         _.values.filter(_.parentId.contains(id)).toList.map { page =>
-          ChildPage(page.id, page.status, page.title, page.spaceId, 0)
+          ChildPage(page.id, page.status, page.title, page.spaceId, Some(0))
         }
       )
 

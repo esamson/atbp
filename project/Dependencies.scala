@@ -9,7 +9,7 @@ object Dependencies {
     val CommonMark = "0.32.0"
     val D2 = "v0.9.0"
     val Zio = "2.1.27"
-    val ZioConfig = "4.1.0"
+    val ZioConfig = "4.1.2"
     val ZioHttp = "3.11.4"
     val ZioLogging = "2.5.3"
   }

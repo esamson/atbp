@@ -3,11 +3,15 @@ package ph.samson.atbp.md2c
 import better.files.File
 import com.atlassian.adf.jackson2.AdfJackson2
 import com.atlassian.adf.model.mark.Link
+import com.atlassian.adf.model.node.Extension
+import com.atlassian.adf.model.node.Paragraph
+import com.atlassian.adf.model.node.Rule
 import com.atlassian.adf.model.node.Text
 import ph.samson.atbp.confluence.Client
 import ph.samson.atbp.confluence.model.*
 import zio.Ref
 import zio.Task
+import zio.Unsafe
 import zio.ZIO
 import zio.ZLayer
 import zio.http.URL
@@ -304,8 +308,402 @@ object PublisherLinksSpec extends ZIOSpecDefault {
       } yield assertTrue(
         files.map(_.name) == List("Pitaka Ledger.png")
       )
+    },
+    test(
+      "publishes through degraded metadata, skips repeats, and updates once on recovery"
+    ) {
+      for {
+        source <- sourceTree("Note.md" -> "Hello")
+        dir = source.root.source
+        runner = new GitFakes.ScriptedRunner(
+          dir,
+          Map(
+            "remote" -> new GitMetadata.TimedOut,
+            "ls-files" -> new GitMetadata.TimedOut,
+            "log" -> new GitMetadata.TimedOut
+          )
+        )
+        client <- FakeClient.make()
+        publishWithGit = GitMetadata.withRunner(runner)(publish(source, client))
+        _ <- publishWithGit
+        degraded <- client.pages.get
+        note = degraded.values.find(_.title == "Note").get
+        _ <- publishWithGit
+        repeated <- client.pages.get
+        _ = runner.fail(Map.empty)
+        _ <- publishWithGit
+        recovered <- client.pages.get
+        _ <- publishWithGit
+        stable <- client.pages.get
+        degradedText = body(degraded(note.id))
+        recoveredText = body(recovered(note.id))
+      } yield assertTrue(
+        degraded.size == 2,
+        degraded.values.forall(_.status == "current"),
+        degradedText.contains("generated from markdown source"),
+        degradedText.contains(
+          "Clone command unavailable: remote lookup failed."
+        ),
+        degradedText.contains("Source change status unavailable."),
+        degradedText.contains("Source history unavailable."),
+        body(degraded("root")).contains("generated directory listing"),
+        repeated == degraded,
+        recovered(note.id).version.number == degraded(
+          note.id
+        ).version.number + 1,
+        recovered("root").version.number == degraded("root").version.number + 1,
+        recoveredText.contains(GitFakes.RemoteUrl),
+        recoveredText.contains("Clarify setup"),
+        !recoveredText.contains("unavailable"),
+        stable == recovered
+      )
+    },
+    test("metadata failures stay sanitized while other failures propagate") {
+      val secret = "https://user:s3cret-token@example.com/team/docs.git"
+      for {
+        source <- sourceTree("Note.md" -> "Hello")
+        runner = new GitFakes.ScriptedRunner(
+          source.root.source,
+          Map(
+            "remote" -> new RuntimeException(s"fatal: $secret"),
+            "log" -> new java.io.IOException(secret)
+          )
+        )
+        ok <- FakeClient.make()
+        _ <- GitMetadata.withRunner(runner)(publish(source, ok))
+        pages <- ok.pages.get
+        logs <- ZTestLogger.logOutput
+        rendered = logs.map(entry => s"${entry.message()} ${entry.cause}")
+        broken <- FakeClient.make(
+          _ => ZIO.fail(new RuntimeException("confluence boom")),
+          retainBodies = true
+        )
+        exit <- GitMetadata.withRunner(runner)(publish(source, broken)).exit
+      } yield assertTrue(
+        logs.nonEmpty,
+        rendered.forall(!_.contains("s3cret")),
+        pages.values.forall(page => !body(page).contains("s3cret")),
+        pages.values.forall(!_.version.message.contains("s3cret")),
+        exit.causeOption.exists(_.prettyPrint.contains("confluence boom"))
+      )
+    },
+    footerAwarePublication
+  ) @@ GitFixtures.isolated
+
+  private def footerAwarePublication = suite("footer-aware publication")(
+    test(
+      "broken Git discovery skips repeat writes and updates once after recovery"
+    ) {
+      val diagnostic = "fixture-only-diagnostic"
+      for {
+        repo <- repoWith("Note.md" -> "Hello")
+        config = repo / ".git" / "config"
+        brokenConfig = repo / ".git" / diagnostic
+        original <- ZIO.attemptBlocking(config.contentAsString)
+        _ <- ZIO.attemptBlocking {
+          brokenConfig.write("[broken\n")
+          config.write(s"$original\n[include]\n\tpath = $diagnostic\n")
+        }
+        source <- docsTree(repo)
+        client <- FakeClient.make()
+        snapshot = publish(source, client) *> client.pages.get
+        degraded <- snapshot
+        _ <- ZIO.attemptBlocking(brokenConfig.write("\n\n[broken\n"))
+        repeated <- snapshot
+        _ <- ZIO.attemptBlocking(config.write(original))
+        recovered <- snapshot
+        stable <- snapshot
+        logs <- ZTestLogger.logOutput
+      } yield assertTrue(
+        degraded.size == 2,
+        degraded.values.forall(page =>
+          body(page).contains(
+            "Git metadata unavailable: repository lookup failed."
+          ) && !body(page).contains(diagnostic) && !page.version.message
+            .contains(diagnostic)
+        ),
+        logs.forall(entry =>
+          !s"${entry.message()} ${entry.cause}".contains(diagnostic)
+        ),
+        repeated == degraded,
+        recovered.values.forall(page =>
+          page.version.number == degraded(page.id).version.number + 1
+        ),
+        body(titled(recovered, "Note")).contains("docs/Note.md"),
+        stable == recovered
+      )
+    },
+    test("a legacy page gains its footer once, then skips") {
+      for {
+        repo <- repoWith("Note.md" -> "Hello")
+        source <- docsTree(repo)
+        client <- FakeClient.make()
+        _ <- publish(source, client)
+        first <- client.pages.get
+        note = titled(first, "Note")
+        parsed <- Parser.parse(repo / "docs" / "Note.md")
+        legacyBody <- Parser.parseMarkdown("Hello")
+        // pre-feature state: hash of the Markdown alone, no footer in the body
+        _ <- client.pages.update(
+          _.updated(
+            note.id,
+            note.copy(
+              version = note.version.copy(message = parsed.contentHash),
+              body = PageSingle.BodySingle(
+                None,
+                Some(
+                  PageSingle.BodyType(
+                    "atlas_doc_format",
+                    PageBodyWrite(legacyBody).value
+                  )
+                ),
+                None
+              )
+            )
+          )
+        )
+        legacy <- client.pages.get
+        _ <- publish(source, client)
+        upgraded <- client.pages.get
+        _ <- publish(source, client)
+        repeated <- client.pages.get
+      } yield assertTrue(
+        !body(legacy(note.id)).contains("Do not edit here"),
+        upgraded(note.id).version.number == note.version.number + 1,
+        upgraded(note.id).version.message != parsed.contentHash,
+        oneFooter(upgraded(note.id)),
+        repeated == upgraded
+      )
+    },
+    test("footer facts and source history decide whether a page updates") {
+      for {
+        repo <- repoWith("Note.md" -> "Hello")
+        docs = repo / "docs"
+        client <- FakeClient.make()
+        // re-evaluated on every run: the publication root moves in the last step
+        snapshot = ZIO.suspend {
+          for {
+            source <- SourceTree.from(
+              if (docs.exists) docs else repo / "handbook"
+            )
+            _ <- publish(source, client)
+            pages <- client.pages.get
+          } yield pages
+        }
+        v0 <- snapshot
+        noteId = titled(v0, "Note").id
+        rootVersion = (p: Map[String, PageSingle]) => p("root").version.number
+        noteVersion = (p: Map[String, PageSingle]) => p(noteId).version.number
+        noteText = (p: Map[String, PageSingle]) => body(p(noteId))
+
+        // identical run
+        v1 <- snapshot
+        // unrelated commit: no page text changes
+        _ <- ZIO.attemptBlocking {
+          GitFixtures.commitFile(
+            repo,
+            "other.txt",
+            "changed\n",
+            "Unrelated",
+            "2026-02-01T10:00:00Z"
+          ): Unit
+        }
+        v2 <- snapshot
+        // a commit that only adds front matter leaves the body hash alone
+        _ <- ZIO.attemptBlocking {
+          GitFixtures.commitFile(
+            repo,
+            "docs/Note.md",
+            "---\ntitle: Note\n---\nHello",
+            "Add front matter",
+            "2026-02-02T10:00:00Z"
+          ): Unit
+        }
+        v3 <- snapshot
+        v4 <- snapshot
+        // worktree mode change: only the uncommitted status differs
+        _ <- ZIO.attemptBlocking {
+          (repo / "docs" / "Note.md").toJava.setExecutable(true): Unit
+        }
+        v5 <- snapshot
+        v6 <- snapshot
+        _ <- ZIO.attemptBlocking {
+          (repo / "docs" / "Note.md").toJava.setExecutable(false): Unit
+        }
+        v7 <- snapshot
+        // clone command change reaches every page showing the command
+        _ <- ZIO.attemptBlocking {
+          GitFixtures.run(
+            repo,
+            "remote",
+            "set-url",
+            "origin",
+            "git@example.com:team/moved.git"
+          )
+        }
+        v8 <- snapshot
+        // remote availability change
+        _ <- ZIO.attemptBlocking {
+          GitFixtures.run(repo, "remote", "remove", "origin")
+        }
+        v9 <- snapshot
+        v10 <- snapshot
+        // path and history change together when the directory is renamed
+        _ <- ZIO.attemptBlocking {
+          GitFixtures.run(repo, "mv", "docs", "handbook")
+          GitFixtures.commitAll(repo, "Rename docs", "2026-02-03T10:00:00Z")
+        }
+        v11 <- snapshot
+        v12 <- snapshot
+      } yield assertTrue(
+        v1 == v0,
+        v2 == v0,
+        noteVersion(v3) == noteVersion(v2) + 1,
+        noteText(v3).contains("Add front matter"),
+        rootVersion(v3) == rootVersion(v2),
+        v4 == v3,
+        noteVersion(v5) == noteVersion(v4) + 1,
+        noteText(v5).contains("Source has uncommitted changes"),
+        rootVersion(v5) == rootVersion(v4),
+        v6 == v5,
+        noteVersion(v7) == noteVersion(v6) + 1,
+        !noteText(v7).contains("uncommitted"),
+        noteVersion(v8) == noteVersion(v7) + 1,
+        rootVersion(v8) == rootVersion(v7) + 1,
+        noteText(v8).contains("moved.git"),
+        noteVersion(v9) == noteVersion(v8) + 1,
+        rootVersion(v9) == rootVersion(v8) + 1,
+        noteText(v9).contains("no Git remote configured"),
+        v10 == v9,
+        noteVersion(v11) == noteVersion(v10) + 1,
+        rootVersion(v11) == rootVersion(v10) + 1,
+        noteText(v11).contains("handbook/Note.md"),
+        noteText(v11).contains("Rename docs"),
+        noteText(v11).contains("Add front matter"),
+        v12 == v11,
+        v11.values.forall(oneFooter)
+      )
+    },
+    test("recreated link destinations still invalidate footer-bearing pages") {
+      for {
+        repo <- repoWith(
+          "README.md" -> "[child](Child.md)",
+          "Child.md" -> "Hello"
+        )
+        source <- docsTree(repo)
+        client <- FakeClient.make()
+        _ <- publish(source, client)
+        first <- client.pages.get
+        child = titled(first, "Child")
+        _ <- client.deletePage(child.id)
+        _ <- publish(source, client)
+        second <- client.pages.get
+        replacement = titled(second, "Child")
+        _ <- publish(source, client)
+        third <- client.pages.get
+      } yield assertTrue(
+        replacement.id != child.id,
+        links(second("root")) == Map("child" -> pageUrl(replacement)),
+        second("root").version.number == first("root").version.number + 1,
+        second.values.forall(oneFooter),
+        third == second
+      )
+    },
+    test("changed attachments update an otherwise unchanged footer page") {
+      for {
+        repo <- repoWith(
+          "Pic.md" -> "![pic](pic.png)\n",
+          "pic.png" -> "first image"
+        )
+        source <- docsTree(repo)
+        client <- FakeClient.make()
+        _ <- publish(source, client)
+        first <- client.pages.get
+        pic = titled(first, "Pic")
+        _ <- publish(source, client)
+        second <- client.pages.get
+        stored1 <- client.storedAttachments.get
+        // the image is not the Markdown source: no commit and no status change
+        _ <- ZIO.attemptBlocking((repo / "docs" / "pic.png").write("second"))
+        _ <- publish(source, client)
+        third <- client.pages.get
+        stored2 <- client.storedAttachments.get
+        _ <- publish(source, client)
+        fourth <- client.pages.get
+      } yield assertTrue(
+        stored1.map(_.title) == List("pic.png"),
+        second == first,
+        third(pic.id).version.number == first(pic.id).version.number + 1,
+        third(pic.id).version.message == first(pic.id).version.message,
+        third("root") == first("root"),
+        stored2.map(_.comment) != stored1.map(_.comment),
+        stored2.size == 1,
+        oneFooter(third(pic.id)),
+        fourth == third
+      )
+    },
+    test(
+      "keeps listing, trimming, exclusions and children-before-parent order"
+    ) {
+      for {
+        repo <- repoWith(
+          "Guide/Intro.md" -> "# Intro\n\nBody text",
+          "Guide/Notes.md" -> "Notes",
+          "Guide/data.txt" -> "not a page"
+        )
+        _ <- ZIO.attemptBlocking(
+          (repo / "docs" / "Empty").createDirectories(): Unit
+        )
+        source <- docsTree(repo)
+        order <- Ref.make(List.empty[String])
+        client <- FakeClient.make(
+          onUpdate = request =>
+            order.update(_ :+ s"${request.title}:${request.body.value.length}"),
+          retainBodies = true
+        )
+        _ <- publish(source, client)
+        pages <- client.pages.get
+        updates <- order.get
+        titles = pages.values.map(_.title).toSet
+        guide = titled(pages, "Guide")
+        intro = titled(pages, "Intro")
+        introDoc = new AdfJackson2().unmarshall(body(intro))
+        guideDoc = new AdfJackson2().unmarshall(body(guide))
+        finalIndex = (title: String) =>
+          updates.lastIndexWhere(_.startsWith(s"$title:"))
+      } yield assertTrue(
+        titles == Set("Existing root", "Guide", "Intro", "Notes"),
+        introDoc.content().get(0).getClass == classOf[Paragraph],
+        body(intro).contains("Body text"),
+        !body(intro).contains("\"heading\""),
+        guideDoc.content().get(0).getClass == classOf[Extension],
+        guideDoc.content().get(1).getClass == classOf[Rule],
+        pages.values.forall(oneFooter),
+        finalIndex("Intro") < finalIndex("Guide"),
+        finalIndex("Notes") < finalIndex("Guide"),
+        finalIndex("Guide") < finalIndex("Existing root")
+      )
+    },
+    test("completed bodies are not retained and repeats skip") {
+      for {
+        repo <- repoWith("A.md" -> "Alpha", "B/C.md" -> "Gamma")
+        source <- docsTree(repo)
+        client <- FakeClient.make(_ => ZIO.unit, retainBodies = false)
+        _ <- publish(source, client)
+        first <- client.pages.get
+        _ <- publish(source, client)
+        second <- client.pages.get
+      } yield assertTrue(
+        first.size == 4,
+        first.values.forall(_.body.atlas_doc_format.isEmpty),
+        first.values.forall(_.version.message.nonEmpty),
+        second == first
+      )
     }
   )
+
+  private def body(page: PageSingle): String =
+    page.body.atlas_doc_format.map(_.value).getOrElse("")
 
   private[md2c] def largeDocumentSet(count: Int) = {
     val markdown = "```text\n" + ("large document body\n" * 14000) + "```\n"
@@ -321,6 +719,38 @@ object PublisherLinksSpec extends ZIOSpecDefault {
       pages.values.forall(_.version.message.nonEmpty)
     }
   }
+
+  private def titled(pages: Map[String, PageSingle], title: String) =
+    pages.values.find(_.title == title).get
+
+  /** Exactly one footer: a single separator and a single page-type warning. */
+  private def oneFooter(page: PageSingle): Boolean = {
+    val text = body(page)
+    val doc = new AdfJackson2().unmarshall(text)
+    doc.allNodesOfType(classOf[Rule]).count() == 1 &&
+    "Do not edit here\\.".r.findAllIn(text).size == 1
+  }
+
+  /** A committed repository whose publication root is `docs/`. */
+  private def repoWith(files: (String, String)*) = for {
+    repo <- GitFixtures.temp
+    _ <- ZIO.attemptBlocking {
+      GitFixtures.init(repo)
+      GitFixtures.run(repo, "remote", "add", "origin", GitFakes.RemoteUrl)
+      val all = Seq(
+        s"docs/${SourceConf.FileName}" -> "spaceKey = DOC\npageId = root\n",
+        "other.txt" -> "other\n"
+      ) ++ files.map { case (path, content) => s"docs/$path" -> content }
+      all.foreach { case (path, content) =>
+        val file = repo / path
+        file.parent.createDirectories()
+        file.write(content)
+      }
+      GitFixtures.commitAll(repo, "Initial", "2026-01-01T10:00:00Z")
+    }
+  } yield repo
+
+  private def docsTree(repo: File) = SourceTree.from(repo / "docs")
 
   private def sourceTree(files: (String, String)*) = for {
     dir <- ZIO.acquireRelease(
@@ -401,6 +831,9 @@ object PublisherLinksSpec extends ZIOSpecDefault {
       retainBodies: Boolean,
       attached: Ref[List[File]]
   ) extends Client {
+    val storedAttachments: Ref[List[Attachment]] =
+      Unsafe.unsafe(implicit u => Ref.unsafe.make(List.empty[Attachment]))
+
     private def stored(page: PageSingle): PageSingle =
       if (retainBodies) page
       else page.copy(body = PageSingle.BodySingle(None, None, None))
@@ -510,7 +943,7 @@ object PublisherLinksSpec extends ZIOSpecDefault {
     override def deletePage(id: String): Task[Boolean] =
       pages.update(_ - id).as(true)
     override def getPageAttachments(id: String): Task[List[Attachment]] =
-      ZIO.succeed(Nil)
+      storedAttachments.get.map(_.filter(_.pageId == id))
     override def getCurrentUser(): Task[User] =
       ZIO.dieMessage("Unexpected getCurrentUser")
     override def deleteDraftPage(id: String): Task[Boolean] =
@@ -533,9 +966,15 @@ object PublisherLinksSpec extends ZIOSpecDefault {
         page: PageSingle,
         file: File
     ): Task[CreateAttachmentResponse] =
-      attached.update(file :: _).as(attachmentResponse(file))
+      attached.update(file :: _) *>
+        storedAttachments
+          .update(
+            _.filterNot(a => a.pageId == page.id && a.title == file.name) :+
+              storedAttachment(page.id, file)
+          )
+          .as(attachmentResponse(file))
     override def deleteAttachment(id: String): Task[Boolean] =
-      ZIO.dieMessage("Unexpected deleteAttachment")
+      storedAttachments.update(_.filterNot(_.id == id)).as(true)
   }
 
   private object FakeClient {
@@ -578,6 +1017,24 @@ object PublisherLinksSpec extends ZIOSpecDefault {
       attached
     )
   }
+
+  private def storedAttachment(pageId: String, file: File): Attachment =
+    Attachment(
+      mediaTypeDescription = None,
+      webuiLink = s"/attachments/${file.name}",
+      createdAt = createdAt,
+      comment = file.sha1,
+      version = Attachment.Version(1, "", false, "author", createdAt),
+      title = file.name,
+      status = "current",
+      fileSize = 1,
+      fileId = s"file-${file.name}",
+      mediaType = "image/png",
+      pageId = pageId,
+      downloadLink = s"/download/${file.name}",
+      id = s"att-${file.name}",
+      _links = Attachment.Links(s"/download/${file.name}", s"/a/${file.name}")
+    )
 
   private def attachmentResponse(file: File): CreateAttachmentResponse = {
     val user = CreateAttachmentResponse.User(

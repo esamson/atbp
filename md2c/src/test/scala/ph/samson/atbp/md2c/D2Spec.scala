@@ -419,5 +419,5 @@ object D2Spec extends ZIOSpecDefault {
         )
       }
     }
-  )
+  ) @@ GitFixtures.isolated
 }

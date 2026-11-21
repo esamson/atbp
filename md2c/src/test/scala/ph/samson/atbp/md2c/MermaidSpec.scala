@@ -345,5 +345,5 @@ object MermaidSpec extends ZIOSpecDefault {
         )
       }
     }
-  )
+  ) @@ GitFixtures.isolated
 }

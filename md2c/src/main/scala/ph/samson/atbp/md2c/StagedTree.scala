@@ -117,12 +117,29 @@ object StagedTree {
         mermaidRendered <- Mermaid.transform(plantUmlRendered)
         d2Rendered <- D2.transform(mermaidRendered)
         extensionsRendered = Extensions.transform(d2Rendered)
+        footer <- node match {
+          case _: Directory =>
+            GitMetadata.directory(node.source).map(SourceFooter.directory)
+          case _: MarkdownBranch | _: MarkdownLeaf =>
+            GitMetadata.markdown(node.source).map(SourceFooter.markdown)
+          case unhandled =>
+            ZIO.fail(
+              new IllegalArgumentException(
+                s"No ADF Doc for content: $unhandled"
+              )
+            )
+        }
+        (finalDoc, finalHash) <- SourceFooter.attach(
+          extensionsRendered,
+          contentHash,
+          footer
+        )
       } yield Page(
         node.name,
         node.source,
         frontMatter,
-        extensionsRendered,
-        contentHash,
+        finalDoc,
+        finalHash,
         Nil
       )
     }

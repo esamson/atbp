@@ -1,5 +1,7 @@
 # DMARC aggregate report viewer V1
 
+Source spec: SPEC.md
+
 Implement the local `atbp dmarc` command described in [SPEC.md](../SPEC.md). An administrator should be able to open one HTML file and trace its totals and authentication failures back to a receiver, reporting window and input. The [implementation checklist](todo.md) gives the acceptance criteria and verification for each slice.
 
 ## Implementation order
